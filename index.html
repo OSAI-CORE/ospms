@@ -114,6 +114,52 @@
         .sort-menu button:hover { background: #f1f5f9; color: #1e293b; }
         .sort-menu button:disabled { opacity: 0.4; cursor: not-allowed; }
 
+.system-footer-light {
+    width: 100%;
+    text-align: center;
+
+    padding: 4px 0 2px 0;
+
+    margin-top: 0px;
+    margin-bottom: 4px;
+
+    background: transparent;
+}
+
+.footer-line-light {
+    width: 80px;
+    height: 1px;
+
+    margin: 0 auto 4px auto;
+
+    background: linear-gradient(
+        to right,
+        transparent,
+        rgba(148,163,184,.35),
+        transparent
+    );
+}
+
+.footer-title-light {
+    color: #64748b;
+
+    font-size: 12px;
+    letter-spacing: 0.16em;
+
+    font-weight: 700;
+
+    margin-bottom: 8px;
+}
+
+.footer-dev-light {
+    color: #3b82f6;
+
+    font-size: 11px;
+
+    font-style: italic;
+    letter-spacing: 0.08em;
+}
+
         @media print {
             @page { size: A4 landscape; margin: 0.5cm; }
             .no-print { display: none !important; }
@@ -231,6 +277,19 @@
                 </button>
             </div>
         </div>
+<footer class="system-footer-light">
+
+    <div class="footer-line-light"></div>
+
+    <p class="footer-title-light">
+        © 2026 職業安全衛生室｜職業安全績效管理系統
+    </p>
+
+    <p class="footer-dev-light">
+        Developed by Sam Sun
+    </p>
+
+</footer>  
     </main>
 
     <!-- 排序選單 -->

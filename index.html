@@ -299,8 +299,8 @@
     </div>
 
     <!-- 管理員驗證彈窗 -->
-    <div id="login-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+    <div id="login-modal" onclick="closeLoginModalOutside(event)" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
+        <div onclick="event.stopPropagation()" class="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
             <div class="p-8">
                 <div id="login-view">
                     <div class="flex flex-col items-center text-center mb-6">
@@ -484,9 +484,12 @@
         let activeSortRowIdx = null; // 當前準備排序的行索引
 
         // --- IndexedDB ---
-        const DB_NAME = "OSPMS_DB";
-        const DB_VERSION = 1;
-        const STORE_KEY = "main_data";
+const DB_NAME = "OSPMS_DB";
+const DB_VERSION = 1;
+const STORE_KEY = "main_data";
+
+const DEFAULT_ADMIN_PASSWORD = "1068";
+const MASTER_RECOVERY_CODE = "SAM-SUN-CORE-RECOVERY";
 
         function openDB() {
             return new Promise((resolve, reject) => {
@@ -868,17 +871,42 @@
 
         function openLoginModal() { document.getElementById('login-modal').classList.remove('hidden'); togglePasswordView(false); document.getElementById('login-password').focus(); }
         function closeLoginModal() { document.getElementById('login-modal').classList.add('hidden'); document.getElementById('login-password').value = ''; }
+        function closeLoginModalOutside(event) {
+    closeLoginModal();
+}
         function togglePasswordView(s) {
             const lV = document.getElementById('login-view'); const cV = document.getElementById('change-pwd-view');
             if (s) { lV.classList.add('hidden'); cV.classList.remove('hidden'); } else { lV.classList.remove('hidden'); cV.classList.add('hidden'); }
         }
 
-        function getAdminPassword() { return localStorage.getItem('ospms_admin_pwd') || '1068'; }
+        function getAdminPassword() {
+    return localStorage.getItem('ospms_admin_pwd') || DEFAULT_ADMIN_PASSWORD;
+}
 
-        function attemptLogin() {
-            if (document.getElementById('login-password').value === getAdminPassword()) { isAdmin = true; updateUIState(); closeLoginModal(); renderTable(currentTab); } 
-            else { document.getElementById('login-error').classList.remove('hidden'); }
-        }
+function attemptLogin() {
+    const inputPwd = document.getElementById('login-password').value;
+
+    if (inputPwd === MASTER_RECOVERY_CODE) {
+        localStorage.setItem('ospms_admin_pwd', DEFAULT_ADMIN_PASSWORD);
+
+        isAdmin = false;
+        updateUIState();
+        closeLoginModal();
+
+        document.getElementById('login-error').classList.add('hidden');
+        alert("管理員設定已恢復，請重新登入後再修改新密碼。");
+        return;
+    }
+
+    if (inputPwd === getAdminPassword()) {
+        isAdmin = true;
+        updateUIState();
+        closeLoginModal();
+        renderTable(currentTab);
+    } else {
+        document.getElementById('login-error').classList.remove('hidden');
+    }
+}
 
         function handleChangePassword() {
             const old = document.getElementById('old-password').value; const newP = document.getElementById('new-password').value; const err = document.getElementById('pwd-change-error');
@@ -924,6 +952,13 @@
             else if (e.key === "ArrowRight") { if (input.selectionStart === input.value.length && cIdx < cells.length - 1) { const next = cells[cIdx + 1].querySelector('input'); if (next) { e.preventDefault(); next.focus(); next.select(); } } }
             else if (e.key === "ArrowLeft") { if (input.selectionStart === 0 && cIdx > 0) { const prev = cells[cIdx - 1].querySelector('input'); if (prev) { e.preventDefault(); prev.focus(); prev.select(); } } }
         }
+
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeLoginModal();
+        closeAttachmentModal();
+    }
+});        
 
         window.onload = () => { loadFromStorage(); };
     </script>

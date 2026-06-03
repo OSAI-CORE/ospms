@@ -1107,27 +1107,83 @@ function getCategoryStats(key) {
     };
 }
 
+function getMonthlyStats() {
+    const monthlyStats = [];
+
+    for (let month = 1; month <= 12; month++) {
+        let totalMonthCells = 0;
+        let notApplicableCount = 0;
+        let filledValidMonthCount = 0;
+
+        Object.keys(titles).forEach(key => {
+            const baseInfo = appData[key] || [];
+            const savedValues = tableDataStore[key] || [];
+
+            baseInfo.forEach((item, idx) => {
+                totalMonthCells++;
+
+                const rowSaved = savedValues[idx] || [];
+                const rawValue = rowSaved[month + 1];
+
+                const value = rawValue === undefined || rawValue === null
+                    ? ""
+                    : String(rawValue).trim().toUpperCase();
+
+                if (value === "N/A" || value === "NA") {
+                    notApplicableCount++;
+                } else if (value !== "") {
+                    filledValidMonthCount++;
+                }
+            });
+        });
+
+        const executableMonthCells = totalMonthCells - notApplicableCount;
+        const emptyCount = executableMonthCells - filledValidMonthCount;
+
+        const rate = executableMonthCells > 0
+            ? Math.round((filledValidMonthCount / executableMonthCells) * 100)
+            : 0;
+
+        monthlyStats.push({
+            month,
+            totalMonthCells,
+            notApplicableCount,
+            executableMonthCells,
+            filledValidMonthCount,
+            emptyCount,
+            rate
+        });
+    }
+
+    return monthlyStats;
+}
+
 function addOverviewSheet() {
     const categoryKeys = Object.keys(titles);
+    const monthlyStats = getMonthlyStats();
 
     const totalIndicators = categoryKeys.reduce((sum, key) => {
         return sum + ((appData[key] || []).length);
     }, 0);
 
-    const totalMonthCells = categoryKeys.reduce((sum, key) => {
-        return sum + getCategoryStats(key).totalMonthCells;
+    const totalMonthCells = monthlyStats.reduce((sum, item) => {
+        return sum + item.totalMonthCells;
     }, 0);
 
-    const totalNotApplicableCount = categoryKeys.reduce((sum, key) => {
-        return sum + getCategoryStats(key).notApplicableCount;
+    const totalNotApplicableCount = monthlyStats.reduce((sum, item) => {
+        return sum + item.notApplicableCount;
     }, 0);
 
-    const totalExecutableMonthCells = categoryKeys.reduce((sum, key) => {
-        return sum + getCategoryStats(key).executableMonthCells;
+    const totalExecutableMonthCells = monthlyStats.reduce((sum, item) => {
+        return sum + item.executableMonthCells;
     }, 0);
 
-    const totalFilledValidMonthCount = categoryKeys.reduce((sum, key) => {
-        return sum + getCategoryStats(key).filledValidMonthCount;
+    const totalFilledValidMonthCount = monthlyStats.reduce((sum, item) => {
+        return sum + item.filledValidMonthCount;
+    }, 0);
+
+    const totalEmptyCount = monthlyStats.reduce((sum, item) => {
+        return sum + item.emptyCount;
     }, 0);
 
     const filledRate = totalExecutableMonthCells > 0
@@ -1143,23 +1199,21 @@ function addOverviewSheet() {
         ["年度管理摘要", "", "", "", "", "", "", ""],
         ["績效分類數", categoryKeys.length, "績效指標總數", totalIndicators, "附件總數", attachmentCount, "計算規則", "N/A 不列入分母"],
         ["月份總格數", totalMonthCells, "不適用格數", totalNotApplicableCount, "應執行格數", totalExecutableMonthCells, "已填有效格數", totalFilledValidMonthCount],
-        ["有效填報率", filledRate, "", "", "", "", "", ""],
+        ["未填報格數", totalEmptyCount, "全年有效填報率", filledRate, "", "", "", ""],
         [],
-        ["分類名稱", "指標數量", "月份總格數", "不適用格數", "應執行格數", "已填有效格數", "有效填報率", "備註"]
+        ["月份", "月份總格數", "不適用格數", "應執行格數", "已填有效格數", "未填報格數", "有效填報率", "備註"]
     ];
 
-    categoryKeys.forEach(key => {
-        const stat = getCategoryStats(key);
-
+    monthlyStats.forEach(item => {
         rows.push([
-            titles[key],
-            stat.itemCount,
-            stat.totalMonthCells,
-            stat.notApplicableCount,
-            stat.executableMonthCells,
-            stat.filledValidMonthCount,
-            `${stat.rate}%`,
-            stat.rate >= 90 ? "執行狀況良好" : "建議持續追蹤"
+            `${item.month}月`,
+            item.totalMonthCells,
+            item.notApplicableCount,
+            item.executableMonthCells,
+            item.filledValidMonthCount,
+            item.emptyCount,
+            `${item.rate}%`,
+            item.rate >= 90 ? "執行狀況良好" : "建議持續追蹤"
         ]);
     });
 
@@ -1175,11 +1229,11 @@ function addOverviewSheet() {
     ];
 
     ws['!cols'] = [
-        { wch: 28 },
-        { wch: 14 },
+        { wch: 12 },
         { wch: 16 },
-        { wch: 14 },
         { wch: 16 },
+        { wch: 16 },
+        { wch: 18 },
         { wch: 16 },
         { wch: 16 },
         { wch: 22 }
@@ -1215,6 +1269,11 @@ function addOverviewSheet() {
             applyCellStyle(ws, r, c, c === 0 ? normalCellStyle : centerCellStyle);
         }
 
+        const emptyCell = ws[cellRef(r, 5)];
+        if (emptyCell && Number(emptyCell.v) > 0) {
+            emptyCell.s = warningCellStyle;
+        }
+
         const rateCell = ws[cellRef(r, 6)];
         if (rateCell) {
             const rateValue = parseInt(String(rateCell.v).replace("%", ""), 10);
@@ -1229,7 +1288,7 @@ function addOverviewSheet() {
         })
     };
 
-    XLSX.utils.book_append_sheet(wb, ws, "年度總覽");
+    XLSX.utils.book_append_sheet(wb, ws, "月份統計總覽");
 }
 
         function addCategorySheet(key) {

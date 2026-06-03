@@ -814,6 +814,7 @@ function exportFullReport() {
 
         const monthStartCol = 5;
         const monthEndCol = 16;
+        const GOOD_RATE_THRESHOLD = 90;
 
         const borderThin = {
             top: { style: "thin", color: { rgb: "CBD5E1" } },
@@ -1240,17 +1241,17 @@ function addOverviewSheet() {
 
     const attachmentCount = getAttachmentCount();
 
-    const rows = [
-        ["職業安全績效管理系統 OSPMS｜全年度績效報表"],
-        [`年度：${yearLabel}`, "", "", `匯出時間：${exportDate}`, "", "", "", ""],
-        [],
-        ["年度管理摘要", "", "", "", "", "", "", ""],
-        ["績效分類數", categoryKeys.length, "績效指標總數", totalIndicators, "附件總數", attachmentCount, "計算規則", "N/A 不列入分母"],
-        ["月份總格數", totalMonthCells, "不適用格數", totalNotApplicableCount, "應執行格數", totalExecutableMonthCells, "已填有效格數", totalFilledValidMonthCount],
-        ["未填報格數", totalEmptyCount, "全年有效填報率", filledRate, "", "", "", ""],
-        [],
-        ["月份", "月份總格數", "不適用格數", "應執行格數", "已填有效格數", "未填報格數", "有效填報率", "備註"]
-    ];
+const rows = [
+    ["職業安全績效管理系統 OSPMS｜全年度績效報表"],
+    [`年度：${yearLabel}`, "", "", `匯出時間：${exportDate}`, "", "", "", ""],
+    [],
+    ["年度管理摘要", "", "", "", "", "", "", ""],
+    ["績效分類數", categoryKeys.length, "績效指標總數", totalIndicators, "附件總數", attachmentCount, "計算規則", "N/A 不列入分母"],
+    ["月份總格數", totalMonthCells, "不適用格數", totalNotApplicableCount, "應執行格數", totalExecutableMonthCells, "已填有效格數", totalFilledValidMonthCount],
+    ["未填報格數", totalEmptyCount, "全年應執行月份填報率", filledRate, "判斷基準", `≥${GOOD_RATE_THRESHOLD}% 良好，未達則追蹤`, "", ""],
+    [],
+    ["月份", "月份總格數", "不適用格數", "應執行格數", "已填有效格數", "未填報格數", "應執行月份填報率", "備註"]
+];
 
     monthlyStats.forEach(item => {
         rows.push([
@@ -1261,7 +1262,7 @@ function addOverviewSheet() {
             item.filledValidMonthCount,
             item.emptyCount,
             `${item.rate}%`,
-            item.rate >= 90 ? "執行狀況良好" : "建議持續追蹤"
+            item.rate >= GOOD_RATE_THRESHOLD ? "執行狀況良好" : "建議持續追蹤"
         ]);
     });
 
@@ -1325,7 +1326,7 @@ function addOverviewSheet() {
         const rateCell = ws[cellRef(r, 6)];
         if (rateCell) {
             const rateValue = parseInt(String(rateCell.v).replace("%", ""), 10);
-            rateCell.s = rateValue >= 90 ? completedCellStyle : warningCellStyle;
+            rateCell.s = rateValue >= GOOD_RATE_THRESHOLD ? completedCellStyle : warningCellStyle;
         }
     }
 
@@ -1337,6 +1338,105 @@ function addOverviewSheet() {
     };
 
     XLSX.utils.book_append_sheet(wb, ws, "月份統計總覽");
+}
+
+function addMissingItemsSheet() {
+    const rows = [
+        ["職業安全績效管理系統 OSPMS｜未填報清單"],
+        [`年度：${yearLabel}`, "", "", `匯出時間：${exportDate}`, "", "", ""],
+        [],
+        ["未填報項目清單", "", "", "", "", "", ""],
+        ["分類名稱", "編號", "績效指標內容", "月份", "時程規劃", "目標值", "狀態"]
+    ];
+
+    Object.keys(titles).forEach(key => {
+        const baseInfo = appData[key] || [];
+        const savedValues = tableDataStore[key] || [];
+
+        baseInfo.forEach((item, idx) => {
+            const rowSaved = savedValues[idx] || [];
+
+            for (let month = 1; month <= 12; month++) {
+                const rawValue = rowSaved[month + 1];
+                const value = rawValue === undefined || rawValue === null
+                    ? ""
+                    : String(rawValue).trim();
+
+                if (value === "") {
+                    rows.push([
+                        titles[key],
+                        item.id || (idx + 1).toString(),
+                        item.name || "",
+                        `${month}月`,
+                        rowSaved[0] || item.schedule || "",
+                        rowSaved[1] || item.target || "",
+                        "尚未填報"
+                    ]);
+                }
+            }
+        });
+    });
+
+    if (rows.length === 5) {
+        rows.push(["目前無未填報項目", "", "", "", "", "", ""]);
+    }
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    const totalRows = rows.length;
+    const totalCols = 7;
+
+    ws['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols - 1 } },
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } },
+        { s: { r: 1, c: 3 }, e: { r: 1, c: totalCols - 1 } },
+        { s: { r: 3, c: 0 }, e: { r: 3, c: totalCols - 1 } }
+    ];
+
+    ws['!cols'] = [
+        { wch: 26 },
+        { wch: 8 },
+        { wch: 42 },
+        { wch: 10 },
+        { wch: 12 },
+        { wch: 12 },
+        { wch: 14 }
+    ];
+
+    ws['!rows'] = [
+        { hpt: 34 },
+        { hpt: 22 },
+        { hpt: 8 },
+        { hpt: 24 },
+        { hpt: 26 }
+    ];
+
+    applyRangeStyle(ws, { s: { r: 0, c: 0 }, e: { r: totalRows - 1, c: totalCols - 1 } }, normalCellStyle);
+    applyRangeStyle(ws, { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols - 1 } }, titleStyle);
+    applyRangeStyle(ws, { s: { r: 1, c: 0 }, e: { r: 1, c: totalCols - 1 } }, metaStyle);
+    applyRangeStyle(ws, { s: { r: 3, c: 0 }, e: { r: 3, c: totalCols - 1 } }, summaryTitleStyle);
+    applyRangeStyle(ws, { s: { r: 4, c: 0 }, e: { r: 4, c: totalCols - 1 } }, headerStyle);
+
+    for (let r = 5; r < totalRows; r++) {
+        for (let c = 0; c < totalCols; c++) {
+            applyCellStyle(ws, r, c, c === 2 ? normalCellStyle : centerCellStyle);
+        }
+
+        const statusCell = ws[cellRef(r, 6)];
+        if (statusCell && statusCell.v === "尚未填報") {
+            statusCell.s = warningCellStyle;
+        } else if (statusCell) {
+            statusCell.s = completedCellStyle;
+        }
+    }
+
+    ws['!autofilter'] = {
+        ref: XLSX.utils.encode_range({
+            s: { r: 4, c: 0 },
+            e: { r: totalRows - 1, c: totalCols - 1 }
+        })
+    };
+
+    XLSX.utils.book_append_sheet(wb, ws, "未填報清單");
 }
 
 function addCategorySheet(key) {
@@ -1353,30 +1453,30 @@ function addCategorySheet(key) {
     rows.push([]);
 
     rows.push(["分類管理摘要", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]);
-    rows.push([
-        "指標數量",
-        stat.itemCount,
-        "月份總格數",
-        stat.totalMonthCells,
-        "不適用格數",
-        stat.notApplicableCount,
-        "應執行格數",
-        stat.executableMonthCells,
-        "已填有效格數",
-        stat.filledValidMonthCount,
-        "有效填報率",
-        `${stat.rate}%`,
-        "計算規則",
-        "N/A 不列入分母",
-        "",
-        "",
-        ""
-    ]);
+rows.push([
+    "指標數量",
+    stat.itemCount,
+    "月份總格數",
+    stat.totalMonthCells,
+    "不適用格數",
+    stat.notApplicableCount,
+    "應執行格數",
+    stat.executableMonthCells,
+    "已填有效格數",
+    stat.filledValidMonthCount,
+    "應執行月份填報率",
+    `${stat.rate}%`,
+    "判斷基準",
+    `≥${GOOD_RATE_THRESHOLD}% 良好，未達則追蹤`,
+    "",
+    "",
+    ""
+]);
 
     rows.push([]);
 
     rows.push(["分類月份統計", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]);
-    rows.push(["月份", "月份總格數", "不適用格數", "應執行格數", "已填有效格數", "未填報格數", "有效填報率", "備註", "", "", "", "", "", "", "", "", ""]);
+    rows.push(["月份", "月份總格數", "不適用格數", "應執行格數", "已填有效格數", "未填報格數", "應執行月份填報率", "備註", "", "", "", "", "", "", "", "", ""]);
 
     categoryMonthlyStats.forEach(item => {
         rows.push([
@@ -1387,7 +1487,7 @@ function addCategorySheet(key) {
             item.filledValidMonthCount,
             item.emptyCount,
             `${item.rate}%`,
-            item.rate >= 90 ? "執行狀況良好" : "建議持續追蹤",
+            item.rate >= GOOD_RATE_THRESHOLD ? "執行狀況良好" : "建議持續追蹤",
             "",
             "",
             "",
@@ -1540,7 +1640,7 @@ function addCategorySheet(key) {
         const rateCell = ws[cellRef(r, 6)];
         if (rateCell) {
             const rateValue = parseInt(String(rateCell.v).replace("%", ""), 10);
-            rateCell.s = rateValue >= 90 ? completedCellStyle : warningCellStyle;
+            rateCell.s = rateValue >= GOOD_RATE_THRESHOLD ? completedCellStyle : warningCellStyle;
         }
     }
 
@@ -1582,11 +1682,12 @@ function addCategorySheet(key) {
     XLSX.utils.book_append_sheet(wb, ws, sheetName);
 }
 
-        addOverviewSheet();
+addOverviewSheet();
+addMissingItemsSheet();
 
-        Object.keys(titles).forEach(key => {
-            addCategorySheet(key);
-        });
+Object.keys(titles).forEach(key => {
+    addCategorySheet(key);
+});
 
         wb.Props = {
             Title: "職業安全績效管理系統全年度績效報表",

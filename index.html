@@ -1158,6 +1158,54 @@ function getMonthlyStats() {
     return monthlyStats;
 }
 
+function getCategoryMonthlyStats(key) {
+    const monthlyStats = [];
+    const baseInfo = appData[key] || [];
+    const savedValues = tableDataStore[key] || [];
+
+    for (let month = 1; month <= 12; month++) {
+        let totalMonthCells = 0;
+        let notApplicableCount = 0;
+        let filledValidMonthCount = 0;
+
+        baseInfo.forEach((item, idx) => {
+            totalMonthCells++;
+
+            const rowSaved = savedValues[idx] || [];
+            const rawValue = rowSaved[month + 1];
+
+            const value = rawValue === undefined || rawValue === null
+                ? ""
+                : String(rawValue).trim().toUpperCase();
+
+            if (value === "N/A" || value === "NA") {
+                notApplicableCount++;
+            } else if (value !== "") {
+                filledValidMonthCount++;
+            }
+        });
+
+        const executableMonthCells = totalMonthCells - notApplicableCount;
+        const emptyCount = executableMonthCells - filledValidMonthCount;
+
+        const rate = executableMonthCells > 0
+            ? Math.round((filledValidMonthCount / executableMonthCells) * 100)
+            : 0;
+
+        monthlyStats.push({
+            month,
+            totalMonthCells,
+            notApplicableCount,
+            executableMonthCells,
+            filledValidMonthCount,
+            emptyCount,
+            rate
+        });
+    }
+
+    return monthlyStats;
+}
+
 function addOverviewSheet() {
     const categoryKeys = Object.keys(titles);
     const monthlyStats = getMonthlyStats();
@@ -1291,174 +1339,248 @@ function addOverviewSheet() {
     XLSX.utils.book_append_sheet(wb, ws, "月份統計總覽");
 }
 
-        function addCategorySheet(key) {
-            const sheetName = safeSheetName(titles[key]);
-            const baseInfo = appData[key] || [];
-            const savedValues = tableDataStore[key] || [];
-            const stat = getCategoryStats(key);
+function addCategorySheet(key) {
+    const sheetName = safeSheetName(titles[key]);
+    const baseInfo = appData[key] || [];
+    const savedValues = tableDataStore[key] || [];
+    const stat = getCategoryStats(key);
+    const categoryMonthlyStats = getCategoryMonthlyStats(key);
 
-            const rows = [];
+    const rows = [];
 
-            rows.push([`職業安全績效管理系統 OSPMS｜${titles[key]}`]);
-            rows.push([`年度：${yearLabel}`, "", "", `匯出時間：${exportDate}`]);
-            rows.push([]);
-            rows.push(["分類管理摘要", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]);
-rows.push([
-    "指標數量",
-    stat.itemCount,
-    "月份總格數",
-    stat.totalMonthCells,
-    "不適用格數",
-    stat.notApplicableCount,
-    "應執行格數",
-    stat.executableMonthCells,
-    "已填有效格數",
-    stat.filledValidMonthCount,
-    "有效填報率",
-    `${stat.rate}%`,
-    "計算規則",
-    "N/A 不列入分母",
-    "",
-    "",
-    ""
-]);
-            rows.push([]);
-            rows.push(headers);
+    rows.push([`職業安全績效管理系統 OSPMS｜${titles[key]}`]);
+    rows.push([`年度：${yearLabel}`, "", "", `匯出時間：${exportDate}`]);
+    rows.push([]);
 
-            baseInfo.forEach((item, idx) => {
-                const rowSaved = savedValues[idx] || [];
+    rows.push(["分類管理摘要", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]);
+    rows.push([
+        "指標數量",
+        stat.itemCount,
+        "月份總格數",
+        stat.totalMonthCells,
+        "不適用格數",
+        stat.notApplicableCount,
+        "應執行格數",
+        stat.executableMonthCells,
+        "已填有效格數",
+        stat.filledValidMonthCount,
+        "有效填報率",
+        `${stat.rate}%`,
+        "計算規則",
+        "N/A 不列入分母",
+        "",
+        "",
+        ""
+    ]);
 
-                const excelRow = [
-                    item.id || (idx + 1).toString(),
-                    item.name || "",
-                    item.content || "",
-                    rowSaved[0] || item.schedule || "",
-                    rowSaved[1] || item.target || ""
-                ];
+    rows.push([]);
 
-                for (let i = 2; i <= 13; i++) {
-                    excelRow.push(rowSaved[i] || "");
-                }
+    rows.push(["分類月份統計", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]);
+    rows.push(["月份", "月份總格數", "不適用格數", "應執行格數", "已填有效格數", "未填報格數", "有效填報率", "備註", "", "", "", "", "", "", "", "", ""]);
 
-                rows.push(excelRow);
-            });
+    categoryMonthlyStats.forEach(item => {
+        rows.push([
+            `${item.month}月`,
+            item.totalMonthCells,
+            item.notApplicableCount,
+            item.executableMonthCells,
+            item.filledValidMonthCount,
+            item.emptyCount,
+            `${item.rate}%`,
+            item.rate >= 90 ? "執行狀況良好" : "建議持續追蹤",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+        ]);
+    });
 
-            const ws = XLSX.utils.aoa_to_sheet(rows);
-            const totalCols = headers.length;
-            const totalRows = rows.length;
+    rows.push([]);
+    rows.push(headers);
 
-            ws['!merges'] = [
-                { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols - 1 } },
-                { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } },
-                { s: { r: 1, c: 3 }, e: { r: 1, c: totalCols - 1 } },
-                { s: { r: 3, c: 0 }, e: { r: 3, c: totalCols - 1 } }
-            ];
+    baseInfo.forEach((item, idx) => {
+        const rowSaved = savedValues[idx] || [];
 
-            ws['!cols'] = [
-                { wch: 7 },
-                { wch: 30 },
-                { wch: 62 },
-                { wch: 10 },
-                { wch: 10 },
-                { wch: 9 },
-                { wch: 9 },
-                { wch: 9 },
-                { wch: 9 },
-                { wch: 9 },
-                { wch: 9 },
-                { wch: 9 },
-                { wch: 9 },
-                { wch: 9 },
-                { wch: 9 },
-                { wch: 9 },
-                { wch: 9 }
-            ];
+        const excelRow = [
+            item.id || (idx + 1).toString(),
+            item.name || "",
+            item.content || "",
+            rowSaved[0] || item.schedule || "",
+            rowSaved[1] || item.target || ""
+        ];
 
-            ws['!rows'] = [
-                { hpt: 34 },
-                { hpt: 22 },
-                { hpt: 8 },
-                { hpt: 24 },
-                { hpt: 24 },
-                { hpt: 8 },
-                { hpt: 28 },
-                ...baseInfo.map(item => {
-                    const textLength = ((item.name || "").length + (item.content || "").length);
-                    return {
-                        hpt: Math.min(88, Math.max(32, 22 + Math.ceil(textLength / 32) * 8))
-                    };
-                })
-            ];
-
-            ws['!autofilter'] = {
-                ref: XLSX.utils.encode_range({
-                    s: { r: 6, c: 0 },
-                    e: { r: totalRows - 1, c: totalCols - 1 }
-                })
-            };
-
-            ws['!margins'] = {
-                left: 0.25,
-                right: 0.25,
-                top: 0.55,
-                bottom: 0.45,
-                header: 0.2,
-                footer: 0.2
-            };
-
-            ws['!pageSetup'] = {
-                orientation: "landscape",
-                fitToWidth: 1,
-                fitToHeight: 0,
-                paperSize: 9
-            };
-
-            applyRangeStyle(ws, { s: { r: 0, c: 0 }, e: { r: totalRows - 1, c: totalCols - 1 } }, normalCellStyle);
-            applyRangeStyle(ws, { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols - 1 } }, titleStyle);
-            applyRangeStyle(ws, { s: { r: 1, c: 0 }, e: { r: 1, c: totalCols - 1 } }, metaStyle);
-            applyRangeStyle(ws, { s: { r: 3, c: 0 }, e: { r: 3, c: totalCols - 1 } }, summaryTitleStyle);
-
-            for (let c = 0; c < totalCols; c++) {
-                applyCellStyle(ws, 4, c, c % 2 === 0 ? summaryLabelStyle : summaryValueStyle);
-            }
-
-            applyRangeStyle(ws, { s: { r: 6, c: 0 }, e: { r: 6, c: totalCols - 1 } }, headerStyle);
-            applyRangeStyle(ws, { s: { r: 6, c: monthStartCol }, e: { r: 6, c: monthEndCol } }, monthHeaderStyle);
-
-            for (let r = 7; r < totalRows; r++) {
-                const rowFill = (r % 2 === 0)
-                    ? { fgColor: { rgb: "FFFFFF" } }
-                    : { fgColor: { rgb: "F8FAFC" } };
-
-                applyRangeStyle(ws, { s: { r, c: 0 }, e: { r, c: totalCols - 1 } }, {
-                    fill: rowFill,
-                    border: borderThin
-                });
-
-                applyCellStyle(ws, r, 0, centerCellStyle);
-                applyCellStyle(ws, r, 1, normalCellStyle);
-                applyCellStyle(ws, r, 2, normalCellStyle);
-                applyCellStyle(ws, r, 3, centerCellStyle);
-                applyCellStyle(ws, r, 4, centerCellStyle);
-
-                for (let c = monthStartCol; c <= monthEndCol; c++) {
-                    const cell = ws[cellRef(r, c)];
-                    const value = cell ? String(cell.v || "").trim() : "";
-
-if (value === "") {
-    applyCellStyle(ws, r, c, emptyCellStyle);
-} else if (value === "N/A" || value.toUpperCase() === "NA") {
-    applyCellStyle(ws, r, c, notApplicableCellStyle);
-} else if (value === "-") {
-    applyCellStyle(ws, r, c, warningCellStyle);
-} else {
-    applyCellStyle(ws, r, c, completedCellStyle);
-}
-                }
-            }
-
-            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        for (let i = 2; i <= 13; i++) {
+            excelRow.push(rowSaved[i] || "");
         }
+
+        rows.push(excelRow);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    const totalCols = headers.length;
+    const totalRows = rows.length;
+
+    const monthlySectionTitleRow = 6;
+    const monthlyHeaderRow = 7;
+    const monthlyDataStartRow = 8;
+    const monthlyDataEndRow = 19;
+    const detailHeaderRow = 21;
+    const detailDataStartRow = 22;
+
+    ws['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols - 1 } },
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } },
+        { s: { r: 1, c: 3 }, e: { r: 1, c: totalCols - 1 } },
+        { s: { r: 3, c: 0 }, e: { r: 3, c: totalCols - 1 } },
+        { s: { r: monthlySectionTitleRow, c: 0 }, e: { r: monthlySectionTitleRow, c: totalCols - 1 } }
+    ];
+
+    ws['!cols'] = [
+        { wch: 7 },
+        { wch: 30 },
+        { wch: 62 },
+        { wch: 10 },
+        { wch: 10 },
+        { wch: 9 },
+        { wch: 9 },
+        { wch: 9 },
+        { wch: 9 },
+        { wch: 9 },
+        { wch: 9 },
+        { wch: 9 },
+        { wch: 9 },
+        { wch: 9 },
+        { wch: 9 },
+        { wch: 9 },
+        { wch: 9 }
+    ];
+
+    ws['!rows'] = [
+        { hpt: 34 },
+        { hpt: 22 },
+        { hpt: 8 },
+        { hpt: 24 },
+        { hpt: 24 },
+        { hpt: 8 },
+        { hpt: 24 },
+        { hpt: 26 },
+        { hpt: 22 },
+        { hpt: 22 },
+        { hpt: 22 },
+        { hpt: 22 },
+        { hpt: 22 },
+        { hpt: 22 },
+        { hpt: 22 },
+        { hpt: 22 },
+        { hpt: 22 },
+        { hpt: 22 },
+        { hpt: 22 },
+        { hpt: 22 },
+        { hpt: 8 },
+        { hpt: 28 },
+        ...baseInfo.map(item => {
+            const textLength = ((item.name || "").length + (item.content || "").length);
+            return {
+                hpt: Math.min(88, Math.max(32, 22 + Math.ceil(textLength / 32) * 8))
+            };
+        })
+    ];
+
+    ws['!autofilter'] = {
+        ref: XLSX.utils.encode_range({
+            s: { r: detailHeaderRow, c: 0 },
+            e: { r: totalRows - 1, c: totalCols - 1 }
+        })
+    };
+
+    ws['!margins'] = {
+        left: 0.25,
+        right: 0.25,
+        top: 0.55,
+        bottom: 0.45,
+        header: 0.2,
+        footer: 0.2
+    };
+
+    ws['!pageSetup'] = {
+        orientation: "landscape",
+        fitToWidth: 1,
+        fitToHeight: 0,
+        paperSize: 9
+    };
+
+    applyRangeStyle(ws, { s: { r: 0, c: 0 }, e: { r: totalRows - 1, c: totalCols - 1 } }, normalCellStyle);
+
+    applyRangeStyle(ws, { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols - 1 } }, titleStyle);
+    applyRangeStyle(ws, { s: { r: 1, c: 0 }, e: { r: 1, c: totalCols - 1 } }, metaStyle);
+
+    applyRangeStyle(ws, { s: { r: 3, c: 0 }, e: { r: 3, c: totalCols - 1 } }, summaryTitleStyle);
+    for (let c = 0; c < totalCols; c++) {
+        applyCellStyle(ws, 4, c, c % 2 === 0 ? summaryLabelStyle : summaryValueStyle);
+    }
+
+    applyRangeStyle(ws, { s: { r: monthlySectionTitleRow, c: 0 }, e: { r: monthlySectionTitleRow, c: totalCols - 1 } }, summaryTitleStyle);
+    applyRangeStyle(ws, { s: { r: monthlyHeaderRow, c: 0 }, e: { r: monthlyHeaderRow, c: 7 } }, headerStyle);
+
+    for (let r = monthlyDataStartRow; r <= monthlyDataEndRow; r++) {
+        for (let c = 0; c <= 7; c++) {
+            applyCellStyle(ws, r, c, c === 0 ? normalCellStyle : centerCellStyle);
+        }
+
+        const emptyCell = ws[cellRef(r, 5)];
+        if (emptyCell && Number(emptyCell.v) > 0) {
+            emptyCell.s = warningCellStyle;
+        }
+
+        const rateCell = ws[cellRef(r, 6)];
+        if (rateCell) {
+            const rateValue = parseInt(String(rateCell.v).replace("%", ""), 10);
+            rateCell.s = rateValue >= 90 ? completedCellStyle : warningCellStyle;
+        }
+    }
+
+    applyRangeStyle(ws, { s: { r: detailHeaderRow, c: 0 }, e: { r: detailHeaderRow, c: totalCols - 1 } }, headerStyle);
+    applyRangeStyle(ws, { s: { r: detailHeaderRow, c: monthStartCol }, e: { r: detailHeaderRow, c: monthEndCol } }, monthHeaderStyle);
+
+    for (let r = detailDataStartRow; r < totalRows; r++) {
+        const rowFill = (r % 2 === 0)
+            ? { fgColor: { rgb: "FFFFFF" } }
+            : { fgColor: { rgb: "F8FAFC" } };
+
+        applyRangeStyle(ws, { s: { r, c: 0 }, e: { r, c: totalCols - 1 } }, {
+            fill: rowFill,
+            border: borderThin
+        });
+
+        applyCellStyle(ws, r, 0, centerCellStyle);
+        applyCellStyle(ws, r, 1, normalCellStyle);
+        applyCellStyle(ws, r, 2, normalCellStyle);
+        applyCellStyle(ws, r, 3, centerCellStyle);
+        applyCellStyle(ws, r, 4, centerCellStyle);
+
+        for (let c = monthStartCol; c <= monthEndCol; c++) {
+            const cell = ws[cellRef(r, c)];
+            const value = cell ? String(cell.v || "").trim() : "";
+
+            if (value === "") {
+                applyCellStyle(ws, r, c, emptyCellStyle);
+            } else if (value === "N/A" || value.toUpperCase() === "NA") {
+                applyCellStyle(ws, r, c, notApplicableCellStyle);
+            } else if (value === "-") {
+                applyCellStyle(ws, r, c, warningCellStyle);
+            } else {
+                applyCellStyle(ws, r, c, completedCellStyle);
+            }
+        }
+    }
+
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+}
 
         addOverviewSheet();
 

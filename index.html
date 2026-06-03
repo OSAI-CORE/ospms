@@ -6,7 +6,7 @@
     <title>職業安全績效管理系統 (OSPMS)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; overflow: hidden; }
@@ -783,159 +783,625 @@ const MASTER_RECOVERY_CODE = "SAM-SUN-CORE-RECOVERY";
             reader.readAsText(file);
         }
 
-        function exportFullReport() {
-            try {
-                if (isAdmin) saveCurrentTabData();
+function exportFullReport() {
+    try {
+        if (isAdmin) saveCurrentTabData();
 
-                const wb = XLSX.utils.book_new();
-                const yearLabel = document.getElementById('year-input-field').value || "年度績效報表";
-                const exportDate = new Date().toLocaleString('zh-TW');
-                const headers = ["編號", "績效指標內容", "計算方式", "時程規劃", "目標值", "1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"];
-                const monthStartCol = 5;
-                const monthEndCol = 16;
-                const borderThin = { style: "thin", color: { rgb: "CBD5E1" } };
-                const headerFill = { fgColor: { rgb: "E2E8F0" } };
-                const titleFill = { fgColor: { rgb: "1E3A8A" } };
-                const monthFill = { fgColor: { rgb: "DBEAFE" } };
-                const metaFill = { fgColor: { rgb: "F8FAFC" } };
+        const wb = XLSX.utils.book_new();
 
-                function safeSheetName(name) {
-                    return String(name).replace(/[\\/?*\[\]:]/g, '').substring(0, 31) || 'Sheet';
+        const yearLabel = document.getElementById('year-input-field').value || "年度績效報表";
+        const exportDate = new Date().toLocaleString('zh-TW');
+
+        const headers = [
+            "編號",
+            "績效指標內容",
+            "計算方式",
+            "時程規劃",
+            "目標值",
+            "1月",
+            "2月",
+            "3月",
+            "4月",
+            "5月",
+            "6月",
+            "7月",
+            "8月",
+            "9月",
+            "10月",
+            "11月",
+            "12月"
+        ];
+
+        const monthStartCol = 5;
+        const monthEndCol = 16;
+
+        const borderThin = {
+            top: { style: "thin", color: { rgb: "CBD5E1" } },
+            bottom: { style: "thin", color: { rgb: "CBD5E1" } },
+            left: { style: "thin", color: { rgb: "CBD5E1" } },
+            right: { style: "thin", color: { rgb: "CBD5E1" } }
+        };
+
+        const titleStyle = {
+            fill: { fgColor: { rgb: "0F172A" } },
+            font: {
+                name: "Microsoft JhengHei",
+                sz: 18,
+                bold: true,
+                color: { rgb: "FFFFFF" }
+            },
+            alignment: {
+                horizontal: "center",
+                vertical: "center"
+            }
+        };
+
+        const metaStyle = {
+            fill: { fgColor: { rgb: "E2E8F0" } },
+            font: {
+                name: "Microsoft JhengHei",
+                sz: 10,
+                bold: true,
+                color: { rgb: "334155" }
+            },
+            alignment: {
+                horizontal: "left",
+                vertical: "center"
+            },
+            border: borderThin
+        };
+
+        const summaryTitleStyle = {
+            fill: { fgColor: { rgb: "1D4ED8" } },
+            font: {
+                name: "Microsoft JhengHei",
+                sz: 11,
+                bold: true,
+                color: { rgb: "FFFFFF" }
+            },
+            alignment: {
+                horizontal: "left",
+                vertical: "center"
+            },
+            border: borderThin
+        };
+
+        const summaryLabelStyle = {
+            fill: { fgColor: { rgb: "F8FAFC" } },
+            font: {
+                name: "Microsoft JhengHei",
+                sz: 10,
+                bold: true,
+                color: { rgb: "475569" }
+            },
+            alignment: {
+                horizontal: "center",
+                vertical: "center",
+                wrapText: true
+            },
+            border: borderThin
+        };
+
+        const summaryValueStyle = {
+            fill: { fgColor: { rgb: "FFFFFF" } },
+            font: {
+                name: "Microsoft JhengHei",
+                sz: 11,
+                bold: true,
+                color: { rgb: "0F172A" }
+            },
+            alignment: {
+                horizontal: "center",
+                vertical: "center",
+                wrapText: true
+            },
+            border: borderThin
+        };
+
+        const headerStyle = {
+            fill: { fgColor: { rgb: "334155" } },
+            font: {
+                name: "Microsoft JhengHei",
+                sz: 10,
+                bold: true,
+                color: { rgb: "FFFFFF" }
+            },
+            alignment: {
+                horizontal: "center",
+                vertical: "center",
+                wrapText: true
+            },
+            border: borderThin
+        };
+
+        const monthHeaderStyle = {
+            fill: { fgColor: { rgb: "DBEAFE" } },
+            font: {
+                name: "Microsoft JhengHei",
+                sz: 10,
+                bold: true,
+                color: { rgb: "1D4ED8" }
+            },
+            alignment: {
+                horizontal: "center",
+                vertical: "center",
+                wrapText: true
+            },
+            border: borderThin
+        };
+
+        const normalCellStyle = {
+            font: {
+                name: "Microsoft JhengHei",
+                sz: 10,
+                color: { rgb: "334155" }
+            },
+            alignment: {
+                vertical: "center",
+                wrapText: true
+            },
+            border: borderThin
+        };
+
+        const centerCellStyle = {
+            font: {
+                name: "Microsoft JhengHei",
+                sz: 10,
+                color: { rgb: "334155" }
+            },
+            alignment: {
+                horizontal: "center",
+                vertical: "center",
+                wrapText: true
+            },
+            border: borderThin
+        };
+
+        const completedCellStyle = {
+            fill: { fgColor: { rgb: "DCFCE7" } },
+            font: {
+                name: "Microsoft JhengHei",
+                sz: 10,
+                bold: true,
+                color: { rgb: "047857" }
+            },
+            alignment: {
+                horizontal: "center",
+                vertical: "center",
+                wrapText: true
+            },
+            border: borderThin
+        };
+
+        const warningCellStyle = {
+            fill: { fgColor: { rgb: "FEF3C7" } },
+            font: {
+                name: "Microsoft JhengHei",
+                sz: 10,
+                bold: true,
+                color: { rgb: "B45309" }
+            },
+            alignment: {
+                horizontal: "center",
+                vertical: "center",
+                wrapText: true
+            },
+            border: borderThin
+        };
+
+        const emptyCellStyle = {
+            fill: { fgColor: { rgb: "F8FAFC" } },
+            font: {
+                name: "Microsoft JhengHei",
+                sz: 10,
+                color: { rgb: "94A3B8" }
+            },
+            alignment: {
+                horizontal: "center",
+                vertical: "center",
+                wrapText: true
+            },
+            border: borderThin
+        };
+
+        function safeSheetName(name) {
+            return String(name).replace(/[\\/?*\[\]:]/g, '').substring(0, 31) || 'Sheet';
+        }
+
+        function cellRef(row, col) {
+            return XLSX.utils.encode_cell({ r: row, c: col });
+        }
+
+        function applyCellStyle(ws, row, col, style) {
+            const ref = cellRef(row, col);
+            if (!ws[ref]) ws[ref] = { t: 's', v: '' };
+            ws[ref].s = Object.assign({}, ws[ref].s || {}, style);
+        }
+
+        function applyRangeStyle(ws, range, style) {
+            for (let r = range.s.r; r <= range.e.r; r++) {
+                for (let c = range.s.c; c <= range.e.c; c++) {
+                    applyCellStyle(ws, r, c, style);
                 }
-
-                function cellRef(row, col) {
-                    return XLSX.utils.encode_cell({ r: row, c: col });
-                }
-
-                function applyCellStyle(ws, row, col, style) {
-                    const ref = cellRef(row, col);
-                    if (!ws[ref]) ws[ref] = { t: 's', v: '' };
-                    ws[ref].s = Object.assign({}, ws[ref].s || {}, style);
-                }
-
-                function applyRangeStyle(ws, range, style) {
-                    for (let r = range.s.r; r <= range.e.r; r++) {
-                        for (let c = range.s.c; c <= range.e.c; c++) {
-                            applyCellStyle(ws, r, c, style);
-                        }
-                    }
-                }
-
-                Object.keys(titles).forEach(key => {
-                    const sheetName = safeSheetName(titles[key]);
-                    const baseInfo = appData[key] || [];
-                    const savedValues = tableDataStore[key] || [];
-                    const rows = [];
-
-                    rows.push([`職業安全績效管理系統 OSPMS｜${titles[key]}`]);
-                    rows.push([`年度：${yearLabel}`, '', '', `匯出時間：${exportDate}`]);
-                    rows.push([]);
-                    rows.push(headers);
-
-                    baseInfo.forEach((item, idx) => {
-                        const rowSaved = savedValues[idx] || [];
-                        const excelRow = [
-                            item.id || (idx + 1).toString(),
-                            item.name || '',
-                            item.content || '',
-                            rowSaved[0] || item.schedule || '',
-                            rowSaved[1] || item.target || ''
-                        ];
-                        for (let i = 2; i <= 13; i++) excelRow.push(rowSaved[i] || "");
-                        rows.push(excelRow);
-                    });
-
-                    const ws = XLSX.utils.aoa_to_sheet(rows);
-                    const totalCols = headers.length;
-                    const totalRows = rows.length;
-
-                    ws['!merges'] = [
-                        { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols - 1 } },
-                        { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } },
-                        { s: { r: 1, c: 3 }, e: { r: 1, c: totalCols - 1 } }
-                    ];
-
-                    ws['!cols'] = [
-                        { wch: 6 },
-                        { wch: 28 },
-                        { wch: 58 },
-                        { wch: 10 },
-                        { wch: 10 },
-                        ...Array.from({ length: 12 }, () => ({ wch: 9 }))
-                    ];
-
-                    ws['!rows'] = [
-                        { hpt: 30 },
-                        { hpt: 22 },
-                        { hpt: 8 },
-                        { hpt: 24 },
-                        ...baseInfo.map(item => {
-                            const textLength = ((item.name || '').length + (item.content || '').length);
-                            return { hpt: Math.min(78, Math.max(30, 22 + Math.ceil(textLength / 32) * 8)) };
-                        })
-                    ];
-
-                    ws['!freeze'] = { xSplit: 2, ySplit: 4, topLeftCell: 'C5', activePane: 'bottomRight', state: 'frozen' };
-                    ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 3, c: 0 }, e: { r: totalRows - 1, c: totalCols - 1 } }) };
-                    ws['!margins'] = { left: 0.25, right: 0.25, top: 0.55, bottom: 0.45, header: 0.2, footer: 0.2 };
-                    ws['!pageSetup'] = { orientation: 'landscape', fitToWidth: 1, fitToHeight: 0, paperSize: 9 };
-
-                    applyRangeStyle(ws, { s: { r: 0, c: 0 }, e: { r: totalRows - 1, c: totalCols - 1 } }, {
-                        font: { name: 'Microsoft JhengHei', sz: 10, color: { rgb: '0F172A' } },
-                        alignment: { vertical: 'center', wrapText: true },
-                        border: { top: borderThin, bottom: borderThin, left: borderThin, right: borderThin }
-                    });
-
-                    applyRangeStyle(ws, { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols - 1 } }, {
-                        fill: titleFill,
-                        font: { name: 'Microsoft JhengHei', sz: 16, bold: true, color: { rgb: 'FFFFFF' } },
-                        alignment: { horizontal: 'center', vertical: 'center' }
-                    });
-
-                    applyRangeStyle(ws, { s: { r: 1, c: 0 }, e: { r: 1, c: totalCols - 1 } }, {
-                        fill: metaFill,
-                        font: { name: 'Microsoft JhengHei', sz: 10, bold: true, color: { rgb: '334155' } },
-                        alignment: { horizontal: 'left', vertical: 'center' }
-                    });
-
-                    applyRangeStyle(ws, { s: { r: 3, c: 0 }, e: { r: 3, c: totalCols - 1 } }, {
-                        fill: headerFill,
-                        font: { name: 'Microsoft JhengHei', sz: 10, bold: true, color: { rgb: '0F172A' } },
-                        alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
-                        border: { top: borderThin, bottom: borderThin, left: borderThin, right: borderThin }
-                    });
-
-                    applyRangeStyle(ws, { s: { r: 3, c: monthStartCol }, e: { r: 3, c: monthEndCol } }, {
-                        fill: monthFill,
-                        font: { name: 'Microsoft JhengHei', sz: 10, bold: true, color: { rgb: '1D4ED8' } },
-                        alignment: { horizontal: 'center', vertical: 'center' }
-                    });
-
-                    for (let r = 4; r < totalRows; r++) {
-                        const fill = (r % 2 === 0) ? { fgColor: { rgb: 'FFFFFF' } } : { fgColor: { rgb: 'F8FAFC' } };
-                        applyRangeStyle(ws, { s: { r, c: 0 }, e: { r, c: totalCols - 1 } }, { fill });
-                        applyRangeStyle(ws, { s: { r, c: 0 }, e: { r, c: 0 } }, {
-                            alignment: { horizontal: 'center', vertical: 'center' },
-                            font: { name: 'Microsoft JhengHei', sz: 10, bold: true, color: { rgb: '334155' } }
-                        });
-                        applyRangeStyle(ws, { s: { r, c: 1 }, e: { r, c: 2 } }, {
-                            alignment: { horizontal: 'left', vertical: 'center', wrapText: true }
-                        });
-                        applyRangeStyle(ws, { s: { r, c: 3 }, e: { r, c: totalCols - 1 } }, {
-                            alignment: { horizontal: 'center', vertical: 'center', wrapText: true }
-                        });
-                    }
-
-                    XLSX.utils.book_append_sheet(wb, ws, sheetName);
-                });
-
-                const safeYear = yearLabel.replace(/[\\/:*?"<>|\s]+/g, '_');
-                XLSX.writeFile(wb, `OSPMS_${safeYear}_全年度績效報表.xlsx`, { cellStyles: true });
-            } catch (error) {
-                console.error(error);
-                alert("匯出 Excel 失敗");
             }
         }
+
+        function getMonthValueCount(savedValues) {
+            let count = 0;
+
+            Object.keys(titles).forEach(key => {
+                const baseInfo = appData[key] || [];
+                const savedRows = savedValues[key] || [];
+
+                baseInfo.forEach((item, idx) => {
+                    const rowSaved = savedRows[idx] || [];
+
+                    for (let i = 2; i <= 13; i++) {
+                        const value = rowSaved[i];
+                        if (value !== undefined && value !== null && String(value).trim() !== "") {
+                            count++;
+                        }
+                    }
+                });
+            });
+
+            return count;
+        }
+
+        function getAttachmentCount() {
+            let count = 0;
+
+            Object.keys(attachmentsStore || {}).forEach(categoryKey => {
+                const category = attachmentsStore[categoryKey] || {};
+
+                Object.keys(category).forEach(rowKey => {
+                    const row = category[rowKey] || {};
+
+                    Object.keys(row).forEach(monthKey => {
+                        const slot = row[monthKey];
+
+                        if (Array.isArray(slot)) {
+                            count += slot.length;
+                        } else if (slot) {
+                            count += 1;
+                        }
+                    });
+                });
+            });
+
+            return count;
+        }
+
+        function getCategoryStats(key) {
+            const baseInfo = appData[key] || [];
+            const savedValues = tableDataStore[key] || [];
+
+            let filledMonthCount = 0;
+            let totalMonthCells = baseInfo.length * 12;
+
+            baseInfo.forEach((item, idx) => {
+                const rowSaved = savedValues[idx] || [];
+
+                for (let i = 2; i <= 13; i++) {
+                    const value = rowSaved[i];
+
+                    if (value !== undefined && value !== null && String(value).trim() !== "") {
+                        filledMonthCount++;
+                    }
+                }
+            });
+
+            const rate = totalMonthCells > 0
+                ? Math.round((filledMonthCount / totalMonthCells) * 100)
+                : 0;
+
+            return {
+                itemCount: baseInfo.length,
+                filledMonthCount,
+                totalMonthCells,
+                rate
+            };
+        }
+
+        function addOverviewSheet() {
+            const categoryKeys = Object.keys(titles);
+
+            const totalIndicators = categoryKeys.reduce((sum, key) => {
+                return sum + ((appData[key] || []).length);
+            }, 0);
+
+            const totalMonthCells = totalIndicators * 12;
+            const filledMonthCells = getMonthValueCount(tableDataStore);
+            const filledRate = totalMonthCells > 0
+                ? `${Math.round((filledMonthCells / totalMonthCells) * 100)}%`
+                : "0%";
+
+            const attachmentCount = getAttachmentCount();
+
+            const rows = [
+                ["職業安全績效管理系統 OSPMS｜全年度績效報表"],
+                [`年度：${yearLabel}`, "", "", `匯出時間：${exportDate}`, "", ""],
+                [],
+                ["年度管理摘要", "", "", "", "", ""],
+                ["績效分類數", categoryKeys.length, "績效指標總數", totalIndicators, "附件總數", attachmentCount],
+                ["月份填報格數", filledMonthCells, "月份總格數", totalMonthCells, "填報完成率", filledRate],
+                [],
+                ["分類名稱", "指標數量", "月份填報格數", "月份總格數", "填報完成率", "備註"]
+            ];
+
+            categoryKeys.forEach(key => {
+                const stat = getCategoryStats(key);
+
+                rows.push([
+                    titles[key],
+                    stat.itemCount,
+                    stat.filledMonthCount,
+                    stat.totalMonthCells,
+                    `${stat.rate}%`,
+                    stat.rate >= 90 ? "執行狀況良好" : "建議持續追蹤"
+                ]);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(rows);
+            const totalRows = rows.length;
+            const totalCols = 6;
+
+            ws['!merges'] = [
+                { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols - 1 } },
+                { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } },
+                { s: { r: 1, c: 3 }, e: { r: 1, c: totalCols - 1 } },
+                { s: { r: 3, c: 0 }, e: { r: 3, c: totalCols - 1 } }
+            ];
+
+            ws['!cols'] = [
+                { wch: 28 },
+                { wch: 16 },
+                { wch: 18 },
+                { wch: 18 },
+                { wch: 16 },
+                { wch: 20 }
+            ];
+
+            ws['!rows'] = [
+                { hpt: 34 },
+                { hpt: 22 },
+                { hpt: 8 },
+                { hpt: 24 },
+                { hpt: 24 },
+                { hpt: 24 },
+                { hpt: 8 },
+                { hpt: 26 }
+            ];
+
+            applyRangeStyle(ws, { s: { r: 0, c: 0 }, e: { r: totalRows - 1, c: totalCols - 1 } }, normalCellStyle);
+            applyRangeStyle(ws, { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols - 1 } }, titleStyle);
+            applyRangeStyle(ws, { s: { r: 1, c: 0 }, e: { r: 1, c: totalCols - 1 } }, metaStyle);
+            applyRangeStyle(ws, { s: { r: 3, c: 0 }, e: { r: 3, c: totalCols - 1 } }, summaryTitleStyle);
+            applyRangeStyle(ws, { s: { r: 4, c: 0 }, e: { r: 5, c: totalCols - 1 } }, summaryLabelStyle);
+
+            for (let r = 4; r <= 5; r++) {
+                for (let c = 0; c < totalCols; c++) {
+                    applyCellStyle(ws, r, c, c % 2 === 0 ? summaryLabelStyle : summaryValueStyle);
+                }
+            }
+
+            applyRangeStyle(ws, { s: { r: 7, c: 0 }, e: { r: 7, c: totalCols - 1 } }, headerStyle);
+
+            for (let r = 8; r < totalRows; r++) {
+                for (let c = 0; c < totalCols; c++) {
+                    applyCellStyle(ws, r, c, c === 0 ? normalCellStyle : centerCellStyle);
+                }
+
+                const rateCell = ws[cellRef(r, 4)];
+                if (rateCell) {
+                    const rateValue = parseInt(String(rateCell.v).replace("%", ""), 10);
+                    rateCell.s = rateValue >= 90 ? completedCellStyle : warningCellStyle;
+                }
+            }
+
+            ws['!autofilter'] = {
+                ref: XLSX.utils.encode_range({
+                    s: { r: 7, c: 0 },
+                    e: { r: totalRows - 1, c: totalCols - 1 }
+                })
+            };
+
+            XLSX.utils.book_append_sheet(wb, ws, "年度總覽");
+        }
+
+        function addCategorySheet(key) {
+            const sheetName = safeSheetName(titles[key]);
+            const baseInfo = appData[key] || [];
+            const savedValues = tableDataStore[key] || [];
+            const stat = getCategoryStats(key);
+
+            const rows = [];
+
+            rows.push([`職業安全績效管理系統 OSPMS｜${titles[key]}`]);
+            rows.push([`年度：${yearLabel}`, "", "", `匯出時間：${exportDate}`]);
+            rows.push([]);
+            rows.push(["分類管理摘要", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]);
+            rows.push([
+                "指標數量",
+                stat.itemCount,
+                "月份填報格數",
+                stat.filledMonthCount,
+                "月份總格數",
+                stat.totalMonthCells,
+                "填報完成率",
+                `${stat.rate}%`,
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                ""
+            ]);
+            rows.push([]);
+            rows.push(headers);
+
+            baseInfo.forEach((item, idx) => {
+                const rowSaved = savedValues[idx] || [];
+
+                const excelRow = [
+                    item.id || (idx + 1).toString(),
+                    item.name || "",
+                    item.content || "",
+                    rowSaved[0] || item.schedule || "",
+                    rowSaved[1] || item.target || ""
+                ];
+
+                for (let i = 2; i <= 13; i++) {
+                    excelRow.push(rowSaved[i] || "");
+                }
+
+                rows.push(excelRow);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(rows);
+            const totalCols = headers.length;
+            const totalRows = rows.length;
+
+            ws['!merges'] = [
+                { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols - 1 } },
+                { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } },
+                { s: { r: 1, c: 3 }, e: { r: 1, c: totalCols - 1 } },
+                { s: { r: 3, c: 0 }, e: { r: 3, c: totalCols - 1 } }
+            ];
+
+            ws['!cols'] = [
+                { wch: 7 },
+                { wch: 30 },
+                { wch: 62 },
+                { wch: 10 },
+                { wch: 10 },
+                { wch: 9 },
+                { wch: 9 },
+                { wch: 9 },
+                { wch: 9 },
+                { wch: 9 },
+                { wch: 9 },
+                { wch: 9 },
+                { wch: 9 },
+                { wch: 9 },
+                { wch: 9 },
+                { wch: 9 },
+                { wch: 9 }
+            ];
+
+            ws['!rows'] = [
+                { hpt: 34 },
+                { hpt: 22 },
+                { hpt: 8 },
+                { hpt: 24 },
+                { hpt: 24 },
+                { hpt: 8 },
+                { hpt: 28 },
+                ...baseInfo.map(item => {
+                    const textLength = ((item.name || "").length + (item.content || "").length);
+                    return {
+                        hpt: Math.min(88, Math.max(32, 22 + Math.ceil(textLength / 32) * 8))
+                    };
+                })
+            ];
+
+            ws['!autofilter'] = {
+                ref: XLSX.utils.encode_range({
+                    s: { r: 6, c: 0 },
+                    e: { r: totalRows - 1, c: totalCols - 1 }
+                })
+            };
+
+            ws['!margins'] = {
+                left: 0.25,
+                right: 0.25,
+                top: 0.55,
+                bottom: 0.45,
+                header: 0.2,
+                footer: 0.2
+            };
+
+            ws['!pageSetup'] = {
+                orientation: "landscape",
+                fitToWidth: 1,
+                fitToHeight: 0,
+                paperSize: 9
+            };
+
+            applyRangeStyle(ws, { s: { r: 0, c: 0 }, e: { r: totalRows - 1, c: totalCols - 1 } }, normalCellStyle);
+            applyRangeStyle(ws, { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols - 1 } }, titleStyle);
+            applyRangeStyle(ws, { s: { r: 1, c: 0 }, e: { r: 1, c: totalCols - 1 } }, metaStyle);
+            applyRangeStyle(ws, { s: { r: 3, c: 0 }, e: { r: 3, c: totalCols - 1 } }, summaryTitleStyle);
+
+            for (let c = 0; c < totalCols; c++) {
+                applyCellStyle(ws, 4, c, c % 2 === 0 ? summaryLabelStyle : summaryValueStyle);
+            }
+
+            applyRangeStyle(ws, { s: { r: 6, c: 0 }, e: { r: 6, c: totalCols - 1 } }, headerStyle);
+            applyRangeStyle(ws, { s: { r: 6, c: monthStartCol }, e: { r: 6, c: monthEndCol } }, monthHeaderStyle);
+
+            for (let r = 7; r < totalRows; r++) {
+                const rowFill = (r % 2 === 0)
+                    ? { fgColor: { rgb: "FFFFFF" } }
+                    : { fgColor: { rgb: "F8FAFC" } };
+
+                applyRangeStyle(ws, { s: { r, c: 0 }, e: { r, c: totalCols - 1 } }, {
+                    fill: rowFill,
+                    border: borderThin
+                });
+
+                applyCellStyle(ws, r, 0, centerCellStyle);
+                applyCellStyle(ws, r, 1, normalCellStyle);
+                applyCellStyle(ws, r, 2, normalCellStyle);
+                applyCellStyle(ws, r, 3, centerCellStyle);
+                applyCellStyle(ws, r, 4, centerCellStyle);
+
+                for (let c = monthStartCol; c <= monthEndCol; c++) {
+                    const cell = ws[cellRef(r, c)];
+                    const value = cell ? String(cell.v || "").trim() : "";
+
+                    if (value === "") {
+                        applyCellStyle(ws, r, c, emptyCellStyle);
+                    } else if (value === "N/A" || value === "-" || value.toUpperCase() === "NA") {
+                        applyCellStyle(ws, r, c, warningCellStyle);
+                    } else {
+                        applyCellStyle(ws, r, c, completedCellStyle);
+                    }
+                }
+            }
+
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        }
+
+        addOverviewSheet();
+
+        Object.keys(titles).forEach(key => {
+            addCategorySheet(key);
+        });
+
+        wb.Props = {
+            Title: "職業安全績效管理系統全年度績效報表",
+            Subject: yearLabel,
+            Author: "職業安全績效管理系統 OSPMS",
+            CreatedDate: new Date()
+        };
+
+        const safeYear = yearLabel.replace(/[\\/:*?"<>|\s]+/g, "_");
+
+        XLSX.writeFile(
+            wb,
+            `OSPMS_${safeYear}_全年度績效報表.xlsx`,
+            { cellStyles: true }
+        );
+
+    } catch (error) {
+        console.error(error);
+        alert("匯出 Excel 失敗");
+    }
+}
 
         function initNav() {
             const nav = document.getElementById('nav-tabs');

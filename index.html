@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>職業安全績效管理系統 (OSPMS)</title>
+    <title>職業安全績效管理系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
@@ -762,7 +762,7 @@ const MASTER_RECOVERY_CODE = "SAM-SUN-CORE-RECOVERY";
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = `職業安全績效管理系統_OSPMS_${new Date().toISOString().slice(0, 10)}.json`;
+            a.download = `職業安全績效管理系統_PMS_${new Date().toISOString().slice(0, 10)}.json`;
             a.click();
         }
 

@@ -204,157 +204,109 @@
     letter-spacing: 0.08em;
 }
 
-/* 手機 / 桌機共用：附件檔案預覽視窗 */
-.file-preview-modal {
-    position: fixed;
-    inset: 0;
-    z-index: 130;
-    background: rgba(15, 23, 42, 0.92);
-    display: flex;
-    flex-direction: column;
-}
-
-.file-preview-modal.hidden {
-    display: none;
-}
-
-.file-preview-header {
-    flex-shrink: 0;
-    height: 56px;
-    padding: 10px 14px;
-    padding-top: calc(10px + env(safe-area-inset-top));
-    background: rgba(15, 23, 42, 0.96);
-    border-bottom: 1px solid rgba(148, 163, 184, 0.25);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.file-preview-title {
-    color: #e2e8f0;
-    font-size: 13px;
-    font-weight: 700;
-    min-width: 0;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
-
-.file-preview-close {
-    flex-shrink: 0;
-    width: 40px;
-    height: 40px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.12);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.file-preview-close:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-.file-preview-body {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 12px;
-    padding-bottom: calc(12px + env(safe-area-inset-bottom));
-}
-
-#file-preview-frame {
-    width: 100%;
-    height: 100%;
-    border: 0;
-    background: white;
-    border-radius: 12px;
-}
-
-#file-preview-image {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    border-radius: 12px;
-    background: white;
-}
-
-body.file-preview-open {
-    overflow: hidden;
-}
-
 /* 手機預覽修正：避免登入管理者後 header 被手機瀏覽器切斷 */
 .mobile-sidebar-backdrop {
     display: none;
 }
 
-/* 手機左側功能列開合按鈕：同位置切換展開 / 關閉 */
+/* 手機左側功能列開合按鈕：深色簡潔融合版 */
 .mobile-sidebar-toggle {
     position: relative;
-    width: 44px;
-    height: 44px;
-    border: 1px solid rgba(37, 99, 235, 0.22);
-    border-radius: 16px;
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    border: 1px solid rgba(148, 163, 184, 0.28);
     background: linear-gradient(
-        135deg,
-        rgba(37, 99, 235, 0.98),
-        rgba(59, 130, 246, 0.9)
+        145deg,
+        rgba(15, 23, 42, 0.96),
+        rgba(30, 41, 59, 0.92)
     );
     color: #ffffff;
     box-shadow:
-        0 12px 24px rgba(37, 99, 235, 0.22),
-        inset 0 1px 0 rgba(255, 255, 255, 0.28);
-    overflow: hidden;
+        0 10px 22px rgba(15, 23, 42, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
     align-items: center;
     justify-content: center;
+    overflow: hidden;
     transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease,
-        background 0.2s ease;
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        background 0.18s ease;
 }
 
-.mobile-sidebar-toggle-glow {
+.mobile-sidebar-toggle::after {
+    content: "";
     position: absolute;
-    inset: -40%;
-    background: radial-gradient(
-        circle at 30% 25%,
-        rgba(255, 255, 255, 0.55),
-        transparent 34%
+    inset: 1px;
+    border-radius: 13px;
+    background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.08),
+        transparent
     );
-    opacity: 0.75;
     pointer-events: none;
-}
-
-.mobile-sidebar-toggle:hover {
-    transform: translateY(-1px);
-    box-shadow:
-        0 16px 28px rgba(37, 99, 235, 0.28),
-        inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .mobile-sidebar-toggle:active {
     transform: scale(0.96);
 }
 
-.mobile-sidebar-icon-open,
-.mobile-sidebar-icon-close {
-    position: absolute;
+.mobile-sidebar-toggle-lines {
+    position: relative;
+    z-index: 2;
+    width: 18px;
+    height: 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
     transition:
         opacity 0.18s ease,
         transform 0.18s ease;
 }
 
-.mobile-sidebar-icon-close {
-    opacity: 0;
-    transform: rotate(-90deg) scale(0.75);
+.mobile-sidebar-toggle-lines span {
+    display: block;
+    height: 2px;
+    border-radius: 999px;
+    background: #e2e8f0;
 }
 
-body.mobile-sidebar-open .mobile-sidebar-icon-open {
+.mobile-sidebar-toggle-lines span:nth-child(1) {
+    width: 18px;
+}
+
+.mobile-sidebar-toggle-lines span:nth-child(2) {
+    width: 14px;
+}
+
+.mobile-sidebar-toggle-lines span:nth-child(3) {
+    width: 18px;
+}
+
+.mobile-sidebar-icon-close {
+    position: absolute;
+    z-index: 3;
+    opacity: 0;
+    color: #ffffff;
+    transform: rotate(-90deg) scale(0.72);
+    transition:
+        opacity 0.18s ease,
+        transform 0.18s ease;
+}
+
+body.mobile-sidebar-open .mobile-sidebar-toggle {
+    background: linear-gradient(
+        145deg,
+        rgba(2, 6, 23, 0.98),
+        rgba(15, 23, 42, 0.96)
+    );
+    border-color: rgba(96, 165, 250, 0.3);
+    box-shadow:
+        0 12px 26px rgba(2, 6, 23, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+body.mobile-sidebar-open .mobile-sidebar-toggle-lines {
     opacity: 0;
     transform: rotate(90deg) scale(0.75);
 }
@@ -362,18 +314,6 @@ body.mobile-sidebar-open .mobile-sidebar-icon-open {
 body.mobile-sidebar-open .mobile-sidebar-icon-close {
     opacity: 1;
     transform: rotate(0deg) scale(1);
-}
-
-body.mobile-sidebar-open .mobile-sidebar-toggle {
-    background: linear-gradient(
-        135deg,
-        rgba(15, 23, 42, 0.98),
-        rgba(30, 41, 59, 0.96)
-    );
-    border-color: rgba(148, 163, 184, 0.28);
-    box-shadow:
-        0 12px 24px rgba(15, 23, 42, 0.28),
-        inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 /* 手機共用設定：直式與橫式都套用 */
@@ -524,12 +464,19 @@ body.mobile-sidebar-open .mobile-sidebar-toggle {
 
 .mobile-sidebar-toggle {
     display: inline-flex !important;
-    z-index: 100;
+    position: fixed;
+    top: calc(12px + env(safe-area-inset-top));
+    left: 12px;
+    z-index: 120;
 }
 
 body.mobile-sidebar-open .mobile-sidebar-toggle {
     opacity: 1;
     pointer-events: auto;
+}
+
+header > .flex.items-center.gap-3.min-w-0 {
+    padding-left: 52px;
 }
 
     main {
@@ -560,39 +507,29 @@ body.mobile-sidebar-open .mobile-sidebar-toggle {
     }
 
     body {
-        width: 100%;
-        max-width: 100%;
-        margin: 0;
-        padding-left: env(safe-area-inset-left);
-        padding-right: env(safe-area-inset-right);
-        box-sizing: border-box;
-    }
-
-    .sidebar {
-        width: 260px;
-        min-width: 260px;
-        flex: 0 0 260px;
+        width: 100vw;
+        max-width: 100vw;
     }
 
     main {
-        flex: 1 1 0;
-        width: auto !important;
-        max-width: none !important;
+        flex: 1 1 auto;
+        width: calc(100vw - 280px) !important;
+        max-width: calc(100vw - 280px) !important;
         min-width: 0;
-        margin: 0 !important;
+        margin-right: 0 !important;
     }
 
-main > .p-4,
-.p-4.flex-1.overflow-hidden.flex.flex-col {
-    padding: 8px 0 6px 8px !important;
-}
+    main > .p-4,
+    .p-4.flex-1.overflow-hidden.flex.flex-col {
+        padding: 8px 6px 6px 8px !important;
+    }
 
-.table-container {
-    width: 100% !important;
-    max-width: none !important;
-    margin: 0 !important;
-    border-radius: 12px 0 0 12px;
-}
+    .table-container {
+        width: 100% !important;
+        max-width: none !important;
+        margin-right: 0 !important;
+        border-radius: 12px;
+    }
 
     .sidebar > .p-6 {
         padding: 16px !important;
@@ -932,13 +869,14 @@ main > .p-4,
         onclick="toggleMobileSidebar()"
         class="mobile-sidebar-toggle no-print hidden"
         aria-label="開啟或關閉功能列">
-    <span class="mobile-sidebar-toggle-glow"></span>
-
-    <i data-lucide="panel-left-open"
-       class="mobile-sidebar-icon-open w-5 h-5 relative z-10"></i>
+    <span class="mobile-sidebar-toggle-lines">
+        <span></span>
+        <span></span>
+        <span></span>
+    </span>
 
     <i data-lucide="x"
-       class="mobile-sidebar-icon-close w-5 h-5 relative z-10"></i>
+       class="mobile-sidebar-icon-close w-5 h-5"></i>
 </button>
 
     <div class="min-w-0">
@@ -1118,21 +1056,6 @@ main > .p-4,
             </button>
         </div>
     </div>
-
-<!-- 檔案預覽視窗 -->
-<div id="file-preview-modal" class="file-preview-modal hidden no-print">
-    <div class="file-preview-header">
-        <div id="file-preview-title" class="file-preview-title">附件預覽</div>
-        <button type="button" class="file-preview-close" onclick="closeFilePreviewModal()" aria-label="關閉預覽">
-            <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
-    </div>
-
-    <div class="file-preview-body">
-        <iframe id="file-preview-frame" class="hidden"></iframe>
-        <img id="file-preview-image" class="hidden" alt="附件預覽">
-    </div>
-</div>
 
     <script>
         // 初始數據定義
@@ -2578,48 +2501,11 @@ function switchTab(type) {
 
         function processFile(file) { processFiles([file]); }
         function handleFileUpload(input) { processFiles(input.files); }
-function viewFileDirectly(file) {
-    const modal = document.getElementById('file-preview-modal');
-    const title = document.getElementById('file-preview-title');
-    const frame = document.getElementById('file-preview-frame');
-    const image = document.getElementById('file-preview-image');
-
-    if (!modal || !frame || !image || !file) return;
-
-    title.innerText = file.name || '附件預覽';
-
-    frame.classList.add('hidden');
-    image.classList.add('hidden');
-    frame.removeAttribute('src');
-    image.removeAttribute('src');
-
-    if (file.type === 'application/pdf') {
-        frame.src = file.data;
-        frame.classList.remove('hidden');
-    } else {
-        image.src = file.data;
-        image.classList.remove('hidden');
-    }
-
-    document.body.classList.add('file-preview-open');
-    modal.classList.remove('hidden');
-    lucide.createIcons();
-}
-
-function closeFilePreviewModal() {
-    const modal = document.getElementById('file-preview-modal');
-    const frame = document.getElementById('file-preview-frame');
-    const image = document.getElementById('file-preview-image');
-
-    if (frame) frame.removeAttribute('src');
-    if (image) image.removeAttribute('src');
-
-    if (frame) frame.classList.add('hidden');
-    if (image) image.classList.add('hidden');
-    if (modal) modal.classList.add('hidden');
-
-    document.body.classList.remove('file-preview-open');
-}
+        function viewFileDirectly(file) {
+            const win = window.open();
+            if (file.type === 'application/pdf') win.document.write(`<iframe src="${file.data}" frameborder="0" style="position:fixed; top:0; left:0; width:100%; height:100%;" allowfullscreen></iframe>`); 
+            else win.document.write(`<div style="background:#f1f5f9; min-height:100vh; display:flex; justify-content:center; align-items:center;"><img src="${file.data}" style="max-width:90%; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);"></div>`); 
+        }
         function viewCurrentFile() { const files = getAttachmentFiles(attachmentsStore[currentTab]?.[activeAttachmentTarget.row]?.[activeAttachmentTarget.month]); if (files.length > 0) viewFileDirectly(files[0]); }
 
         async function deleteSingleAttachment() {
@@ -2787,11 +2673,10 @@ if (inputPwd === getAdminPassword()) {
 
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
-        closeFilePreviewModal();
         closeLoginModal();
         closeAttachmentModal();
     }
-});       
+});        
 
 window.addEventListener('resize', function() {
     if (!isMobilePortraitView()) {

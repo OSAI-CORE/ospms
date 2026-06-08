@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>職業安全績效管理系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -209,113 +209,6 @@
     display: none;
 }
 
-/* 手機左側功能列開合按鈕：深色簡潔融合版 */
-.mobile-sidebar-toggle {
-    position: relative;
-    width: 42px;
-    height: 42px;
-    border-radius: 14px;
-    border: 1px solid rgba(148, 163, 184, 0.28);
-    background: linear-gradient(
-        145deg,
-        rgba(15, 23, 42, 0.96),
-        rgba(30, 41, 59, 0.92)
-    );
-    color: #ffffff;
-    box-shadow:
-        0 10px 22px rgba(15, 23, 42, 0.18),
-        inset 0 1px 0 rgba(255, 255, 255, 0.12);
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    transition:
-        transform 0.18s ease,
-        box-shadow 0.18s ease,
-        background 0.18s ease;
-}
-
-.mobile-sidebar-toggle::after {
-    content: "";
-    position: absolute;
-    inset: 1px;
-    border-radius: 13px;
-    background: linear-gradient(
-        180deg,
-        rgba(255, 255, 255, 0.08),
-        transparent
-    );
-    pointer-events: none;
-}
-
-.mobile-sidebar-toggle:active {
-    transform: scale(0.96);
-}
-
-.mobile-sidebar-toggle-lines {
-    position: relative;
-    z-index: 2;
-    width: 18px;
-    height: 14px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    transition:
-        opacity 0.18s ease,
-        transform 0.18s ease;
-}
-
-.mobile-sidebar-toggle-lines span {
-    display: block;
-    height: 2px;
-    border-radius: 999px;
-    background: #e2e8f0;
-}
-
-.mobile-sidebar-toggle-lines span:nth-child(1) {
-    width: 18px;
-}
-
-.mobile-sidebar-toggle-lines span:nth-child(2) {
-    width: 14px;
-}
-
-.mobile-sidebar-toggle-lines span:nth-child(3) {
-    width: 18px;
-}
-
-.mobile-sidebar-icon-close {
-    position: absolute;
-    z-index: 3;
-    opacity: 0;
-    color: #ffffff;
-    transform: rotate(-90deg) scale(0.72);
-    transition:
-        opacity 0.18s ease,
-        transform 0.18s ease;
-}
-
-body.mobile-sidebar-open .mobile-sidebar-toggle {
-    background: linear-gradient(
-        145deg,
-        rgba(2, 6, 23, 0.98),
-        rgba(15, 23, 42, 0.96)
-    );
-    border-color: rgba(96, 165, 250, 0.3);
-    box-shadow:
-        0 12px 26px rgba(2, 6, 23, 0.28),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
-
-body.mobile-sidebar-open .mobile-sidebar-toggle-lines {
-    opacity: 0;
-    transform: rotate(90deg) scale(0.75);
-}
-
-body.mobile-sidebar-open .mobile-sidebar-icon-close {
-    opacity: 1;
-    transform: rotate(0deg) scale(1);
-}
-
 /* 手機共用設定：直式與橫式都套用 */
 @media screen and (max-width: 900px) {
     html,
@@ -462,22 +355,11 @@ body.mobile-sidebar-open .mobile-sidebar-icon-close {
         display: block;
     }
 
-.mobile-sidebar-toggle {
-    display: inline-flex !important;
-    position: fixed;
-    top: calc(12px + env(safe-area-inset-top));
-    left: 12px;
-    z-index: 120;
-}
-
-body.mobile-sidebar-open .mobile-sidebar-toggle {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-header > .flex.items-center.gap-3.min-w-0 {
-    padding-left: 52px;
-}
+    .mobile-sidebar-toggle {
+        display: inline-flex !important;
+        width: 42px;
+        height: 42px;
+    }
 
     main {
         width: 100vw !important;
@@ -864,20 +746,12 @@ header > .flex.items-center.gap-3.min-w-0 {
     <main class="flex-1 flex flex-col min-w-0">
         <header class="bg-white px-8 py-5 border-b border-slate-200 flex justify-between items-center shrink-0">
  <div class="flex items-center gap-3 min-w-0">
-<button id="mobile-sidebar-toggle"
-        type="button"
-        onclick="toggleMobileSidebar()"
-        class="mobile-sidebar-toggle no-print hidden"
-        aria-label="開啟或關閉功能列">
-    <span class="mobile-sidebar-toggle-lines">
-        <span></span>
-        <span></span>
-        <span></span>
-    </span>
-
-    <i data-lucide="x"
-       class="mobile-sidebar-icon-close w-5 h-5"></i>
-</button>
+    <button id="mobile-sidebar-toggle"
+            type="button"
+            onclick="toggleMobileSidebar()"
+            class="mobile-sidebar-toggle no-print hidden shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm">
+        <i data-lucide="menu" class="w-5 h-5"></i>
+    </button>
 
     <div class="min-w-0">
         <h2 id="current-category-title" class="text-xl font-black text-slate-900 tracking-tight leading-none">載入中...</h2>

@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>職業安全績效管理系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -204,6 +204,91 @@
     letter-spacing: 0.08em;
 }
 
+/* 手機 / 桌機共用：附件檔案預覽視窗 */
+.file-preview-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 130;
+    background: rgba(15, 23, 42, 0.92);
+    display: flex;
+    flex-direction: column;
+}
+
+.file-preview-modal.hidden {
+    display: none;
+}
+
+.file-preview-header {
+    flex-shrink: 0;
+    height: 56px;
+    padding: 10px 14px;
+    padding-top: calc(10px + env(safe-area-inset-top));
+    background: rgba(15, 23, 42, 0.96);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.file-preview-title {
+    color: #e2e8f0;
+    font-size: 13px;
+    font-weight: 700;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.file-preview-close {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.file-preview-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.file-preview-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+}
+
+#file-preview-frame {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: white;
+    border-radius: 12px;
+}
+
+#file-preview-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 12px;
+    background: white;
+}
+
+body.file-preview-open {
+    overflow: hidden;
+}
+
+
 /* 手機預覽修正：避免登入管理者後 header 被手機瀏覽器切斷 */
 .mobile-sidebar-backdrop {
     display: none;
@@ -389,29 +474,39 @@
     }
 
     body {
-        width: 100vw;
-        max-width: 100vw;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+        box-sizing: border-box;
+    }
+
+    .sidebar {
+        width: 260px;
+        min-width: 260px;
+        flex: 0 0 260px;
     }
 
     main {
-        flex: 1 1 auto;
-        width: calc(100vw - 280px) !important;
-        max-width: calc(100vw - 280px) !important;
-        min-width: 0;
-        margin-right: 0 !important;
-    }
-
-    main > .p-4,
-    .p-4.flex-1.overflow-hidden.flex.flex-col {
-        padding: 8px 6px 6px 8px !important;
-    }
-
-    .table-container {
-        width: 100% !important;
+        flex: 1 1 0;
+        width: auto !important;
         max-width: none !important;
-        margin-right: 0 !important;
-        border-radius: 12px;
+        min-width: 0;
+        margin: 0 !important;
     }
+
+main > .p-4,
+.p-4.flex-1.overflow-hidden.flex.flex-col {
+    padding: 8px 0 6px 8px !important;
+}
+
+.table-container {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    border-radius: 12px 0 0 12px;
+}
 
     .sidebar > .p-6 {
         padding: 16px !important;
@@ -930,6 +1025,21 @@
             </button>
         </div>
     </div>
+
+<!-- 檔案預覽視窗 -->
+<div id="file-preview-modal" class="file-preview-modal hidden no-print">
+    <div class="file-preview-header">
+        <div id="file-preview-title" class="file-preview-title">附件預覽</div>
+        <button type="button" class="file-preview-close" onclick="closeFilePreviewModal()" aria-label="關閉預覽">
+            <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+    </div>
+
+    <div class="file-preview-body">
+        <iframe id="file-preview-frame" class="hidden"></iframe>
+        <img id="file-preview-image" class="hidden" alt="附件預覽">
+    </div>
+</div>
 
     <script>
         // 初始數據定義
@@ -2375,11 +2485,48 @@ function switchTab(type) {
 
         function processFile(file) { processFiles([file]); }
         function handleFileUpload(input) { processFiles(input.files); }
-        function viewFileDirectly(file) {
-            const win = window.open();
-            if (file.type === 'application/pdf') win.document.write(`<iframe src="${file.data}" frameborder="0" style="position:fixed; top:0; left:0; width:100%; height:100%;" allowfullscreen></iframe>`); 
-            else win.document.write(`<div style="background:#f1f5f9; min-height:100vh; display:flex; justify-content:center; align-items:center;"><img src="${file.data}" style="max-width:90%; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);"></div>`); 
-        }
+function viewFileDirectly(file) {
+    const modal = document.getElementById('file-preview-modal');
+    const title = document.getElementById('file-preview-title');
+    const frame = document.getElementById('file-preview-frame');
+    const image = document.getElementById('file-preview-image');
+
+    if (!modal || !frame || !image || !file) return;
+
+    title.innerText = file.name || '附件預覽';
+
+    frame.classList.add('hidden');
+    image.classList.add('hidden');
+    frame.removeAttribute('src');
+    image.removeAttribute('src');
+
+    if (file.type === 'application/pdf') {
+        frame.src = file.data;
+        frame.classList.remove('hidden');
+    } else {
+        image.src = file.data;
+        image.classList.remove('hidden');
+    }
+
+    document.body.classList.add('file-preview-open');
+    modal.classList.remove('hidden');
+    lucide.createIcons();
+}
+
+function closeFilePreviewModal() {
+    const modal = document.getElementById('file-preview-modal');
+    const frame = document.getElementById('file-preview-frame');
+    const image = document.getElementById('file-preview-image');
+
+    if (frame) frame.removeAttribute('src');
+    if (image) image.removeAttribute('src');
+
+    if (frame) frame.classList.add('hidden');
+    if (image) image.classList.add('hidden');
+    if (modal) modal.classList.add('hidden');
+
+    document.body.classList.remove('file-preview-open');
+}
         function viewCurrentFile() { const files = getAttachmentFiles(attachmentsStore[currentTab]?.[activeAttachmentTarget.row]?.[activeAttachmentTarget.month]); if (files.length > 0) viewFileDirectly(files[0]); }
 
         async function deleteSingleAttachment() {
@@ -2547,6 +2694,7 @@ if (inputPwd === getAdminPassword()) {
 
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
+        closeFilePreviewModal();
         closeLoginModal();
         closeAttachmentModal();
     }

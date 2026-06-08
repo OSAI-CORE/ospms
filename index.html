@@ -13,6 +13,39 @@
         
         .sidebar { width: 280px; flex-shrink: 0; }
 
+    /* 左側功能列捲軸美化：只影響 sidebar 裡面的 nav */
+.sidebar nav {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(96, 165, 250, 0.45) rgba(15, 23, 42, 0.25);
+}
+
+.sidebar nav::-webkit-scrollbar {
+    width: 8px;
+}
+
+.sidebar nav::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.18);
+    border-radius: 999px;
+}
+
+.sidebar nav::-webkit-scrollbar-thumb {
+    background: linear-gradient(
+        180deg,
+        rgba(96, 165, 250, 0.75),
+        rgba(37, 99, 235, 0.45)
+    );
+    border-radius: 999px;
+    border: 2px solid rgba(15, 23, 42, 0.9);
+}
+
+.sidebar nav::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(
+        180deg,
+        rgba(147, 197, 253, 0.9),
+        rgba(59, 130, 246, 0.65)
+    );
+}    
+
         .table-container { 
             overflow: auto; 
             height: calc(100vh - 160px); 
@@ -169,6 +202,106 @@
 
     font-style: italic;
     letter-spacing: 0.08em;
+}
+
+/* 手機垂直預覽：側欄改成可展開 / 收納，不影響桌機 */
+.mobile-sidebar-backdrop {
+    display: none;
+}
+
+@media screen and (max-width: 768px) and (orientation: portrait) {
+    body {
+        overflow: hidden;
+    }
+
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: min(82vw, 320px);
+        height: 100vh;
+        z-index: 90;
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+        box-shadow: 20px 0 40px rgba(15, 23, 42, 0.28);
+    }
+
+    body.mobile-sidebar-open .sidebar {
+        transform: translateX(0);
+    }
+
+    .mobile-sidebar-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 80;
+        background: rgba(15, 23, 42, 0.48);
+        backdrop-filter: blur(2px);
+    }
+
+    body.mobile-sidebar-open .mobile-sidebar-backdrop {
+        display: block;
+    }
+
+    .mobile-sidebar-toggle {
+        display: inline-flex !important;
+        width: 42px;
+        height: 42px;
+    }
+
+    main {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        margin: 0 auto;
+    }
+
+    header {
+        padding: 14px 14px !important;
+        gap: 10px;
+        align-items: flex-start !important;
+    }
+
+    #current-category-title {
+        font-size: 16px !important;
+        line-height: 1.3 !important;
+        word-break: break-word;
+    }
+
+    #year-input-field {
+        width: 145px;
+        font-size: 11px;
+        padding: 4px 8px;
+    }
+
+    header .no-print {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+
+    header .no-print button {
+        padding: 8px 10px !important;
+        font-size: 12px !important;
+    }
+
+    .p-4.flex-1.overflow-hidden.flex.flex-col {
+        padding: 10px !important;
+    }
+
+    .table-container {
+        width: 100%;
+        max-width: 100%;
+        height: calc(100vh - 130px);
+        margin: 0 auto;
+        border-radius: 12px;
+    }
+
+    #main-table {
+        min-width: 1282px;
+    }
+
+    .system-footer-light {
+        display: none;
+    }
 }
 
         @media print {
@@ -434,18 +567,32 @@
         </div>
     </aside>
 
+<div id="mobile-sidebar-backdrop"
+     class="mobile-sidebar-backdrop no-print"
+     onclick="closeMobileSidebar()"></div>
+
     <main class="flex-1 flex flex-col min-w-0">
         <header class="bg-white px-8 py-5 border-b border-slate-200 flex justify-between items-center shrink-0">
-            <div>
-                <h2 id="current-category-title" class="text-xl font-black text-slate-900 tracking-tight leading-none">載入中...</h2>
+ <div class="flex items-center gap-3 min-w-0">
+    <button id="mobile-sidebar-toggle"
+            type="button"
+            onclick="toggleMobileSidebar()"
+            class="mobile-sidebar-toggle no-print hidden shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm">
+        <i data-lucide="menu" class="w-5 h-5"></i>
+    </button>
+
+    <div class="min-w-0">
+        <h2 id="current-category-title" class="text-xl font-black text-slate-900 tracking-tight leading-none">載入中...</h2>
                 <div class="flex items-center mt-2">
                     <input type="text" id="year-input-field" class="year-input" value="2026年度 (115年)" 
                            onclick="this.select()" 
                            onblur="handleYearFormat(this)"
                            onkeydown="if(event.key === 'Enter') handleYearFormat(this)">
                 </div>
-            </div>
-            <div class="flex items-center space-x-3 no-print">
+    </div>
+</div>
+
+<div class="flex items-center space-x-3 no-print">
                 <button id="save-logout-btn" onclick="saveAndLogout()" class="hidden flex items-center space-x-2 px-5 py-2.5 bg-green-600 text-white rounded-full text-sm font-bold transition shadow-sm hover:bg-green-700">
                     <i data-lucide="save" class="w-4 h-4"></i><span>儲存並登出系統</span>
                 </button>
@@ -1724,18 +1871,22 @@ Object.keys(titles).forEach(key => {
             lucide.createIcons();
         }
 
-        function switchTab(type) {
-            if (isAdmin) saveCurrentTabData();
-            currentTab = type;
-            document.querySelectorAll('nav button').forEach(btn => {
-                btn.classList.remove('text-white', 'bg-slate-800', 'border-blue-500');
-                btn.classList.add('text-slate-400', 'border-transparent');
-            });
-            const activeBtn = document.getElementById(`tab-${type}`);
-            if (activeBtn) activeBtn.classList.add('text-white', 'bg-slate-800', 'border-blue-500');
-            document.getElementById('current-category-title').innerText = titles[type];
-            renderTable(type);
-        }
+function switchTab(type) {
+    if (isAdmin) saveCurrentTabData();
+    currentTab = type;
+    document.querySelectorAll('nav button').forEach(btn => {
+        btn.classList.remove('text-white', 'bg-slate-800', 'border-blue-500');
+        btn.classList.add('text-slate-400', 'border-transparent');
+    });
+    const activeBtn = document.getElementById(`tab-${type}`);
+    if (activeBtn) activeBtn.classList.add('text-white', 'bg-slate-800', 'border-blue-500');
+    document.getElementById('current-category-title').innerText = titles[type];
+    renderTable(type);
+
+    if (isMobilePortraitView()) {
+        closeMobileSidebar();
+    }
+}
 
         function saveCurrentTabData() {
             const rows = document.querySelectorAll("#table-body tr");
@@ -2084,6 +2235,19 @@ Object.keys(titles).forEach(key => {
 
         // --- 核心邏輯與 UI 互動 ---
 
+function isMobilePortraitView() {
+    return window.matchMedia('(max-width: 768px) and (orientation: portrait)').matches;
+}
+
+function toggleMobileSidebar() {
+    if (!isMobilePortraitView()) return;
+    document.body.classList.toggle('mobile-sidebar-open');
+}
+
+function closeMobileSidebar() {
+    document.body.classList.remove('mobile-sidebar-open');
+}        
+
         function autoResize(textarea) { textarea.style.height = 'auto'; textarea.style.height = textarea.scrollHeight + 'px'; }
 
         function handleAuthClick() {
@@ -2199,6 +2363,12 @@ document.addEventListener('keydown', function(event) {
         closeAttachmentModal();
     }
 });        
+
+window.addEventListener('resize', function() {
+    if (!isMobilePortraitView()) {
+        closeMobileSidebar();
+    }
+});
 
         window.onload = () => { loadFromStorage(); };
     </script>

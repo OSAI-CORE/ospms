@@ -257,39 +257,6 @@
     background: rgba(255, 255, 255, 0.2);
 }
 
-.file-preview-floating-close {
-    display: none;
-    position: fixed;
-    right: 16px;
-    top: calc(72px + env(safe-area-inset-top));
-    bottom: auto;
-    z-index: 140;
-    height: 46px;
-    padding: 0 18px;
-    border-radius: 999px;
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
-    color: #ffffff;
-    font-size: 14px;
-    font-weight: 900;
-    letter-spacing: 0.05em;
-    box-shadow: 0 14px 28px rgba(37, 99, 235, 0.38);
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    border: 1px solid rgba(255, 255, 255, 0.22);
-}
-
-.file-preview-floating-close:hover {
-    transform: translateY(-1px);
-    background: linear-gradient(135deg, #1d4ed8, #1e40af);
-}
-
-.file-preview-floating-close i {
-    width: 18px;
-    height: 18px;
-    stroke-width: 3px;
-}
-
 .file-preview-body {
     flex: 1 1 auto;
     min-height: 0;
@@ -328,18 +295,18 @@ body.file-preview-open {
 }
 
 .mobile-sidebar-toggle {
-    border: 0;
+    border: 1px solid #bfdbfe;
     border-radius: 16px;
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
-    color: #ffffff;
-    box-shadow: 0 12px 24px rgba(37, 99, 235, 0.28);
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    color: #2563eb;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.16);
     transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .mobile-sidebar-toggle:hover {
     transform: translateY(-1px);
-    box-shadow: 0 16px 30px rgba(37, 99, 235, 0.34);
-    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+    box-shadow: 0 12px 24px rgba(37, 99, 235, 0.2);
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
 }
 
 .mobile-sidebar-toggle:active {
@@ -347,8 +314,8 @@ body.file-preview-open {
 }
 
 .mobile-sidebar-toggle i {
-    width: 21px;
-    height: 21px;
+    width: 22px;
+    height: 22px;
     stroke-width: 2.8px;
 }
 
@@ -440,10 +407,6 @@ body.file-preview-open {
     #main-table {
         min-width: 1282px;
     }
-
-.file-preview-floating-close {
-    display: inline-flex;
-}
 
 .file-preview-header {
     height: 60px;
@@ -916,7 +879,7 @@ main > .p-4,
         onclick="toggleMobileSidebar()"
         class="mobile-sidebar-toggle no-print hidden shrink-0 items-center justify-center"
         aria-label="展開功能選單">
-    <i data-lucide="panel-left-open" class="w-5 h-5"></i>
+    <i data-lucide="menu" class="w-5 h-5"></i>
 </button>
 
     <div class="min-w-0">
@@ -1110,14 +1073,6 @@ main > .p-4,
         <iframe id="file-preview-frame" class="hidden"></iframe>
         <img id="file-preview-image" class="hidden" alt="附件預覽">
     </div>
-
-    <button type="button"
-            class="file-preview-floating-close"
-            onclick="closeFilePreviewModal()"
-            aria-label="關閉檔案預覽">
-        <i data-lucide="x" class="w-5 h-5"></i>
-        <span>關閉</span>
-    </button>
 </div>
 
     <script>
@@ -2679,12 +2634,7 @@ function updateMobileSidebarToggleIcon() {
     const toggleIcon = document.querySelector('#mobile-sidebar-toggle i');
     if (!toggleIcon) return;
 
-    if (document.body.classList.contains('mobile-sidebar-open')) {
-        toggleIcon.setAttribute('data-lucide', 'panel-left-close');
-    } else {
-        toggleIcon.setAttribute('data-lucide', 'panel-left-open');
-    }
-
+    toggleIcon.setAttribute('data-lucide', 'menu');
     lucide.createIcons();
 }
 

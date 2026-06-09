@@ -2485,6 +2485,27 @@ function switchTab(type) {
 
         function processFile(file) { processFiles([file]); }
         function handleFileUpload(input) { processFiles(input.files); }
+
+function isMobilePdfPreviewDevice() {
+    return window.matchMedia('(max-width: 900px)').matches;
+}
+
+function dataUrlToBlobUrl(dataUrl) {
+    const parts = dataUrl.split(',');
+    const mimeMatch = parts[0].match(/data:(.*?);base64/);
+    const mime = mimeMatch ? mimeMatch[1] : 'application/pdf';
+    const binary = atob(parts[1]);
+    const length = binary.length;
+    const bytes = new Uint8Array(length);
+
+    for (let i = 0; i < length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+
+    const blob = new Blob([bytes], { type: mime });
+    return URL.createObjectURL(blob);
+}
+
 function viewFileDirectly(file) {
     const modal = document.getElementById('file-preview-modal');
     const title = document.getElementById('file-preview-title');
@@ -2501,6 +2522,12 @@ function viewFileDirectly(file) {
     image.removeAttribute('src');
 
     if (file.type === 'application/pdf') {
+        if (isMobilePdfPreviewDevice()) {
+            const pdfUrl = dataUrlToBlobUrl(file.data);
+            window.open(pdfUrl, '_blank');
+            return;
+        }
+
         frame.src = file.data;
         frame.classList.remove('hidden');
     } else {

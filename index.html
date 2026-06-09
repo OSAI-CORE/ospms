@@ -257,6 +257,39 @@
     background: rgba(255, 255, 255, 0.2);
 }
 
+.file-preview-floating-close {
+    display: none;
+    position: fixed;
+    right: 16px;
+    top: calc(72px + env(safe-area-inset-top));
+    bottom: auto;
+    z-index: 140;
+    height: 46px;
+    padding: 0 18px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    box-shadow: 0 14px 28px rgba(37, 99, 235, 0.38);
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.file-preview-floating-close:hover {
+    transform: translateY(-1px);
+    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+}
+
+.file-preview-floating-close i {
+    width: 18px;
+    height: 18px;
+    stroke-width: 3px;
+}
+
 .file-preview-body {
     flex: 1 1 auto;
     min-height: 0;
@@ -292,6 +325,31 @@ body.file-preview-open {
 /* 手機預覽修正：避免登入管理者後 header 被手機瀏覽器切斷 */
 .mobile-sidebar-backdrop {
     display: none;
+}
+
+.mobile-sidebar-toggle {
+    border: 0;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff;
+    box-shadow: 0 12px 24px rgba(37, 99, 235, 0.28);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.mobile-sidebar-toggle:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 16px 30px rgba(37, 99, 235, 0.34);
+    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+}
+
+.mobile-sidebar-toggle:active {
+    transform: scale(0.96);
+}
+
+.mobile-sidebar-toggle i {
+    width: 21px;
+    height: 21px;
+    stroke-width: 2.8px;
 }
 
 /* 手機共用設定：直式與橫式都套用 */
@@ -383,6 +441,18 @@ body.file-preview-open {
         min-width: 1282px;
     }
 
+.file-preview-floating-close {
+    display: inline-flex;
+}
+
+.file-preview-header {
+    height: 60px;
+}
+
+.file-preview-body {
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+}    
+
 .system-footer-light {
     display: block;
     flex-shrink: 0;
@@ -442,8 +512,8 @@ body.file-preview-open {
 
     .mobile-sidebar-toggle {
         display: inline-flex !important;
-        width: 42px;
-        height: 42px;
+        width: 46px;
+        height: 46px;
     }
 
     main {
@@ -841,12 +911,13 @@ main > .p-4,
     <main class="flex-1 flex flex-col min-w-0">
         <header class="bg-white px-8 py-5 border-b border-slate-200 flex justify-between items-center shrink-0">
  <div class="flex items-center gap-3 min-w-0">
-    <button id="mobile-sidebar-toggle"
-            type="button"
-            onclick="toggleMobileSidebar()"
-            class="mobile-sidebar-toggle no-print hidden shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm">
-        <i data-lucide="menu" class="w-5 h-5"></i>
-    </button>
+<button id="mobile-sidebar-toggle"
+        type="button"
+        onclick="toggleMobileSidebar()"
+        class="mobile-sidebar-toggle no-print hidden shrink-0 items-center justify-center"
+        aria-label="展開功能選單">
+    <i data-lucide="panel-left-open" class="w-5 h-5"></i>
+</button>
 
     <div class="min-w-0">
         <h2 id="current-category-title" class="text-xl font-black text-slate-900 tracking-tight leading-none">載入中...</h2>
@@ -1039,6 +1110,14 @@ main > .p-4,
         <iframe id="file-preview-frame" class="hidden"></iframe>
         <img id="file-preview-image" class="hidden" alt="附件預覽">
     </div>
+
+    <button type="button"
+            class="file-preview-floating-close"
+            onclick="closeFilePreviewModal()"
+            aria-label="關閉檔案預覽">
+        <i data-lucide="x" class="w-5 h-5"></i>
+        <span>關閉</span>
+    </button>
 </div>
 
     <script>
@@ -2588,11 +2667,26 @@ function isMobilePortraitView() {
 function toggleMobileSidebar() {
     if (!isMobilePortraitView()) return;
     document.body.classList.toggle('mobile-sidebar-open');
+    updateMobileSidebarToggleIcon();
 }
 
 function closeMobileSidebar() {
     document.body.classList.remove('mobile-sidebar-open');
-}        
+    updateMobileSidebarToggleIcon();
+}
+
+function updateMobileSidebarToggleIcon() {
+    const toggleIcon = document.querySelector('#mobile-sidebar-toggle i');
+    if (!toggleIcon) return;
+
+    if (document.body.classList.contains('mobile-sidebar-open')) {
+        toggleIcon.setAttribute('data-lucide', 'panel-left-close');
+    } else {
+        toggleIcon.setAttribute('data-lucide', 'panel-left-open');
+    }
+
+    lucide.createIcons();
+}
 
         function autoResize(textarea) { textarea.style.height = 'auto'; textarea.style.height = textarea.scrollHeight + 'px'; }
 

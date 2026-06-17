@@ -64,15 +64,17 @@
         thead th.sticky-col-name { z-index: 40; left: 40px; }
 
 
-        #main-table { table-layout: fixed; min-width: 1282px; }
+        #main-table { table-layout: fixed; min-width: 1442px; }
         #main-table th, #main-table td { vertical-align: middle; }
         #main-table th:nth-child(1), #main-table td:nth-child(1) { width: 40px; }
         #main-table th:nth-child(2), #main-table td:nth-child(2) { width: 170px; }
         #main-table th:nth-child(3), #main-table td:nth-child(3) { width: 310px; }
         #main-table th:nth-child(4), #main-table td:nth-child(4) { width: 56px; }
-        #main-table th:nth-child(5), #main-table td:nth-child(5) { width: 58px; }
+        #main-table th:nth-child(5), #main-table td:nth-child(5) { width: 78px; }
         #main-table th:nth-child(n+6):nth-child(-n+17),
         #main-table td:nth-child(n+6):nth-child(-n+17) { width: 54px; }
+        #main-table th:nth-child(18), #main-table td:nth-child(18) { width: 70px; }
+        #main-table th:nth-child(19), #main-table td:nth-child(19) { width: 70px; }
 
         .input-cell { 
             width: 100%; 
@@ -88,6 +90,326 @@
         .input-cell:disabled { cursor: not-allowed; opacity: 1; color: #475569; }
         .input-cell:not(:disabled):hover { border-color: #cbd5e1; background: #fff; }
         .input-cell:not(:disabled):focus { border-color: #3b82f6; background: #fff; outline: none; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1); }
+
+        /* 完成度管理狀態樣式：僅套用在月份欄位，不影響原本版面結構 */
+        .status-cell {
+            width: 100%;
+            text-align: center;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            padding: 3px 1px;
+            font-size: 11px;
+            font-weight: 800;
+            transition: all 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+        .status-cell:disabled {
+            cursor: default;
+            opacity: 1;
+        }
+        .status-cell:not(:disabled):hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.12);
+        }
+        .status-cell:not(:disabled):focus {
+            border-color: #3b82f6;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.12);
+        }
+        .status-empty {
+            background: #f8fafc !important;
+            color: #94a3b8 !important;
+        }
+        .status-complete {
+            background: #dcfce7 !important;
+            color: #047857 !important;
+        }
+        .status-progress {
+            background: #fef3c7 !important;
+            color: #b45309 !important;
+        }
+        .status-incomplete {
+            background: #fee2e2 !important;
+            color: #dc2626 !important;
+        }
+        .status-delay {
+            background: #ffedd5 !important;
+            color: #c2410c !important;
+        }
+        .status-na {
+            background: #e5e7eb !important;
+            color: #64748b !important;
+        }
+
+        .completion-summary-cell {
+            text-align: center;
+            font-size: 11px;
+            font-weight: 900;
+            border-radius: 999px;
+            padding: 4px 2px;
+            display: inline-block;
+            min-width: 46px;
+        }
+
+        .completion-rate-good,
+        .execution-status-good {
+            background: #dcfce7 !important;
+            color: #047857 !important;
+        }
+
+        .completion-rate-warning,
+        .execution-status-warning {
+            background: #fef3c7 !important;
+            color: #b45309 !important;
+        }
+
+        .completion-rate-critical,
+        .execution-status-critical {
+            background: #fee2e2 !important;
+            color: #dc2626 !important;
+        }
+
+
+        .execution-status-neutral,
+        .completion-rate-neutral {
+            background: #e5e7eb !important;
+            color: #64748b !important;
+        }
+
+.fixed-select-cell {
+    height: 28px;
+    line-height: 1.2;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: none !important;
+    background: transparent !important;
+    cursor: pointer;
+}
+
+.fixed-select-cell:disabled {
+    cursor: default !important;
+    opacity: 1;
+    pointer-events: none;
+}
+
+
+
+.execution-months-panel {
+    position: relative;
+    min-width: 100%;
+}
+
+.execution-months-panel.is-disabled .execution-months-trigger {
+    cursor: default;
+    pointer-events: none;
+    background: transparent;
+    color: #475569;
+}
+
+.execution-months-trigger {
+    width: 100%;
+    height: 28px;
+    padding: 3px 1px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: transparent;
+    color: #475569;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.execution-months-trigger:hover {
+    border-color: #cbd5e1;
+    background: #ffffff;
+}
+
+.execution-months-label {
+    max-width: 66px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.execution-months-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 188px;
+    padding: 10px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.14);
+    z-index: 120;
+}
+
+.execution-months-dropdown.hidden {
+    display: none;
+}
+
+.execution-months-dropdown::before {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    transform: translateX(-50%) rotate(45deg);
+    background: #ffffff;
+    border-left: 1px solid #e2e8f0;
+    border-top: 1px solid #e2e8f0;
+}
+
+.execution-months-quick-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.execution-months-quick-actions button {
+    border-radius: 8px;
+    padding: 5px 4px;
+    font-size: 10px;
+    font-weight: 500;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #475569;
+}
+
+.execution-months-quick-actions button:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.execution-months-none {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    padding: 6px;
+    border-radius: 8px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    font-size: 10px;
+    font-weight: 400;
+    color: #64748b;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.execution-months-none:hover {
+    background: #f8fafc;
+}
+
+.execution-months-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+}
+
+.execution-months-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #ffffff;
+    font-size: 10px;
+    font-weight: 400;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.execution-months-box:hover {
+    border-color: #bfdbfe;
+    background: #f8fafc;
+    color: #2563eb;
+}
+
+.execution-months-box input,
+.execution-months-none input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.execution-months-box:has(input:checked) {
+    border-color: #93c5fd;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-weight: 500;
+}
+
+.execution-months-none:has(input:checked) {
+    border-color: #cbd5e1;
+    background: #f1f5f9;
+    color: #475569;
+    font-weight: 500;
+}
+
+.execution-months-confirm-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.execution-months-cancel-btn,
+.execution-months-confirm-btn {
+    border-radius: 9px;
+    padding: 7px 4px;
+    font-size: 11px;
+    font-weight: 500;
+    transition: all 0.15s ease;
+}
+
+.execution-months-cancel-btn {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+}
+
+.execution-months-cancel-btn:hover {
+    background: #f1f5f9;
+}
+
+.execution-months-confirm-btn {
+    background: #2563eb;
+    border: 1px solid #2563eb;
+    color: #ffffff;
+}
+
+.execution-months-confirm-btn:hover {
+    background: #1d4ed8;
+}
+
+        .header-filter {
+            width: 100%;
+            margin-top: 4px;
+            padding: 2px 1px;
+            border: 1px solid #cbd5e1;
+            border-radius: 5px;
+            background: #ffffff;
+            color: #475569;
+            font-size: 9px;
+            font-weight: 700;
+            text-align: center;
+        }
 
         .admin-edit-cell { background-color: #fefce8 !important; border: 1px dashed #eab308 !important; color: #475569 !important; }
 
@@ -405,7 +727,7 @@ body.file-preview-open {
     }
 
     #main-table {
-        min-width: 1282px;
+        min-width: 1442px;
     }
 
 .file-preview-header {
@@ -769,16 +1091,20 @@ main > .p-4,
                 white-space: normal !important;
             }
 
-            td:nth-child(1), th:nth-child(1) { width: 3.5% !important; text-align: center !important; }
-            td:nth-child(2), th:nth-child(2) { width: 13% !important; }
-            td:nth-child(3), th:nth-child(3) { width: 25% !important; }
+            td:nth-child(1), th:nth-child(1) { width: 3% !important; text-align: center !important; }
+            td:nth-child(2), th:nth-child(2) { width: 12% !important; }
+            td:nth-child(3), th:nth-child(3) { width: 20% !important; }
             td:nth-child(4), th:nth-child(4) { width: 4.5% !important; text-align: center !important; }
-            td:nth-child(5), th:nth-child(5) { width: 4.5% !important; text-align: center !important; }
+            td:nth-child(5), th:nth-child(5) { width: 6% !important; text-align: center !important; }
             td:nth-child(n+6):nth-child(-n+17),
-            th:nth-child(n+6):nth-child(-n+17) { width: 4.125% !important; text-align: center !important; }
+            th:nth-child(n+6):nth-child(-n+17) { width: 3.7% !important; text-align: center !important; }
+            td:nth-child(18), th:nth-child(18),
+            td:nth-child(19), th:nth-child(19) { width: 5.3% !important; text-align: center !important; }
 
             .input-cell,
-            .input-cell:disabled {
+            .input-cell:disabled,
+            .status-cell,
+            .status-cell:disabled {
                 display: block !important;
                 width: 100% !important;
                 min-height: 12px !important;
@@ -919,9 +1245,38 @@ main > .p-4,
                         <tr class="bg-slate-50 text-slate-500 text-[10px] font-bold uppercase tracking-widest">
                             <th class="px-2 py-4 sticky-col-num border-b">編號</th>
                             <th class="px-3 py-3 sticky-col-name border-b">績效指標內容</th>
-                            <th class="px-3 py-3 min-w-[310px] border-b border-l">計算方式</th>
-                            <th class="px-1.5 py-3 text-center min-w-[56px] border-b border-l">時程規劃</th>
-                            <th class="px-1.5 py-3 text-center min-w-[58px] border-b border-l">目標值</th>
+                            <th class="px-3 py-3 min-w-[310px] border-b border-l">完成標準</th>
+                            <th class="px-1.5 py-2 text-center min-w-[56px] border-b border-l">
+                                <div>時程規劃</div>
+                                <select id="schedule-filter" class="header-filter no-print" onchange="applyTableFilters()">
+                                    <option value="">全部</option>
+                                    <option value="月">月</option>
+                                    <option value="季">季</option>
+                                    <option value="半年">半年</option>
+                                    <option value="年">年</option>
+                                    <option value="2年">2年</option>
+                                    <option value="適時">適時</option>
+                                </select>
+                            </th>
+                            <th class="px-1.5 py-2 text-center min-w-[78px] border-b border-l">
+                                <div>執行月份</div>
+                                <select id="execution-months-filter" class="header-filter no-print" onchange="applyTableFilters()">
+                                    <option value="">全部</option>
+                                    <option value="無固定月份">無固定月份</option>
+                                    <option value="1">含1月</option>
+                                    <option value="2">含2月</option>
+                                    <option value="3">含3月</option>
+                                    <option value="4">含4月</option>
+                                    <option value="5">含5月</option>
+                                    <option value="6">含6月</option>
+                                    <option value="7">含7月</option>
+                                    <option value="8">含8月</option>
+                                    <option value="9">含9月</option>
+                                    <option value="10">含10月</option>
+                                    <option value="11">含11月</option>
+                                    <option value="12">含12月</option>
+                                </select>
+                            </th>
                             <th class="px-1 py-3 text-center border-b border-l bg-blue-50/30 text-blue-600 min-w-[54px]">1月</th>
                             <th class="px-1 py-3 text-center border-b border-l bg-blue-50/30 text-blue-600 min-w-[54px]">2月</th>
                             <th class="px-1 py-3 text-center border-b border-l bg-blue-50/30 text-blue-600 min-w-[54px]">3月</th>
@@ -934,6 +1289,8 @@ main > .p-4,
                             <th class="px-1 py-3 text-center border-b border-l bg-blue-50/30 text-blue-600 min-w-[54px]">10月</th>
                             <th class="px-1 py-3 text-center border-b border-l bg-blue-50/30 text-blue-600 min-w-[54px]">11月</th>
                             <th class="px-1 py-3 text-center border-b border-l bg-blue-50/30 text-blue-600 min-w-[54px]">12月</th>
+                            <th class="px-1 py-3 text-center border-b border-l bg-emerald-50 text-emerald-700 min-w-[70px]">年度完成率</th>
+                            <th class="px-1 py-3 text-center border-b border-l bg-emerald-50 text-emerald-700 min-w-[70px]">執行狀態</th>
                             <th id="admin-header-action" class="hidden px-2 py-4 text-center border-b border-l text-red-500">操作</th>
                         </tr>
                     </thead>
@@ -1132,12 +1489,12 @@ main > .p-4,
                 { id: "4", name: "母性健康保護計畫", content: "依法規定使妊娠中的員工在分娩後，在工作獲致合法合理的安置與管理。", schedule: "年", target: "100%" }
             ],
             passive: [
-                { id: "1", name: "失能災害頻率 (FR)", content: "失能災害頻率（FR）＝失能傷害人次數×1,000,000 / 總經歷工時", schedule: "適時", target: "<0.79" },
-                { id: "2", name: "失能災害嚴重率 (SR)", content: "失能災害嚴重率（SR）＝總失能損失日數×1,000,000 / 總經歷工時", schedule: "適時", target: "<32" }
+                { id: "1", name: "失能災害頻率 (FR)", content: "失能災害頻率（FR）＝失能傷害人次數×1,000,000 / 總經歷工時", schedule: "月", target: "1~12" },
+                { id: "2", name: "失能災害嚴重率 (SR)", content: "失能災害嚴重率（SR）＝總失能損失日數×1,000,000 / 總經歷工時", schedule: "月", target: "1~12" }
             ],
             monitor: [
-                { id: "1", name: "作業環境監測計畫", content: "每半年委託監測機構，執行作業環境監測(有機溶劑揮發/二氧化碳/噪音/照度)。", schedule: "半年", target: "100%" },
-                { id: "2", name: "作業環境監測申報", content: "每半年於作業環境監測規劃實施前須先向當地主管機關進行核備作業。", schedule: "半年", target: "100%" },
+                { id: "1", name: "作業環境監測計畫", content: "每半年委託監測機構，執行作業環境監測(有機溶劑揮發/二氧化碳/噪音/照度)。", schedule: "半年", target: "2,8" },
+                { id: "2", name: "作業環境監測申報", content: "每半年於作業環境監測規劃實施前須先向當地主管機關進行核備作業。", schedule: "半年", target: "2,8" },
                 { id: "3", name: "職業災害定期申報", content: "每月10號前向人事單位索取整體工時，於工作者安全衛生履歷智能雲線上系統完成申報作業。", schedule: "月", target: "100%" },
                 { id: "4", name: "單位及人員設置報備", content: "每月於工作者安全衛生履歷智能雲線上申報確認核備之人員。", schedule: "月", target: "100%" },
                 { id: "5", name: "急救箱定期檢查", content: "依勞工健康保護規則第15條規定，急救藥品與器材，應置於適當固定處所及保持清潔，至少每六個月定期檢查。 對於被污染或失效之物品，應隨時予以更換及補充。", schedule: "月", target: "100%" },
@@ -1173,6 +1530,7 @@ main > .p-4,
 const DB_NAME = "OSPMS_DB";
 const DB_VERSION = 1;
 const STORE_KEY = "main_data";
+const APP_DATA_VERSION = "completion-2026-06-month-popup-confirm";
 
 const DEFAULT_ADMIN_PASSWORD = "1068";
 const MASTER_RECOVERY_CODE = "SAM-SUN-CORE-RECOVERY";
@@ -1202,13 +1560,24 @@ const MASTER_RECOVERY_CODE = "SAM-SUN-CORE-RECOVERY";
                 if (savedData) tableDataStore = savedData;
                 const savedAttach = await getRequest('ospms_attachments');
                 if (savedAttach) attachmentsStore = savedAttach;
-                const savedBaseData = await getRequest('ospms_base_data');
-                if (savedBaseData) Object.keys(savedBaseData).forEach(k => { if(appData[k]) appData[k] = savedBaseData[k]; });
+const savedBaseData = await getRequest('ospms_base_data');
+
+if (
+    savedBaseData &&
+    savedBaseData.version === APP_DATA_VERSION &&
+    savedBaseData.data
+) {
+    Object.keys(savedBaseData.data).forEach(k => {
+        if (appData[k]) appData[k] = savedBaseData.data[k];
+    });
+}
+                normalizeAllExecutionMonths();
                 initNav(); 
                 switchTab('plan');
                 initDragAndDrop();
             } catch (err) {
                 console.error("Load Error:", err);
+                normalizeAllExecutionMonths();
                 initNav(); 
                 switchTab('plan');
             }
@@ -1219,9 +1588,12 @@ const MASTER_RECOVERY_CODE = "SAM-SUN-CORE-RECOVERY";
                 const db = await openDB();
                 const transaction = db.transaction(STORE_KEY, "readwrite");
                 const store = transaction.objectStore(STORE_KEY);
-                store.put(tableDataStore, 'ospms_data_store');
-                store.put(attachmentsStore, 'ospms_attachments');
-                store.put(appData, 'ospms_base_data');
+store.put(tableDataStore, 'ospms_data_store');
+store.put(attachmentsStore, 'ospms_attachments');
+store.put({
+    version: APP_DATA_VERSION,
+    data: appData
+}, 'ospms_base_data');
                 return new Promise((resolve) => { transaction.oncomplete = () => resolve(); });
             } catch (err) { console.error("Save Error:", err); }
         }
@@ -1229,7 +1601,16 @@ const MASTER_RECOVERY_CODE = "SAM-SUN-CORE-RECOVERY";
         // --- 功能模組 ---
 
         function exportJSON() {
-            const dataToExport = { data_store: tableDataStore, attachments: attachmentsStore, base_data: appData, export_date: new Date().toLocaleString() };
+const dataToExport = {
+    version: APP_DATA_VERSION,
+    data_store: tableDataStore,
+    attachments: attachmentsStore,
+    base_data: {
+        version: APP_DATA_VERSION,
+        data: appData
+    },
+    export_date: new Date().toLocaleString()
+};
             const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: "application/json" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
@@ -1245,15 +1626,376 @@ const MASTER_RECOVERY_CODE = "SAM-SUN-CORE-RECOVERY";
             reader.onload = async (e) => {
                 try {
                     const imported = JSON.parse(e.target.result);
-                    tableDataStore = imported.data_store || {};
-                    attachmentsStore = imported.attachments || {};
-                    appData = imported.base_data || appData;
+tableDataStore = imported.data_store || {};
+attachmentsStore = imported.attachments || {};
+
+if (
+    imported.base_data &&
+    imported.base_data.version === APP_DATA_VERSION &&
+    imported.base_data.data
+) {
+    appData = imported.base_data.data;
+}
                     await persistToStorage();
                     window.location.reload();
                 } catch (err) { alert("檔案格式錯誤！"); }
             };
             reader.readAsText(file);
         }
+
+
+function normalizeStatusValue(rawValue) {
+    const value = rawValue === undefined || rawValue === null ? "" : String(rawValue).trim();
+    if (value === "") return "";
+
+    const upper = value.toUpperCase();
+
+    if (upper === "N/A" || upper === "NA" || value === "不適用") return "N/A";
+    if (value === "完成" || value === "已完成" || value === "達成") return "完成";
+    if (value === "進行中" || value === "執行中") return "進行中";
+    if (value === "未完成" || value === "未達成" || value === "異常" || value === "-") return "未完成";
+    if (value === "延後" || value === "延期") return "延後";
+
+    const numericText = value.replace("%", "");
+    const numericValue = Number(numericText);
+
+    if (!Number.isNaN(numericValue) && value !== "") {
+        if (numericValue >= 100) return "完成";
+        if (numericValue > 0) return "未完成";
+        return "未完成";
+    }
+
+    return value;
+}
+
+function getStatusClass(value) {
+    const status = normalizeStatusValue(value);
+
+    if (status === "完成") return "status-complete";
+    if (status === "進行中") return "status-progress";
+    if (status === "未完成") return "status-incomplete";
+    if (status === "延後") return "status-delay";
+    if (status === "N/A") return "status-na";
+
+    return "status-empty";
+}
+
+function getStatusOptionsHTML(value) {
+    const status = normalizeStatusValue(value);
+    const options = ["", "完成", "進行中", "未完成", "延後", "N/A"];
+
+    return options.map(option => {
+        const label = option === "" ? "-" : option;
+        return `<option value="${option}" ${status === option ? "selected" : ""}>${label}</option>`;
+    }).join("");
+}
+
+function getCompletionStatusLabel(rate) {
+    if (rate >= 100) return "達標";
+    if (rate >= 80) return "追蹤";
+    return "異常";
+}
+
+function getScheduleOptionsHTML(value) {
+    const current = value === undefined || value === null ? '' : String(value).trim();
+    const options = ['', '月', '季', '半年', '年', '2年', '適時'];
+
+    return options.map(option => {
+        const label = option === '' ? '-' : option;
+        return `<option value="${option}" ${current === option ? 'selected' : ''}>${label}</option>`;
+    }).join('');
+}
+
+function getExecutionMonthsCheckboxesHTML(value, disabled = false) {
+    const selectedMonths = parseExecutionMonths(value);
+    const isNoFixed = selectedMonths.length === 0;
+    const disabledAttr = disabled ? 'disabled' : '';
+    const labelText = formatExecutionMonths(selectedMonths);
+    const safeLabel = labelText.replace(/"/g, '&quot;');
+
+    const monthBoxes = Array.from({ length: 12 }, (_, idx) => {
+        const month = idx + 1;
+        const checked = selectedMonths.includes(month) ? 'checked' : '';
+        return `<label class="execution-months-box" title="${month}月">
+                    <input type="checkbox" class="execution-month-checkbox" value="${month}" ${checked} ${disabledAttr} onchange="handleExecutionMonthDraftChange(this)">
+                    <span>${month}</span>
+                </label>`;
+    }).join('');
+
+    const dropdownHTML = disabled ? '' : `
+        <div class="execution-months-dropdown hidden" onclick="event.stopPropagation()">
+            <div class="execution-months-quick-actions">
+                <button type="button" onclick="setExecutionMonthsDraftValue(this.closest('.execution-months-panel'), '1~12');">全選</button>
+                <button type="button" onclick="setExecutionMonthsDraftValue(this.closest('.execution-months-panel'), '無固定月份');">清空</button>
+            </div>
+            <label class="execution-months-none">
+                <input type="checkbox" class="execution-month-none-checkbox" ${isNoFixed ? 'checked' : ''} ${disabledAttr} onchange="handleExecutionMonthDraftChange(this)">
+                <span>無固定月份</span>
+            </label>
+            <div class="execution-months-grid">${monthBoxes}</div>
+            <div class="execution-months-confirm-actions">
+                <button type="button" class="execution-months-cancel-btn" onclick="cancelExecutionMonthsSelection(this.closest('.execution-months-panel'))">取消</button>
+                <button type="button" class="execution-months-confirm-btn" onclick="confirmExecutionMonthsSelection(this.closest('.execution-months-panel'))">確認</button>
+            </div>
+        </div>`;
+
+    return `<div class="execution-months-panel ${disabled ? 'is-disabled' : ''}">
+                <input type="hidden" class="input-cell execution-months-value" value="${safeLabel}">
+                <button type="button" class="execution-months-trigger" ${disabled ? 'disabled' : ''} onclick="toggleExecutionMonthsMenu(this)">
+                    <span class="execution-months-label" title="${safeLabel}">${labelText}</span>
+                </button>
+                ${dropdownHTML}
+            </div>`;
+}
+
+function getCurrentReportYear() {
+    const yearInput = document.getElementById('year-input-field');
+    const value = yearInput ? String(yearInput.value || '') : '';
+    const match = value.match(/\d{4}/);
+    if (match) return Number(match[0]);
+
+    const rocMatch = value.match(/\d+/);
+    if (rocMatch) {
+        const y = Number(rocMatch[0]);
+        if (y < 1911) return y + 1911;
+        return y;
+    }
+
+    return new Date().getFullYear();
+}
+
+function getCurrentDueMonth() {
+    const reportYear = getCurrentReportYear();
+    const now = new Date();
+    const currentYear = now.getFullYear();
+
+    if (reportYear < currentYear) return 12;
+    if (reportYear > currentYear) return 0;
+    return now.getMonth() + 1;
+}
+
+function parseExecutionMonths(value) {
+    const raw = value === undefined || value === null ? '' : String(value).trim();
+    if (!raw || raw === '-' || raw === '無固定月份' || raw === '依事件' || raw === '依需求') return [];
+    if (raw.includes('1~12') || raw.includes('1-12') || raw.includes('每月')) return [1,2,3,4,5,6,7,8,9,10,11,12];
+
+    const months = [];
+    const matches = raw.match(/\d+/g) || [];
+    matches.forEach(token => {
+        const month = Number(token);
+        if (month >= 1 && month <= 12 && !months.includes(month)) months.push(month);
+    });
+
+    return months.sort((a, b) => a - b);
+}
+
+function formatExecutionMonths(months) {
+    if (!months || months.length === 0) return '無固定月份';
+    if (months.length === 12 && months.every((m, i) => m === i + 1)) return '1~12';
+    return months.join(',');
+}
+
+function getDefaultExecutionMonthsBySchedule(schedule) {
+    const timing = schedule === undefined || schedule === null ? '' : String(schedule).trim();
+
+    if (timing === '月') return '1~12';
+    if (timing === '季') return '3,6,9,12';
+    if (timing === '半年') return '6,12';
+    if (timing === '年') return '12';
+    if (timing === '2年' || timing === '二年' || timing === '兩年') return '12';
+    if (timing === '適時') return '無固定月份';
+
+    return '無固定月份';
+}
+
+function resolveExecutionMonthsValue(schedule, rawExecutionMonths) {
+    const raw = rawExecutionMonths === undefined || rawExecutionMonths === null ? '' : String(rawExecutionMonths).trim();
+    const looksLikeOldBaseline = raw && (
+        raw.includes('%') ||
+        raw.includes('完成') ||
+        raw.includes('辦理') ||
+        raw.includes('依事件') ||
+        raw.startsWith('<') ||
+        raw.startsWith('>') ||
+        raw.includes('FR') ||
+        raw.includes('SR')
+    ) && parseExecutionMonths(raw).length === 0;
+
+    if (raw === '-' || raw === '無固定月份') return '無固定月份';
+    if (!raw || looksLikeOldBaseline) return getDefaultExecutionMonthsBySchedule(schedule);
+    return formatExecutionMonths(parseExecutionMonths(raw));
+}
+
+function normalizeAllExecutionMonths() {
+    Object.keys(appData).forEach(key => {
+        (appData[key] || []).forEach((item, idx) => {
+            item.target = resolveExecutionMonthsValue(item.schedule, item.target);
+
+            // 被動性指標 FR / SR 屬於每月檢核型指標；舊資料若以 0% 表示無職災，轉為「完成」避免誤判異常。
+            if (key === 'passive') {
+                item.schedule = '月';
+                item.target = '1~12';
+
+                const savedRow = tableDataStore[key]?.[idx];
+                if (Array.isArray(savedRow)) {
+                    savedRow[0] = savedRow[0] || '月';
+                    savedRow[1] = resolveExecutionMonthsValue(savedRow[0], savedRow[1] || item.target);
+
+                    for (let month = 2; month <= 13; month++) {
+                        const raw = savedRow[month];
+                        const value = raw === undefined || raw === null ? '' : String(raw).trim();
+                        if (value === '0%' || value === '0') savedRow[month] = '完成';
+                    }
+                }
+            }
+        });
+    });
+}
+
+function getRowCompletionStats(rowSaved, item) {
+    const schedule = rowSaved[0] || item?.schedule || '';
+    const executionMonthsText = resolveExecutionMonthsValue(schedule, rowSaved[1] || item?.target || '');
+    const plannedMonths = parseExecutionMonths(executionMonthsText);
+    const currentDueMonth = getCurrentDueMonth();
+
+    let completedCount = 0;
+    let progressCount = 0;
+    let incompleteCount = 0;
+    let delayCount = 0;
+    let filledCount = 0;
+    let eventTriggeredMonths = [];
+
+    for (let month = 1; month <= 12; month++) {
+        const status = normalizeStatusValue(rowSaved[month + 1]);
+        if (status && status !== 'N/A') {
+            filledCount++;
+            if (!plannedMonths.includes(month)) eventTriggeredMonths.push(month);
+        }
+    }
+
+    const effectiveMonths = plannedMonths.length > 0 ? plannedMonths : eventTriggeredMonths;
+    const annualRequiredCount = effectiveMonths.length;
+    const dueMonths = effectiveMonths.filter(month => month <= currentDueMonth);
+
+    effectiveMonths.forEach(month => {
+        const status = normalizeStatusValue(rowSaved[month + 1]);
+        if (status === '完成') completedCount++;
+    });
+
+    dueMonths.forEach(month => {
+        const status = normalizeStatusValue(rowSaved[month + 1]);
+        if (status === '進行中') progressCount++;
+        else if (status === '未完成') incompleteCount++;
+        else if (status === '延後') delayCount++;
+    });
+
+    const dueCompletedCount = dueMonths.filter(month => normalizeStatusValue(rowSaved[month + 1]) === '完成').length;
+    const annualRate = annualRequiredCount > 0 ? Math.round((completedCount / annualRequiredCount) * 100) : 0;
+
+    let statusLabel = '無執行需求';
+
+    if (annualRequiredCount === 0) {
+        statusLabel = '無執行需求';
+    } else if (dueMonths.length === 0) {
+        statusLabel = completedCount === annualRequiredCount ? '達標' : '未到期';
+    } else if (incompleteCount > 0 || delayCount > 0) {
+        statusLabel = '異常';
+    } else if (progressCount > 0) {
+        statusLabel = '執行中';
+    } else if (dueCompletedCount === dueMonths.length) {
+        statusLabel = '達標';
+    } else {
+        statusLabel = '待執行';
+    }
+
+    return {
+        schedule,
+        executionMonthsText,
+        plannedMonths,
+        effectiveMonths,
+        dueMonths,
+        annualRequiredCount,
+        completedCount,
+        dueCompletedCount,
+        progressCount,
+        incompleteCount,
+        delayCount,
+        filledCount,
+        rate: annualRate,
+        statusLabel
+    };
+}
+
+function getRowRateDisplay(rowStat) {
+    return rowStat.statusLabel === '無執行需求' ? 'N/A' : `${rowStat.rate}%`;
+}
+
+function getCompletionRateClass(rate, statusLabel) {
+    if (statusLabel === '無執行需求' || statusLabel === '未到期') return 'completion-rate-neutral';
+    if (rate >= 100) return 'completion-rate-good';
+    if (rate >= 80) return 'completion-rate-warning';
+    return 'completion-rate-critical';
+}
+
+function getExecutionStatusClass(label) {
+    if (label === '達標') return 'execution-status-good';
+    if (label === '執行中' || label === '待執行') return 'execution-status-warning';
+    if (label === '異常') return 'execution-status-critical';
+    return 'execution-status-neutral';
+}
+
+function getCompletionStatsForRows(baseInfo, savedValues) {
+    let completedCount = 0;
+    let progressCount = 0;
+    let incompleteCount = 0;
+    let delayCount = 0;
+    let noNeedCount = 0;
+    let notDueCount = 0;
+    let annualRequiredCount = 0;
+    let dueRequiredCount = 0;
+    let dueCompletedCount = 0;
+
+    baseInfo.forEach((item, idx) => {
+        const rowSaved = savedValues[idx] || [];
+        const rowStat = getRowCompletionStats(rowSaved, item);
+
+        annualRequiredCount += rowStat.annualRequiredCount;
+        dueRequiredCount += rowStat.dueMonths.length;
+        completedCount += rowStat.completedCount;
+        dueCompletedCount += rowStat.dueCompletedCount;
+        progressCount += rowStat.progressCount;
+        incompleteCount += rowStat.incompleteCount;
+        delayCount += rowStat.delayCount;
+
+        if (rowStat.statusLabel === '無執行需求') noNeedCount++;
+        if (rowStat.statusLabel === '未到期') notDueCount++;
+    });
+
+    const rate = annualRequiredCount > 0 ? Math.round((completedCount / annualRequiredCount) * 100) : 0;
+
+    let statusLabel = '無執行需求';
+    if (annualRequiredCount === 0) statusLabel = '無執行需求';
+    else if (incompleteCount > 0 || delayCount > 0) statusLabel = '異常';
+    else if (progressCount > 0) statusLabel = '執行中';
+    else if (dueRequiredCount === 0) statusLabel = '未到期';
+    else if (dueCompletedCount === dueRequiredCount) statusLabel = '達標';
+    else statusLabel = '待執行';
+
+    return {
+        totalMonthCells: baseInfo.length * 12,
+        annualRequiredCount,
+        dueRequiredCount,
+        completedCount,
+        dueCompletedCount,
+        progressCount,
+        incompleteCount,
+        delayCount,
+        noNeedCount,
+        notDueCount,
+        rate,
+        statusLabel
+    };
+}
 
 function exportFullReport() {
     try {
@@ -1267,9 +2009,9 @@ function exportFullReport() {
         const headers = [
             "編號",
             "績效指標內容",
-            "計算方式",
+            "完成標準",
             "時程規劃",
-            "目標值",
+            "執行月份",
             "1月",
             "2月",
             "3月",
@@ -1281,12 +2023,15 @@ function exportFullReport() {
             "9月",
             "10月",
             "11月",
-            "12月"
+            "12月",
+            "年度完成率",
+            "執行狀態"
         ];
 
         const monthStartCol = 5;
         const monthEndCol = 16;
-        const GOOD_RATE_THRESHOLD = 90;
+        const GOOD_RATE_THRESHOLD = 100;
+        const TRACKING_RATE_THRESHOLD = 80;
 
         const borderThin = {
             top: { style: "thin", color: { rgb: "CBD5E1" } },
@@ -1462,6 +2207,22 @@ function exportFullReport() {
             border: borderThin
         };
 
+        const criticalCellStyle = {
+            fill: { fgColor: { rgb: "FEE2E2" } },
+            font: {
+                name: "Microsoft JhengHei",
+                sz: 10,
+                bold: true,
+                color: { rgb: "DC2626" }
+            },
+            alignment: {
+                horizontal: "center",
+                vertical: "center",
+                wrapText: true
+            },
+            border: borderThin
+        };
+
         const emptyCellStyle = {
             fill: { fgColor: { rgb: "F8FAFC" } },
             font: {
@@ -1543,88 +2304,68 @@ function getCategoryStats(key) {
     const baseInfo = appData[key] || [];
     const savedValues = tableDataStore[key] || [];
 
-    let filledValidMonthCount = 0;
-    let notApplicableCount = 0;
-    const totalMonthCells = baseInfo.length * 12;
-
-    baseInfo.forEach((item, idx) => {
-        const rowSaved = savedValues[idx] || [];
-
-        for (let i = 2; i <= 13; i++) {
-            const rawValue = rowSaved[i];
-            const value = rawValue === undefined || rawValue === null
-                ? ""
-                : String(rawValue).trim().toUpperCase();
-
-            if (value === "N/A" || value === "NA") {
-                notApplicableCount++;
-            } else if (value !== "") {
-                filledValidMonthCount++;
-            }
-        }
-    });
-
-    const executableMonthCells = totalMonthCells - notApplicableCount;
-
-    const rate = executableMonthCells > 0
-        ? Math.round((filledValidMonthCount / executableMonthCells) * 100)
-        : 0;
-
-    return {
-        itemCount: baseInfo.length,
-        totalMonthCells,
-        notApplicableCount,
-        executableMonthCells,
-        filledValidMonthCount,
-        rate
-    };
+    return Object.assign({
+        itemCount: baseInfo.length
+    }, getCompletionStatsForRows(baseInfo, savedValues));
 }
 
 function getMonthlyStats() {
     const monthlyStats = [];
 
     for (let month = 1; month <= 12; month++) {
-        let totalMonthCells = 0;
-        let notApplicableCount = 0;
-        let filledValidMonthCount = 0;
+        let annualRequiredCount = 0;
+        let monthRequiredCount = 0;
+        let dueRequiredCount = 0;
+        let completedCount = 0;
+        let progressCount = 0;
+        let incompleteCount = 0;
+        let delayCount = 0;
+        let noNeedCount = 0;
 
         Object.keys(titles).forEach(key => {
             const baseInfo = appData[key] || [];
             const savedValues = tableDataStore[key] || [];
 
             baseInfo.forEach((item, idx) => {
-                totalMonthCells++;
-
                 const rowSaved = savedValues[idx] || [];
-                const rawValue = rowSaved[month + 1];
+                const rowStat = getRowCompletionStats(rowSaved, item);
+                annualRequiredCount += rowStat.annualRequiredCount;
 
-                const value = rawValue === undefined || rawValue === null
-                    ? ""
-                    : String(rawValue).trim().toUpperCase();
-
-                if (value === "N/A" || value === "NA") {
-                    notApplicableCount++;
-                } else if (value !== "") {
-                    filledValidMonthCount++;
+                if (rowStat.annualRequiredCount === 0) noNeedCount++;
+                if (rowStat.effectiveMonths.includes(month)) {
+                    monthRequiredCount++;
+                    const status = normalizeStatusValue(rowSaved[month + 1]);
+                    if (month <= getCurrentDueMonth()) dueRequiredCount++;
+                    if (status === '完成') completedCount++;
+                    else if (status === '進行中') progressCount++;
+                    else if (status === '未完成') incompleteCount++;
+                    else if (status === '延後') delayCount++;
                 }
             });
         });
 
-        const executableMonthCells = totalMonthCells - notApplicableCount;
-        const emptyCount = executableMonthCells - filledValidMonthCount;
-
-        const rate = executableMonthCells > 0
-            ? Math.round((filledValidMonthCount / executableMonthCells) * 100)
-            : 0;
+        const rate = monthRequiredCount > 0 ? Math.round((completedCount / monthRequiredCount) * 100) : 0;
+        let statusLabel = '無執行需求';
+        if (month > getCurrentDueMonth()) statusLabel = '未到期';
+        else if (monthRequiredCount === 0) statusLabel = '無執行需求';
+        else if (incompleteCount > 0 || delayCount > 0) statusLabel = '異常';
+        else if (progressCount > 0) statusLabel = '執行中';
+        else if (completedCount >= monthRequiredCount) statusLabel = '達標';
+        else statusLabel = '待執行';
 
         monthlyStats.push({
             month,
-            totalMonthCells,
-            notApplicableCount,
-            executableMonthCells,
-            filledValidMonthCount,
-            emptyCount,
-            rate
+            totalMonthCells: annualRequiredCount,
+            annualRequiredCount,
+            monthRequiredCount,
+            dueRequiredCount,
+            completedCount,
+            progressCount,
+            incompleteCount,
+            delayCount,
+            noNeedCount,
+            rate,
+            statusLabel
         });
     }
 
@@ -1637,42 +2378,54 @@ function getCategoryMonthlyStats(key) {
     const savedValues = tableDataStore[key] || [];
 
     for (let month = 1; month <= 12; month++) {
-        let totalMonthCells = 0;
-        let notApplicableCount = 0;
-        let filledValidMonthCount = 0;
+        let annualRequiredCount = 0;
+        let monthRequiredCount = 0;
+        let dueRequiredCount = 0;
+        let completedCount = 0;
+        let progressCount = 0;
+        let incompleteCount = 0;
+        let delayCount = 0;
+        let noNeedCount = 0;
 
         baseInfo.forEach((item, idx) => {
-            totalMonthCells++;
-
             const rowSaved = savedValues[idx] || [];
-            const rawValue = rowSaved[month + 1];
+            const rowStat = getRowCompletionStats(rowSaved, item);
+            annualRequiredCount += rowStat.annualRequiredCount;
 
-            const value = rawValue === undefined || rawValue === null
-                ? ""
-                : String(rawValue).trim().toUpperCase();
-
-            if (value === "N/A" || value === "NA") {
-                notApplicableCount++;
-            } else if (value !== "") {
-                filledValidMonthCount++;
+            if (rowStat.annualRequiredCount === 0) noNeedCount++;
+            if (rowStat.effectiveMonths.includes(month)) {
+                monthRequiredCount++;
+                const status = normalizeStatusValue(rowSaved[month + 1]);
+                if (month <= getCurrentDueMonth()) dueRequiredCount++;
+                if (status === '完成') completedCount++;
+                else if (status === '進行中') progressCount++;
+                else if (status === '未完成') incompleteCount++;
+                else if (status === '延後') delayCount++;
             }
         });
 
-        const executableMonthCells = totalMonthCells - notApplicableCount;
-        const emptyCount = executableMonthCells - filledValidMonthCount;
-
-        const rate = executableMonthCells > 0
-            ? Math.round((filledValidMonthCount / executableMonthCells) * 100)
-            : 0;
+        const rate = monthRequiredCount > 0 ? Math.round((completedCount / monthRequiredCount) * 100) : 0;
+        let statusLabel = '無執行需求';
+        if (month > getCurrentDueMonth()) statusLabel = '未到期';
+        else if (monthRequiredCount === 0) statusLabel = '無執行需求';
+        else if (incompleteCount > 0 || delayCount > 0) statusLabel = '異常';
+        else if (progressCount > 0) statusLabel = '執行中';
+        else if (completedCount >= monthRequiredCount) statusLabel = '達標';
+        else statusLabel = '待執行';
 
         monthlyStats.push({
             month,
-            totalMonthCells,
-            notApplicableCount,
-            executableMonthCells,
-            filledValidMonthCount,
-            emptyCount,
-            rate
+            totalMonthCells: annualRequiredCount,
+            annualRequiredCount,
+            monthRequiredCount,
+            dueRequiredCount,
+            completedCount,
+            progressCount,
+            incompleteCount,
+            delayCount,
+            noNeedCount,
+            rate,
+            statusLabel
         });
     }
 
@@ -1687,25 +2440,21 @@ function addOverviewSheet() {
         return sum + ((appData[key] || []).length);
     }, 0);
 
-    const totalMonthCells = monthlyStats.reduce((sum, item) => {
-        return sum + item.totalMonthCells;
+    const totalExecutableMonthCells = Object.keys(titles).reduce((sum, key) => {
+        return sum + getCategoryStats(key).annualRequiredCount;
     }, 0);
 
-    const totalNotApplicableCount = monthlyStats.reduce((sum, item) => {
-        return sum + item.notApplicableCount;
+    const totalFilledValidMonthCount = Object.keys(titles).reduce((sum, key) => {
+        return sum + getCategoryStats(key).completedCount;
     }, 0);
 
-    const totalExecutableMonthCells = monthlyStats.reduce((sum, item) => {
-        return sum + item.executableMonthCells;
+    const totalEmptyCount = Object.keys(titles).reduce((sum, key) => {
+        const stat = getCategoryStats(key);
+        return sum + stat.progressCount + stat.incompleteCount + stat.delayCount;
     }, 0);
 
-    const totalFilledValidMonthCount = monthlyStats.reduce((sum, item) => {
-        return sum + item.filledValidMonthCount;
-    }, 0);
-
-    const totalEmptyCount = monthlyStats.reduce((sum, item) => {
-        return sum + item.emptyCount;
-    }, 0);
+    const totalMonthCells = totalExecutableMonthCells;
+    const totalNotApplicableCount = Object.keys(titles).reduce((sum, key) => sum + getCategoryStats(key).noNeedCount, 0);
 
     const filledRate = totalExecutableMonthCells > 0
         ? `${Math.round((totalFilledValidMonthCount / totalExecutableMonthCells) * 100)}%`
@@ -1718,23 +2467,23 @@ const rows = [
     [`年度：${yearLabel}`, "", "", `匯出時間：${exportDate}`, "", "", "", ""],
     [],
     ["年度管理摘要", "", "", "", "", "", "", ""],
-    ["績效分類數", categoryKeys.length, "績效指標總數", totalIndicators, "附件總數", attachmentCount, "計算規則", "N/A 不列入分母"],
-    ["月份總格數", totalMonthCells, "不適用格數", totalNotApplicableCount, "應執行格數", totalExecutableMonthCells, "已填有效格數", totalFilledValidMonthCount],
-    ["未填報格數", totalEmptyCount, "全年應執行月份填報率", filledRate, "判斷基準", `≥${GOOD_RATE_THRESHOLD}% 良好，未達則追蹤`, "", ""],
+    ["績效分類數", categoryKeys.length, "績效指標總數", totalIndicators, "附件總數", attachmentCount, "完成度規則", "依執行月份計算；適時項目以「無固定月份」表示無固定月份，有填報才列入"],
+    ["全年應執行次數", totalExecutableMonthCells, "已到期次數", monthlyStats.reduce((s, i) => s + i.dueRequiredCount, 0), "完成次數", totalFilledValidMonthCount, "異常/延後次數", monthlyStats.reduce((s, i) => s + i.incompleteCount + i.delayCount, 0)],
+    ["待執行/執行中次數", totalEmptyCount, "全年完成度", filledRate, "判斷基準", "未到期不列異常；適時且執行月份為「無固定月份」時，無填報即無執行需求", "", ""],
     [],
-    ["月份", "月份總格數", "不適用格數", "應執行格數", "已填有效格數", "未填報格數", "應執行月份填報率", "備註"]
+    ["月份", "全年應執行次數", "本月應執行次數", "已到期次數", "完成次數", "待執行/異常次數", "完成度", "執行狀態"]
 ];
 
     monthlyStats.forEach(item => {
         rows.push([
             `${item.month}月`,
-            item.totalMonthCells,
-            item.notApplicableCount,
-            item.executableMonthCells,
-            item.filledValidMonthCount,
-            item.emptyCount,
+            item.annualRequiredCount,
+            item.monthRequiredCount,
+            item.dueRequiredCount,
+            item.completedCount,
+            item.progressCount + item.incompleteCount + item.delayCount,
             `${item.rate}%`,
-            item.rate >= GOOD_RATE_THRESHOLD ? "執行狀況良好" : "建議持續追蹤"
+            item.statusLabel
         ]);
     });
 
@@ -1798,7 +2547,7 @@ const rows = [
         const rateCell = ws[cellRef(r, 6)];
         if (rateCell) {
             const rateValue = parseInt(String(rateCell.v).replace("%", ""), 10);
-            rateCell.s = rateValue >= GOOD_RATE_THRESHOLD ? completedCellStyle : warningCellStyle;
+            rateCell.s = Number.isNaN(rateValue) ? notApplicableCellStyle : (rateValue >= GOOD_RATE_THRESHOLD ? completedCellStyle : (rateValue >= TRACKING_RATE_THRESHOLD ? warningCellStyle : criticalCellStyle));
         }
     }
 
@@ -1814,11 +2563,11 @@ const rows = [
 
 function addMissingItemsSheet() {
     const rows = [
-        ["職業安全績效管理系統 OSPMS｜未填報清單"],
+        ["職業安全績效管理系統 OSPMS｜待追蹤清單"],
         [`年度：${yearLabel}`, "", "", `匯出時間：${exportDate}`, "", "", ""],
         [],
-        ["未填報項目清單", "", "", "", "", "", ""],
-        ["分類名稱", "編號", "績效指標內容", "月份", "時程規劃", "目標值", "狀態"]
+        ["待追蹤項目清單", "", "", "", "", "", ""],
+        ["分類名稱", "編號", "績效指標內容", "月份", "時程規劃", "執行月份", "狀態"]
     ];
 
     Object.keys(titles).forEach(key => {
@@ -1827,30 +2576,27 @@ function addMissingItemsSheet() {
 
         baseInfo.forEach((item, idx) => {
             const rowSaved = savedValues[idx] || [];
+            const rowStat = getRowCompletionStats(rowSaved, item);
 
-            for (let month = 1; month <= 12; month++) {
-                const rawValue = rowSaved[month + 1];
-                const value = rawValue === undefined || rawValue === null
-                    ? ""
-                    : String(rawValue).trim();
-
-                if (value === "") {
+            rowStat.dueMonths.forEach(month => {
+                const value = normalizeStatusValue(rowSaved[month + 1]);
+                if (value === "" || value === "進行中" || value === "未完成" || value === "延後") {
                     rows.push([
                         titles[key],
                         item.id || (idx + 1).toString(),
                         item.name || "",
                         `${month}月`,
-                        rowSaved[0] || item.schedule || "",
-                        rowSaved[1] || item.target || "",
-                        "尚未填報"
+                        rowStat.schedule || "",
+                        rowStat.executionMonthsText || "",
+                        value === "" ? "待執行" : value
                     ]);
                 }
-            }
+            });
         });
     });
 
     if (rows.length === 5) {
-        rows.push(["目前無未填報項目", "", "", "", "", "", ""]);
+        rows.push(["目前無到期待追蹤項目", "", "", "", "", "", ""]);
     }
 
     const ws = XLSX.utils.aoa_to_sheet(rows);
@@ -1870,7 +2616,7 @@ function addMissingItemsSheet() {
         { wch: 42 },
         { wch: 10 },
         { wch: 12 },
-        { wch: 12 },
+        { wch: 14 },
         { wch: 14 }
     ];
 
@@ -1894,8 +2640,10 @@ function addMissingItemsSheet() {
         }
 
         const statusCell = ws[cellRef(r, 6)];
-        if (statusCell && statusCell.v === "尚未填報") {
+        if (statusCell && (statusCell.v === "待執行" || statusCell.v === "進行中")) {
             statusCell.s = warningCellStyle;
+        } else if (statusCell && (statusCell.v === "未完成" || statusCell.v === "延後")) {
+            statusCell.s = criticalCellStyle;
         } else if (statusCell) {
             statusCell.s = completedCellStyle;
         }
@@ -1908,7 +2656,7 @@ function addMissingItemsSheet() {
         })
     };
 
-    XLSX.utils.book_append_sheet(wb, ws, "未填報清單");
+    XLSX.utils.book_append_sheet(wb, ws, "待追蹤清單");
 }
 
 function addCategorySheet(key) {
@@ -1930,16 +2678,16 @@ rows.push([
     stat.itemCount,
     "月份總格數",
     stat.totalMonthCells,
-    "不適用格數",
-    stat.notApplicableCount,
-    "應執行格數",
-    stat.executableMonthCells,
-    "已填有效格數",
-    stat.filledValidMonthCount,
-    "應執行月份填報率",
+    "無固定需求項目",
+    stat.noNeedCount,
+    "年度應執行次數",
+    stat.annualRequiredCount,
+    "完成格數",
+    stat.completedCount,
+    "年度完成率",
     `${stat.rate}%`,
-    "判斷基準",
-    `≥${GOOD_RATE_THRESHOLD}% 良好，未達則追蹤`,
+    "執行狀態",
+    stat.statusLabel,
     "",
     "",
     ""
@@ -1947,19 +2695,19 @@ rows.push([
 
     rows.push([]);
 
-    rows.push(["分類月份統計", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]);
-    rows.push(["月份", "月份總格數", "不適用格數", "應執行格數", "已填有效格數", "未填報格數", "應執行月份填報率", "備註", "", "", "", "", "", "", "", "", ""]);
+    rows.push(["分類月份統計", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]);
+    rows.push(["月份", "全年應執行次數", "本月應執行次數", "已到期次數", "完成次數", "待執行/異常次數", "完成度", "執行狀態", "", "", "", "", "", "", "", "", ""]);
 
     categoryMonthlyStats.forEach(item => {
         rows.push([
             `${item.month}月`,
-            item.totalMonthCells,
-            item.notApplicableCount,
-            item.executableMonthCells,
-            item.filledValidMonthCount,
-            item.emptyCount,
+            item.annualRequiredCount,
+            item.monthRequiredCount,
+            item.dueRequiredCount,
+            item.completedCount,
+            item.progressCount + item.incompleteCount + item.delayCount,
             `${item.rate}%`,
-            item.rate >= GOOD_RATE_THRESHOLD ? "執行狀況良好" : "建議持續追蹤",
+            item.statusLabel,
             "",
             "",
             "",
@@ -1983,12 +2731,16 @@ rows.push([
             item.name || "",
             item.content || "",
             rowSaved[0] || item.schedule || "",
-            rowSaved[1] || item.target || ""
+            resolveExecutionMonthsValue(rowSaved[0] || item.schedule || "", rowSaved[1] || item.target || "")
         ];
 
         for (let i = 2; i <= 13; i++) {
-            excelRow.push(rowSaved[i] || "");
+            excelRow.push(normalizeStatusValue(rowSaved[i]) || "");
         }
+
+        const rowStat = getRowCompletionStats(rowSaved, item);
+        excelRow.push(getRowRateDisplay(rowStat));
+        excelRow.push(rowStat.statusLabel);
 
         rows.push(excelRow);
     });
@@ -2029,7 +2781,9 @@ rows.push([
         { wch: 9 },
         { wch: 9 },
         { wch: 9 },
-        { wch: 9 }
+        { wch: 9 },
+        { wch: 12 },
+        { wch: 12 }
     ];
 
     ws['!rows'] = [
@@ -2112,7 +2866,7 @@ rows.push([
         const rateCell = ws[cellRef(r, 6)];
         if (rateCell) {
             const rateValue = parseInt(String(rateCell.v).replace("%", ""), 10);
-            rateCell.s = rateValue >= GOOD_RATE_THRESHOLD ? completedCellStyle : warningCellStyle;
+            rateCell.s = Number.isNaN(rateValue) ? notApplicableCellStyle : (rateValue >= GOOD_RATE_THRESHOLD ? completedCellStyle : (rateValue >= TRACKING_RATE_THRESHOLD ? warningCellStyle : criticalCellStyle));
         }
     }
 
@@ -2143,11 +2897,27 @@ rows.push([
                 applyCellStyle(ws, r, c, emptyCellStyle);
             } else if (value === "N/A" || value.toUpperCase() === "NA") {
                 applyCellStyle(ws, r, c, notApplicableCellStyle);
-            } else if (value === "-") {
+            } else if (value === "完成") {
+                applyCellStyle(ws, r, c, completedCellStyle);
+            } else if (value === "進行中" || value === "延後") {
                 applyCellStyle(ws, r, c, warningCellStyle);
             } else {
-                applyCellStyle(ws, r, c, completedCellStyle);
+                applyCellStyle(ws, r, c, criticalCellStyle);
             }
+        }
+
+        const rateCell = ws[cellRef(r, 17)];
+        if (rateCell) {
+            const rateValue = parseInt(String(rateCell.v).replace("%", ""), 10);
+            rateCell.s = Number.isNaN(rateValue) ? notApplicableCellStyle : (rateValue >= GOOD_RATE_THRESHOLD ? completedCellStyle : (rateValue >= TRACKING_RATE_THRESHOLD ? warningCellStyle : criticalCellStyle));
+        }
+
+        const executionCell = ws[cellRef(r, 18)];
+        if (executionCell) {
+            if (executionCell.v === "達標") executionCell.s = completedCellStyle;
+            else if (executionCell.v === "執行中" || executionCell.v === "待執行") executionCell.s = warningCellStyle;
+            else if (executionCell.v === "異常") executionCell.s = criticalCellStyle;
+            else executionCell.s = notApplicableCellStyle;
         }
     }
 
@@ -2248,7 +3018,6 @@ function switchTab(type) {
             }
 
             appData[type].forEach((item, rowIndex) => {
-                // 自動重新校準編號 (依序遞增)
                 item.id = (rowIndex + 1).toString();
                 
                 const row = document.createElement('tr');
@@ -2261,18 +3030,28 @@ function switchTab(type) {
                     const hasAttach = getAttachmentFiles(attachmentsStore[type]?.[rowIndex]?.[i]).length > 0;
                     const btnClass = hasAttach ? 'has-file' : 'no-file';
 
+                    const statusVal = normalizeStatusValue(val);
+                    const statusClass = getStatusClass(statusVal);
+
                     monthCells += `<td class="px-0.5 py-1.5 border-l border-b relative">
-                        <input type="text" class="input-cell" placeholder="-" value="${val}"
-                               ${!isAdmin ? 'disabled' : ''}
-                               onchange="handleInputChange(this)" onblur="appendPercentage(this)"
-                               onkeydown="handleKeyDown(event, this)">
+                        <select class="input-cell status-cell ${statusClass}"
+                                ${!isAdmin ? 'disabled' : ''}
+                                onchange="handleStatusChange(this)">
+                            ${getStatusOptionsHTML(statusVal)}
+                        </select>
                         <span class="attachment-btn ${btnClass}" onclick="handleAttachmentClick(${rowIndex}, ${i})">
                             <i data-lucide="link"></i>
                         </span>
                     </td>`;
                 }
 
-                // 修改編號欄位，管理模式下點擊觸發排序選單
+                const scheduleValue = rowSaved[0] || item.schedule || "";
+                const executionMonthsValue = resolveExecutionMonthsValue(scheduleValue, rowSaved[1] || item.target || "");
+                const syntheticValues = [scheduleValue, executionMonthsValue, ...Array.from({ length: 12 }, (_, i) => rowSaved[i + 2] || "")];
+                const rowStat = getRowCompletionStats(syntheticValues, item);
+                const rateClass = getCompletionRateClass(rowStat.rate, rowStat.statusLabel);
+                const executionClass = getExecutionStatusClass(rowStat.statusLabel);
+
                 const idContent = isAdmin 
                     ? `<button onclick="toggleSortMenu(event, ${rowIndex})" class="w-full h-full bg-yellow-50 hover:bg-yellow-200 transition-colors font-bold text-slate-700 py-2 rounded border border-yellow-200">${item.id}</button>` 
                     : item.id;
@@ -2285,20 +3064,30 @@ function switchTab(type) {
                     <td class="px-3 py-3 sticky-col-name border-b">${nameHTML}</td>
                     <td class="px-3 py-3 border-l border-b bg-white group-hover:bg-slate-50/50">${contentHTML}</td>
                     <td class="px-1 py-1.5 border-l border-b bg-white group-hover:bg-slate-50/50">
-                        <input type="text" class="input-cell font-light" value="${rowSaved[0] || item.schedule}" ${!isAdmin ? 'disabled' : ''} onkeydown="handleKeyDown(event, this)">
+                        <select class="input-cell fixed-select-cell font-light" ${!isAdmin ? 'disabled' : ''} onchange="handleScheduleSelectChange(this)" onkeydown="handleKeyDown(event, this)">
+                            ${getScheduleOptionsHTML(scheduleValue)}
+                        </select>
                     </td>
                     <td class="px-1 py-1.5 border-l border-b bg-white group-hover:bg-slate-50/50">
-                        <input type="text" class="input-cell font-light" value="${rowSaved[1] || item.target}" ${!isAdmin ? 'disabled' : ''} onblur="appendPercentage(this)" onkeydown="handleKeyDown(event, this)">
+                        ${getExecutionMonthsCheckboxesHTML(executionMonthsValue, !isAdmin)}
                     </td>
                     ${monthCells}
+                    <td class="px-1 py-1.5 border-l border-b bg-white group-hover:bg-slate-50/50 text-center">
+                        <span class="completion-summary-cell ${rateClass}">${getRowRateDisplay(rowStat)}</span>
+                    </td>
+                    <td class="px-1 py-1.5 border-l border-b bg-white group-hover:bg-slate-50/50 text-center">
+                        <span class="completion-summary-cell ${executionClass}">${rowStat.statusLabel}</span>
+                    </td>
                     <td class="${isAdmin ? '' : 'hidden'} px-2 py-2 border-l border-b text-center">
                         <button onclick="deleteRow(${rowIndex})" class="text-red-400 hover:text-red-600 transition"><i data-lucide="trash-2" class="w-4 h-4 mx-auto"></i></button>
                     </td>
                 `;
                 tbody.appendChild(row);
                 row.querySelectorAll('.input-cell').forEach(input => formatInput(input));
+                row.querySelectorAll('textarea').forEach(textarea => autoResize(textarea));
             });
             lucide.createIcons();
+            applyTableFilters();
         }
 
         // --- 排序功能邏輯 ---
@@ -2725,12 +3514,171 @@ if (inputPwd === getAdminPassword()) {
     alert("已儲存並登出");
 }
 
-        function addNewRow() { saveCurrentTabData(); appData[currentTab].push({ id: (appData[currentTab].length + 1).toString(), name: "新項目", content: "內容描述", schedule: "適時", target: "100%" }); renderTable(currentTab); }
+        function addNewRow() { saveCurrentTabData(); appData[currentTab].push({ id: (appData[currentTab].length + 1).toString(), name: "新項目", content: "內容描述", schedule: "適時", target: "無固定月份" }); renderTable(currentTab); }
         async function deleteRow(idx) { if (confirm("確定刪除？")) { saveCurrentTabData(); appData[currentTab].splice(idx, 1); if (attachmentsStore[currentTab]?.[idx]) delete attachmentsStore[currentTab][idx]; await persistToStorage(); renderTable(currentTab); } }
 
         function handleYearFormat(input) {
             let val = input.value.trim(); let match = val.match(/\d+/);
             if (match) { let y = parseInt(match[0]); if (y > 1911) input.value = `${y}年度 (${y - 1911}年)`; else input.value = `${y + 1911}年度 (${y}年)`; }
+        }
+
+        function getExecutionMonthsDisplayText(value) {
+            const months = parseExecutionMonths(value);
+            return formatExecutionMonths(months);
+        }
+
+        function updateExecutionMonthsPanelLabel(panel) {
+            if (!panel) return;
+            const hidden = panel.querySelector('.execution-months-value');
+            const label = panel.querySelector('.execution-months-label');
+            const value = hidden ? hidden.value : '無固定月份';
+            const displayText = getExecutionMonthsDisplayText(value);
+
+            if (label) {
+                label.textContent = displayText;
+                label.title = displayText;
+            }
+        }
+
+        function closeAllExecutionMonthsMenus(exceptPanel = null) {
+            document.querySelectorAll('.execution-months-panel').forEach(panel => {
+                if (exceptPanel && panel === exceptPanel) return;
+                cancelExecutionMonthsSelection(panel, true);
+                const dropdown = panel.querySelector('.execution-months-dropdown');
+                if (dropdown) dropdown.classList.add('hidden');
+            });
+        }
+
+        function toggleExecutionMonthsMenu(button) {
+            const panel = button.closest('.execution-months-panel');
+            if (!panel || panel.classList.contains('is-disabled')) return;
+
+            const dropdown = panel.querySelector('.execution-months-dropdown');
+            if (!dropdown) return;
+
+            const willOpen = dropdown.classList.contains('hidden');
+            closeAllExecutionMonthsMenus(panel);
+            if (willOpen) {
+                resetExecutionMonthsDraft(panel);
+                dropdown.classList.remove('hidden');
+            } else {
+                cancelExecutionMonthsSelection(panel);
+            }
+        }
+
+        function setExecutionMonthsPanelValue(panel, value) {
+            if (!panel) return;
+            const months = parseExecutionMonths(value);
+            const hidden = panel.querySelector('.execution-months-value');
+
+            if (hidden) hidden.value = formatExecutionMonths(months);
+            setExecutionMonthsDraftValue(panel, formatExecutionMonths(months));
+            updateExecutionMonthsPanelLabel(panel);
+        }
+
+        function getExecutionMonthsDraftValue(panel) {
+            const monthCheckboxes = Array.from(panel.querySelectorAll('.execution-month-checkbox'));
+            const selectedMonths = monthCheckboxes
+                .filter(item => item.checked)
+                .map(item => Number(item.value))
+                .sort((a, b) => a - b);
+            return formatExecutionMonths(selectedMonths);
+        }
+
+        function updateExecutionMonthsDraftLabel(panel) {
+            if (!panel) return;
+            const draftLabel = panel.querySelector('.execution-months-draft-label');
+            if (draftLabel) draftLabel.textContent = getExecutionMonthsDraftValue(panel);
+        }
+
+        function setExecutionMonthsDraftValue(panel, value) {
+            if (!panel) return;
+            const months = parseExecutionMonths(value);
+            const noneCheckbox = panel.querySelector('.execution-month-none-checkbox');
+            const monthCheckboxes = panel.querySelectorAll('.execution-month-checkbox');
+
+            if (noneCheckbox) noneCheckbox.checked = months.length === 0;
+            monthCheckboxes.forEach(checkbox => {
+                checkbox.checked = months.includes(Number(checkbox.value));
+            });
+            updateExecutionMonthsDraftLabel(panel);
+        }
+
+        function resetExecutionMonthsDraft(panel) {
+            if (!panel) return;
+            const hidden = panel.querySelector('.execution-months-value');
+            setExecutionMonthsDraftValue(panel, hidden ? hidden.value : '無固定月份');
+        }
+
+        function cancelExecutionMonthsSelection(panel, silent = false) {
+            if (!panel) return;
+            resetExecutionMonthsDraft(panel);
+            const dropdown = panel.querySelector('.execution-months-dropdown');
+            if (dropdown && !silent) dropdown.classList.add('hidden');
+        }
+
+        function confirmExecutionMonthsSelection(panel) {
+            if (!panel) return;
+            const hidden = panel.querySelector('.execution-months-value');
+            const value = getExecutionMonthsDraftValue(panel);
+            if (hidden) hidden.value = value;
+            updateExecutionMonthsPanelLabel(panel);
+            refreshRowSummary(panel.closest('tr'));
+            applyTableFilters();
+
+            const dropdown = panel.querySelector('.execution-months-dropdown');
+            if (dropdown) dropdown.classList.add('hidden');
+        }
+
+        function handleScheduleSelectChange(select) {
+            const row = select.closest('tr');
+            if (!row) return;
+
+            const executionPanel = row.cells[4]?.querySelector('.execution-months-panel');
+            setExecutionMonthsPanelValue(executionPanel, getDefaultExecutionMonthsBySchedule(select.value));
+
+            refreshRowSummary(row);
+            applyTableFilters();
+        }
+
+        function handleExecutionMonthDraftChange(checkbox) {
+            const panel = checkbox.closest('.execution-months-panel');
+            if (!panel) return;
+
+            const noneCheckbox = panel.querySelector('.execution-month-none-checkbox');
+            const monthCheckboxes = Array.from(panel.querySelectorAll('.execution-month-checkbox'));
+
+            if (checkbox.classList.contains('execution-month-none-checkbox') && checkbox.checked) {
+                monthCheckboxes.forEach(item => item.checked = false);
+            } else if (checkbox.classList.contains('execution-month-checkbox') && checkbox.checked && noneCheckbox) {
+                noneCheckbox.checked = false;
+            }
+
+            const hasSelectedMonth = monthCheckboxes.some(item => item.checked);
+            if (!hasSelectedMonth && noneCheckbox) noneCheckbox.checked = true;
+            updateExecutionMonthsDraftLabel(panel);
+        }
+
+        function handleExecutionMonthCheckboxChange(checkbox) {
+            handleExecutionMonthDraftChange(checkbox);
+        }
+
+        function applyTableFilters() {
+            const scheduleFilter = document.getElementById('schedule-filter')?.value || '';
+            const executionFilter = document.getElementById('execution-months-filter')?.value || '';
+            const rows = document.querySelectorAll('#table-body tr');
+
+            rows.forEach(row => {
+                const scheduleValue = row.cells[3]?.querySelector('.input-cell')?.value || '';
+                const executionValue = row.cells[4]?.querySelector('.execution-months-value')?.value || '';
+                const executionMonths = parseExecutionMonths(executionValue);
+
+                const matchSchedule = !scheduleFilter || scheduleValue === scheduleFilter;
+                const matchExecution = !executionFilter ||
+                    (executionFilter === '無固定月份' ? executionMonths.length === 0 : executionMonths.includes(Number(executionFilter)));
+
+                row.style.display = (matchSchedule && matchExecution) ? '' : 'none';
+            });
         }
 
         function appendPercentage(input) {
@@ -2743,15 +3691,52 @@ if (inputPwd === getAdminPassword()) {
             formatInput(input);
         }
 
-        function formatInput(input) { input.style.color = '#475569'; }
+        function refreshRowSummary(row) {
+            if (!row) return;
+            const values = Array.from(row.querySelectorAll('.input-cell')).map(input => input.value);
+            const rowIndex = Array.from(row.parentElement.rows).indexOf(row);
+            const item = appData[currentTab]?.[rowIndex] || {};
+            const rowStat = getRowCompletionStats(values, item);
+            const cells = row.cells;
+            const rateCell = cells[17]?.querySelector('.completion-summary-cell');
+            const statusCell = cells[18]?.querySelector('.completion-summary-cell');
+
+            if (rateCell) {
+                rateCell.textContent = getRowRateDisplay(rowStat);
+                rateCell.classList.remove('completion-rate-good', 'completion-rate-warning', 'completion-rate-critical', 'completion-rate-neutral');
+                rateCell.classList.add(getCompletionRateClass(rowStat.rate, rowStat.statusLabel));
+            }
+
+            if (statusCell) {
+                statusCell.textContent = rowStat.statusLabel;
+                statusCell.classList.remove('execution-status-good', 'execution-status-warning', 'execution-status-critical', 'execution-status-neutral');
+                statusCell.classList.add(getExecutionStatusClass(rowStat.statusLabel));
+            }
+        }
+
+        function handleStatusChange(select) {
+            const status = normalizeStatusValue(select.value);
+            select.value = status;
+            select.classList.remove('status-empty', 'status-complete', 'status-progress', 'status-incomplete', 'status-delay', 'status-na');
+            select.classList.add(getStatusClass(status));
+            refreshRowSummary(select.closest('tr'));
+        }
+
+        function formatInput(input) {
+            if (input.classList && input.classList.contains('status-cell')) {
+                handleStatusChange(input);
+                return;
+            }
+            input.style.color = '#475569';
+        }
 
         function handleKeyDown(e, input) {
             const cell = input.parentElement; const row = cell.parentElement; const tbody = row.parentElement; const cells = Array.from(row.cells); const rows = Array.from(tbody.rows);
             const rIdx = rows.indexOf(row); const cIdx = cells.indexOf(cell);
-            if (e.key === "Enter" || e.key === "ArrowDown") { e.preventDefault(); if (rIdx < rows.length - 1) rows[rIdx + 1].cells[cIdx].querySelector('input')?.focus(); } 
-            else if (e.key === "ArrowUp") { e.preventDefault(); if (rIdx > 0) rows[rIdx - 1].cells[cIdx].querySelector('input')?.focus(); }
-            else if (e.key === "ArrowRight") { if (input.selectionStart === input.value.length && cIdx < cells.length - 1) { const next = cells[cIdx + 1].querySelector('input'); if (next) { e.preventDefault(); next.focus(); next.select(); } } }
-            else if (e.key === "ArrowLeft") { if (input.selectionStart === 0 && cIdx > 0) { const prev = cells[cIdx - 1].querySelector('input'); if (prev) { e.preventDefault(); prev.focus(); prev.select(); } } }
+            if (e.key === "Enter" || e.key === "ArrowDown") { e.preventDefault(); if (rIdx < rows.length - 1) rows[rIdx + 1].cells[cIdx].querySelector('.input-cell')?.focus(); } 
+            else if (e.key === "ArrowUp") { e.preventDefault(); if (rIdx > 0) rows[rIdx - 1].cells[cIdx].querySelector('.input-cell')?.focus(); }
+            else if (e.key === "ArrowRight") { if (input.selectionStart === input.value.length && cIdx < cells.length - 1) { const next = cells[cIdx + 1].querySelector('.input-cell'); if (next) { e.preventDefault(); next.focus(); next.select(); } } }
+            else if (e.key === "ArrowLeft") { if (input.selectionStart === 0 && cIdx > 0) { const prev = cells[cIdx - 1].querySelector('.input-cell'); if (prev) { e.preventDefault(); prev.focus(); prev.select(); } } }
         }
 
 
@@ -2774,6 +3759,7 @@ if (inputPwd === getAdminPassword()) {
 
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
+        closeAllExecutionMonthsMenus();
         closeFilePreviewModal();
         closeLoginModal();
         closeAttachmentModal();
@@ -2793,7 +3779,14 @@ window.addEventListener('resize', function() {
     });
 });
 
-        window.onload = () => { loadFromStorage(); };
+        
+document.addEventListener('click', function(event) {
+    if (!event.target.closest('.execution-months-panel')) {
+        closeAllExecutionMonthsMenus();
+    }
+});
+
+window.onload = () => { loadFromStorage(); };
     </script>
 </body>
 </html>

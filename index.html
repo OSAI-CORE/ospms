@@ -99,7 +99,7 @@
             border-radius: 6px;
             padding: 3px 1px;
             font-size: 11px;
-            font-weight: 800;
+            font-weight: 600;
             transition: all 0.2s;
             appearance: none;
             -webkit-appearance: none;
@@ -122,26 +122,30 @@
             background: #f8fafc !important;
             color: #94a3b8 !important;
         }
-        .status-complete {
-            background: #dcfce7 !important;
-            color: #047857 !important;
-        }
-        .status-progress {
-            background: #fef3c7 !important;
-            color: #b45309 !important;
-        }
-        .status-incomplete {
-            background: #fee2e2 !important;
-            color: #dc2626 !important;
-        }
-        .status-delay {
-            background: #ffedd5 !important;
-            color: #c2410c !important;
-        }
-        .status-na {
-            background: #e5e7eb !important;
-            color: #64748b !important;
-        }
+.status-complete {
+    background: #ecfdf5 !important;
+    color: #047857 !important;
+}
+
+.status-progress {
+    background: #fffbeb !important;
+    color: #92400e !important;
+}
+
+.status-incomplete {
+    background: #fef2f2 !important;
+    color: #b91c1c !important;
+}
+
+.status-delay {
+    background: #fff7ed !important;
+    color: #c2410c !important;
+}
+
+.status-na {
+    background: #f8fafc !important;
+    color: #64748b !important;
+}
 
         .completion-summary-cell {
             text-align: center;
@@ -1682,7 +1686,7 @@ function getStatusClass(value) {
 
 function getStatusOptionsHTML(value) {
     const status = normalizeStatusValue(value);
-    const options = ["", "完成", "進行中", "未完成", "延後", "N/A"];
+    const options = ["", "完成", "進行中", "未完成", "N/A"];
 
     return options.map(option => {
         const label = option === "" ? "-" : option;
@@ -1873,14 +1877,20 @@ function getRowCompletionStats(rowSaved, item) {
         }
     }
 
-    const effectiveMonths = plannedMonths.length > 0 ? plannedMonths : eventTriggeredMonths;
-    const annualRequiredCount = effectiveMonths.length;
-    const dueMonths = effectiveMonths.filter(month => month <= currentDueMonth);
+const effectiveMonths = plannedMonths.length > 0 ? plannedMonths : eventTriggeredMonths;
 
-    effectiveMonths.forEach(month => {
-        const status = normalizeStatusValue(rowSaved[month + 1]);
-        if (status === '完成') completedCount++;
-    });
+const validEffectiveMonths = effectiveMonths.filter(month => {
+    const status = normalizeStatusValue(rowSaved[month + 1]);
+    return status !== 'N/A';
+});
+
+const annualRequiredCount = validEffectiveMonths.length;
+const dueMonths = validEffectiveMonths.filter(month => month <= currentDueMonth);
+
+validEffectiveMonths.forEach(month => {
+    const status = normalizeStatusValue(rowSaved[month + 1]);
+    if (status === '完成') completedCount++;
+});
 
     dueMonths.forEach(month => {
         const status = normalizeStatusValue(rowSaved[month + 1]);
@@ -1912,7 +1922,7 @@ function getRowCompletionStats(rowSaved, item) {
         schedule,
         executionMonthsText,
         plannedMonths,
-        effectiveMonths,
+        effectiveMonths: validEffectiveMonths,
         dueMonths,
         annualRequiredCount,
         completedCount,
@@ -2469,9 +2479,9 @@ const rows = [
     ["年度管理摘要", "", "", "", "", "", "", ""],
     ["績效分類數", categoryKeys.length, "績效指標總數", totalIndicators, "附件總數", attachmentCount, "完成度規則", "依執行月份計算；適時項目以「無固定月份」表示無固定月份，有填報才列入"],
     ["全年應執行次數", totalExecutableMonthCells, "已到期次數", monthlyStats.reduce((s, i) => s + i.dueRequiredCount, 0), "完成次數", totalFilledValidMonthCount, "異常/延後次數", monthlyStats.reduce((s, i) => s + i.incompleteCount + i.delayCount, 0)],
-    ["待執行/執行中次數", totalEmptyCount, "全年完成度", filledRate, "判斷基準", "未到期不列異常；適時且執行月份為「無固定月份」時，無填報即無執行需求", "", ""],
+    ["執行中/異常次數", totalEmptyCount, "全年完成度", filledRate, "判斷基準", "未到期不列異常；適時且執行月份為「無固定月份」時，無填報即無執行需求", "", ""],
     [],
-    ["月份", "全年應執行次數", "本月應執行次數", "已到期次數", "完成次數", "待執行/異常次數", "完成度", "執行狀態"]
+    ["月份", "全年應執行次數", "本月應執行次數", "已到期次數", "完成次數", "執行中/異常次數", "完成度", "執行狀態"]
 ];
 
     monthlyStats.forEach(item => {
@@ -2696,7 +2706,7 @@ rows.push([
     rows.push([]);
 
     rows.push(["分類月份統計", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]);
-    rows.push(["月份", "全年應執行次數", "本月應執行次數", "已到期次數", "完成次數", "待執行/異常次數", "完成度", "執行狀態", "", "", "", "", "", "", "", "", ""]);
+    rows.push(["月份", "全年應執行次數", "本月應執行次數", "已到期次數", "完成次數", "執行中/異常次數", "完成度", "執行狀態", "", "", "", "", "", "", "", "", ""]);
 
     categoryMonthlyStats.forEach(item => {
         rows.push([

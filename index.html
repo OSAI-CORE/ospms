@@ -2278,7 +2278,12 @@ store.put({
 
 function importJSON(input) {
     const file = input.files[0];
-    if (!file || !confirm("導入將會覆蓋目前所有數據，確定嗎？")) return;
+    if (!file) return;
+
+    if (!confirm("導入將會覆蓋目前所有數據，確定嗎？")) {
+        input.value = "";
+        return;
+    }
 
     const reader = new FileReader();
 
@@ -2289,7 +2294,12 @@ function importJSON(input) {
             // 新版格式：完整還原多年度資料夾。
             if (Array.isArray(imported.year_folders) && imported.year_folders.length > 0) {
                 yearFolders = imported.year_folders;
-                currentYearFolderId = imported.current_year_folder_id || yearFolders[0].id;
+
+                const importedCurrentId = imported.current_year_folder_id;
+                const hasCurrentFolder = yearFolders.some(folder => folder.id === importedCurrentId);
+
+                currentYearFolderId = hasCurrentFolder ? importedCurrentId : yearFolders[0].id;
+
                 syncGlobalsFromCurrentYearFolder();
             } else {
                 // 舊版格式：只有單年度 data_store / attachments / base_data。
@@ -2317,7 +2327,6 @@ function importJSON(input) {
             normalizeAllExecutionMonths();
             await persistToStorage();
 
-            // 清空 input，讓使用者之後可再次選同一個 JSON 檔重新匯入。
             input.value = "";
             window.location.reload();
         } catch (err) {
@@ -3813,7 +3822,7 @@ async function renameYearFolder(event, folderId) {
     const folder = yearFolders.find(item => item.id === folderId);
     if (!folder) return;
 
-    const newName = prompt('請輸入新的年度資料夾名稱，例如：116 或 2027', folder.name);
+    const newName = prompt('請輸入新的年度資料夾名稱', folder.name);
     if (!newName) return;
 
     const numericYear = normalizeYearValue(newName);
@@ -4090,13 +4099,6 @@ function switchTab(type, shouldSave = true) {
             }
             return attachmentsStore[currentTab][row][month];
         }
-
-function formatFileSize(bytes) {
-    if (!bytes) return '';
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-}
 
 function formatFileSize(bytes) {
     const size = Number(bytes);

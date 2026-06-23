@@ -2241,48 +2241,92 @@ store.put({
         // --- 功能模組 ---
 
         function exportJSON() {
-const dataToExport = {
-    version: APP_DATA_VERSION,
-    data_store: tableDataStore,
-    attachments: attachmentsStore,
-    base_data: {
+    // 匯出前先保存目前畫面編輯內容，避免備份漏掉尚未儲存的欄位。
+    if (isAdmin) saveCurrentTabData();
+
+    // 將目前全域資料同步回目前年度資料夾，確保多年度資料完整。
+    syncCurrentYearFolderFromGlobals();
+
+    const dataToExport = {
         version: APP_DATA_VERSION,
-        data: appData
-    },
-    export_date: new Date().toLocaleString()
-};
-            const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `職業安全績效管理系統_PMS_${new Date().toISOString().slice(0, 10)}.json`;
-            a.click();
-        }
 
-        function importJSON(input) {
-            const file = input.files[0];
-            if (!file || !confirm("導入將會覆蓋目前所有數據，確定嗎？")) return;
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                try {
-                    const imported = JSON.parse(e.target.result);
-tableDataStore = imported.data_store || {};
-attachmentsStore = imported.attachments || {};
+        // 新版完整備份：包含所有年度資料夾與目前選取年度。
+        year_folders: yearFolders,
+        current_year_folder_id: currentYearFolderId,
 
-if (
-    imported.base_data &&
-    imported.base_data.version === APP_DATA_VERSION &&
-    imported.base_data.data
-) {
-    appData = imported.base_data.data;
+        // 舊版相容備份：保留單年度資料欄位，避免舊資料流程中斷。
+        data_store: tableDataStore,
+        attachments: attachmentsStore,
+        base_data: {
+            version: APP_DATA_VERSION,
+            data: appData
+        },
+
+        export_date: new Date().toLocaleString()
+    };
+
+    const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+
+    a.href = url;
+    a.download = `職業安全績效管理系統_PMS_${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+
+    URL.revokeObjectURL(url);
 }
-                    await persistToStorage();
-                    window.location.reload();
-                } catch (err) { alert("檔案格式錯誤！"); }
-            };
-            reader.readAsText(file);
-        }
 
+function importJSON(input) {
+    const file = input.files[0];
+    if (!file || !confirm("導入將會覆蓋目前所有數據，確定嗎？")) return;
+
+    const reader = new FileReader();
+
+    reader.onload = async (e) => {
+        try {
+            const imported = JSON.parse(e.target.result);
+
+            // 新版格式：完整還原多年度資料夾。
+            if (Array.isArray(imported.year_folders) && imported.year_folders.length > 0) {
+                yearFolders = imported.year_folders;
+                currentYearFolderId = imported.current_year_folder_id || yearFolders[0].id;
+                syncGlobalsFromCurrentYearFolder();
+            } else {
+                // 舊版格式：只有單年度 data_store / attachments / base_data。
+                tableDataStore = imported.data_store || {};
+                attachmentsStore = imported.attachments || {};
+
+                if (
+                    imported.base_data &&
+                    imported.base_data.version === APP_DATA_VERSION &&
+                    imported.base_data.data
+                ) {
+                    appData = imported.base_data.data;
+                }
+
+                const firstFolder = createYearFolder(getCurrentReportYear());
+                firstFolder.appData = appData;
+                firstFolder.tableDataStore = tableDataStore;
+                firstFolder.attachmentsStore = attachmentsStore;
+
+                yearFolders = [firstFolder];
+                currentYearFolderId = firstFolder.id;
+                syncGlobalsFromCurrentYearFolder();
+            }
+
+            normalizeAllExecutionMonths();
+            await persistToStorage();
+
+            // 清空 input，讓使用者之後可再次選同一個 JSON 檔重新匯入。
+            input.value = "";
+            window.location.reload();
+        } catch (err) {
+            alert("檔案格式錯誤！");
+        }
+    };
+
+    reader.readAsText(file);
+}
 
 function normalizeStatusValue(rawValue) {
     const value = rawValue === undefined || rawValue === null ? "" : String(rawValue).trim();
@@ -3729,8 +3773,8 @@ async function switchYearFolder(folderId) {
 async function addYearFolder() {
     if (!isAdmin) return;
 
-    const year = prompt('請輸入要新增的年度，例如：116 或 2027');
-    if (!year) return;
+const year = prompt('請輸入新增年度');
+if (!year) return;
 
     const numericYear = normalizeYearValue(year);
     if (!numericYear) {
@@ -4510,9 +4554,47 @@ if (inputPwd === getAdminPassword()) {
 }
 
         function addNewRow() { saveCurrentTabData(); appData[currentTab].push({ id: (appData[currentTab].length + 1).toString(), name: "新項目", content: "內容描述", schedule: "適時", target: "-" }); renderTable(currentTab); }
-        async function deleteRow(idx) { if (confirm("確定刪除？")) { saveCurrentTabData(); appData[currentTab].splice(idx, 1); if (attachmentsStore[currentTab]?.[idx]) delete attachmentsStore[currentTab][idx]; await persistToStorage(); renderTable(currentTab); } }
+        async function deleteRow(idx) {
+    if (!confirm("確定刪除？")) return;
 
-        function handleYearFormat(input) {
+    // 刪除前先保存目前畫面上的輸入內容。
+    saveCurrentTabData();
+
+    // 刪除基礎指標資料。
+    appData[currentTab].splice(idx, 1);
+
+    // 同步刪除該列填報資料。
+    if (Array.isArray(tableDataStore[currentTab])) {
+        tableDataStore[currentTab].splice(idx, 1);
+    }
+
+    // 重新整理附件索引，避免刪除列後附件對錯指標。
+    const oldAttachments = attachmentsStore[currentTab] || {};
+    const newAttachments = {};
+
+    Object.keys(oldAttachments).forEach(key => {
+        const numericKey = Number(key);
+
+        // 被刪除列前面的附件維持原本位置。
+        if (numericKey < idx) {
+            newAttachments[numericKey] = oldAttachments[key];
+        }
+
+        // 被刪除列後面的附件全部往前移一格。
+        if (numericKey > idx) {
+            newAttachments[numericKey - 1] = oldAttachments[key];
+        }
+
+        // numericKey === idx 的附件不保留，因為該列已刪除。
+    });
+
+    attachmentsStore[currentTab] = newAttachments;
+
+    await persistToStorage();
+    renderTable(currentTab);
+}
+
+function handleYearFormat(input) {
             const numericYear = normalizeYearValue(input.value);
             if (!numericYear) return;
 

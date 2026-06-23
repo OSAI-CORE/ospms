@@ -458,6 +458,226 @@
             transform: scale(1.02);
         }
 
+.attachment-panel {
+    width: 80%;
+    max-width: 450px;
+    max-height: 78vh;
+    overflow-y: auto;
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 16px 18px;
+    box-shadow: 0 20px 52px rgba(15, 23, 42, 0.24);
+}
+
+.attachment-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 12px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.attachment-panel-title {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+}
+
+.attachment-panel-title h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #0f172a;
+    white-space: nowrap;
+}
+
+#attachment-context-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #64748b;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.attachment-panel-close {
+    color: #94a3b8;
+}
+
+.attachment-panel-close:hover {
+    color: #475569;
+}
+
+.attachment-upload-zone {
+    border: 2px dashed #bfdbfe;
+    background: #f8fbff;
+    border-radius: 16px;
+    min-height: 108px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.attachment-upload-zone:hover,
+#upload-status-box.drag-over {
+    border-color: #60a5fa;
+    background: #eff6ff;
+    transform: none;
+}
+
+.attachment-upload-main {
+    color: #2563eb;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.attachment-upload-sub {
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.attachment-list-section {
+    margin-top: 18px;
+}
+
+.attachment-list-title {
+    color: #334155;
+    font-size: 12px;
+    font-weight: 700;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.attachment-file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.attachment-file-row {
+    cursor: pointer;
+    min-height: 54px;
+    padding: 9px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 13px;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    transition: all 0.18s ease;
+}
+
+.attachment-file-row:hover {
+    border-color: #93c5fd;
+    background: #f8fbff;
+}
+
+.attachment-file-info {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.attachment-file-name {
+    color: #334155;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.attachment-file-size {
+    color: #94a3b8;
+    font-size: 11px;
+    font-weight: 500;
+    margin-top: 3px;
+}
+
+.attachment-file-remove {
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    background: #f1f5f9;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.attachment-file-remove:hover {
+    background: #fff1f2;
+    color: #ef4444;
+}
+
+.attachment-header-remove {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    margin-left: 4px;
+}
+
+.attachment-admin-tools {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.attachment-admin-tools.hidden {
+    display: none;
+}
+
+.attachment-admin-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.attachment-batch-apply,
+.attachment-batch-clear {
+    min-height: 42px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 700;
+    transition: all 0.2s ease;
+}
+
+.attachment-batch-apply {
+    background: #1e293b;
+    color: #ffffff;
+}
+
+.attachment-batch-apply:hover {
+    background: #334155;
+}
+
+.attachment-batch-clear {
+    background: #fff1f2;
+    color: #ef4444;
+    border: 1px solid #ffe4e6;
+}
+
+.attachment-batch-clear:hover {
+    background: #ffe4e6;
+}
+
+#upload-icon-status svg {
+    width: 34px;
+    height: 34px;
+    stroke-width: 2.5;
+}
+
         /* 排序選單樣式 */
         .sort-menu {
             position: absolute;
@@ -483,6 +703,143 @@
         }
         .sort-menu button:hover { background: #f1f5f9; color: #1e293b; }
         .sort-menu button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* 年度資料夾：桌機 / 手機共用樣式 */
+.year-folder-toggle {
+    width: 100%;
+    min-height: 34px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    color: #94a3b8;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    background: rgba(15, 23, 42, 0.35);
+    border: 1px solid rgba(51, 65, 85, 0.85);
+    transition: all 0.2s ease;
+}
+
+.year-folder-toggle:hover {
+    background: rgba(30, 41, 59, 0.95);
+    color: #ffffff;
+    border-color: rgba(71, 85, 105, 1);
+}
+
+.year-folder-toggle-title,
+.year-folder-toggle-actions {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.year-folder-add-btn {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    align-items: center;
+    justify-content: center;
+    color: #60a5fa;
+    background: rgba(37, 99, 235, 0.12);
+    transition: all 0.18s ease;
+}
+
+.year-folder-add-btn:not(.hidden) {
+    display: inline-flex;
+}
+
+.year-folder-add-btn:hover {
+    color: #ffffff;
+    background: #2563eb;
+}
+
+.year-folder-chevron {
+    color: #64748b;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.year-folder-toggle.is-open .year-folder-chevron {
+    transform: rotate(180deg);
+    color: #cbd5e1;
+}
+
+.year-folder-list {
+    padding-left: 2px;
+}
+
+.year-folder-item {
+    width: 100%;
+    min-height: 34px;
+    padding: 7px 9px;
+    border-radius: 11px;
+    color: #cbd5e1;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    transition: all 0.2s ease;
+    background: transparent;
+}
+
+.year-folder-item:hover {
+    background: rgba(30, 41, 59, 0.88);
+    color: #ffffff;
+}
+
+.year-folder-item.active {
+    background: linear-gradient(135deg, #1d4ed8, #2563eb);
+    color: #ffffff;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22);
+}
+
+.year-folder-main {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    text-align: left;
+}
+
+.year-folder-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.year-folder-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.year-folder-icon-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 8px;
+    color: #94a3b8;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.18s ease;
+}
+
+.year-folder-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+}
+
+.year-folder-icon-btn.danger:hover {
+    background: rgba(239, 68, 68, 0.14);
+    color: #f87171;
+}
 
 .system-footer-light {
     width: 100%;
@@ -918,6 +1275,51 @@ main > .p-4,
         font-size: 13px !important;
     }
 
+    .year-folder-item {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 10px;
+    color: #cbd5e1;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.year-folder-item:hover {
+    background: rgba(30, 41, 59, 0.8);
+    color: #ffffff;
+}
+
+.year-folder-item.active {
+    background: #1d4ed8;
+    color: #ffffff;
+}
+
+.year-folder-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.year-folder-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.year-folder-actions button {
+    color: #94a3b8;
+}
+
+.year-folder-actions button:hover {
+    color: #ffffff;
+}
+
     .sidebar .p-4 {
         padding: 12px !important;
     }
@@ -1215,10 +1617,41 @@ main > .p-4,
         </div>
         
         <nav class="flex-1 py-6 overflow-y-auto">
-            <div class="px-6 mb-4">
+            <div class="px-6 mb-2">
                 <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">系統分類目錄</span>
             </div>
-            <div class="space-y-1" id="nav-tabs"></div>
+
+            <div class="space-y-1 mb-5" id="nav-tabs"></div>
+
+            <div class="px-6 mt-4">
+                <div id="year-folder-toggle"
+                     role="button"
+                     tabindex="0"
+                     onclick="toggleYearFolders()"
+                     onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleYearFolders(); }"
+                     class="year-folder-toggle">
+                    <span class="year-folder-toggle-title">
+                        <i data-lucide="folder-tree" class="w-3.5 h-3.5"></i>
+                        <span>年度資料夾</span>
+                    </span>
+
+                    <span class="year-folder-toggle-actions">
+                        <button id="add-year-folder-btn"
+                                type="button"
+                                onclick="event.stopPropagation(); addYearFolder();"
+                                class="hidden year-folder-add-btn"
+                                title="新增年度">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                        </button>
+
+                        <i id="year-folder-chevron"
+                           data-lucide="chevron-down"
+                           class="w-3.5 h-3.5 year-folder-chevron"></i>
+                    </span>
+                </div>
+
+                <div id="year-folder-list" class="year-folder-list space-y-1 mt-2 hidden"></div>
+            </div>
         </nav>
 
         <div class="p-4 bg-slate-800/30 space-y-2">
@@ -1413,58 +1846,64 @@ main > .p-4,
         </div>
     </div>
 
-    <!-- 附件管理彈窗 -->
-    <div id="attachment-modal" onclick="closeAttachmentModalOutside(event)" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] hidden flex items-center justify-center p-4">
-        <div onclick="event.stopPropagation()" class="bg-white w-full max-w-[440px] max-h-[90vh] rounded-[2.5rem] shadow-2xl overflow-y-auto p-8 relative animate-in fade-in zoom-in duration-200">
-            <button onclick="closeAttachmentModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 transition">
+<!-- 附件管理彈窗 -->
+<div id="attachment-modal" onclick="closeAttachmentModalOutside(event)" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] hidden flex items-center justify-center p-4">
+    <div onclick="event.stopPropagation()" class="attachment-panel">
+        <div class="attachment-panel-header">
+            <div class="attachment-panel-title">
+                <i data-lucide="link" class="w-7 h-7 text-blue-600 rotate-45"></i>
+<h3 id="attachment-modal-title">佐證附件管理</h3>
+<span id="attachment-context-label"></span>
+
+<button id="clear-month-attachments-btn"
+        type="button"
+        class="attachment-file-remove attachment-header-remove"
+        title="清除該月所有附件"
+        onclick="clearCurrentMonthAttachments(event)">
+    <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+</button>
+            </div>
+
+            <button onclick="closeAttachmentModal()" class="attachment-panel-close">
                 <i data-lucide="x" class="w-6 h-6"></i>
             </button>
-            <div class="flex items-center space-x-3 mb-6">
-                <i data-lucide="link" class="w-6 h-6 text-blue-600 rotate-45"></i>
-                <h3 id="attachment-modal-title" class="text-xl font-bold text-slate-800 tracking-tight">附件與快速填充</h3>
-            </div>
-            <div class="mb-6">
-                <label class="text-[12px] font-bold text-slate-400 mb-2 block">目前選擇</label>
-                <div class="bg-slate-50 border border-slate-100 rounded-xl px-5 py-4 flex justify-between items-center">
-                    <span id="target-label-display" class="text-slate-700 font-medium">載入中...</span>
-                    <button id="delete-single-attachment-btn" onclick="deleteSingleAttachment()" class="hidden text-red-400 hover:text-red-600 transition p-1" title="刪除此筆附件">
-                        <i data-lucide="trash-2" class="w-5 h-5"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="mb-8">
-                <label class="text-[12px] font-bold text-slate-400 mb-2 block">連結電腦 PDF / PNG / JPG 檔案</label>
-                <div class="flex items-center space-x-3">
-                    <div id="upload-status-box" 
-                         onclick="document.getElementById('file-input').click()"
-                         class="flex-1 border-2 border-dashed border-blue-200 bg-blue-50/30 rounded-2xl py-5 px-4 flex items-center justify-center space-x-2 cursor-pointer hover:bg-blue-50 transition group relative">
-                        <i id="upload-icon-status" data-lucide="cloud-upload" class="w-5 h-5 text-blue-500"></i>
-                        <span id="upload-text-status" class="text-blue-600 font-bold text-sm">點擊或拖移檔案至此</span>
-                    </div>
-                    <button onclick="viewCurrentFile()" id="view-file-btn" class="hidden h-[60px] w-[60px] flex items-center justify-center bg-slate-50 border border-slate-100 rounded-2xl text-slate-400 hover:text-blue-600 transition">
-                        <i data-lucide="external-link" class="w-6 h-6"></i>
-                    </button>
-                </div>
-                <input type="file" id="file-input" class="hidden" accept=".pdf,.png,.jpg,.jpeg" multiple onchange="handleFileUpload(this)">
-                <div id="attachment-file-list" class="mt-3 space-y-2 max-h-[260px] overflow-y-auto pr-1"></div>
-            </div>
-            <hr id="attachment-admin-divider" class="border-slate-100 mb-6">
-            <div id="attachment-admin-tools" class="mb-8">
-                <label class="text-[12px] font-bold text-slate-400 mb-3 block">快速大量填充 (批次操作)</label>
-                <div class="grid grid-cols-2 gap-3">
-                    <button onclick="batchApplyToFile()" class="bg-[#1e293b] text-white py-3.5 rounded-xl text-[13px] font-bold hover:bg-slate-700 transition">
-                        將此檔案套用全年度
-                    </button>
-                    <button onclick="batchClearRowAttachments()" class="bg-[#fff1f2] text-[#f43f5e] py-3.5 rounded-xl text-[13px] font-bold hover:bg-red-100 transition border border-red-50">
-                        清除此指標所有附件
-                    </button>
-                </div>
-            </div>
-            <button onclick="closeAttachmentModal()" class="w-full py-4 bg-[#2563eb] text-white rounded-[1.2rem] font-bold text-base shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition">
-                完成並關閉
-            </button>
         </div>
+
+        <div id="attachment-upload-section">
+            <div id="upload-status-box"
+                 onclick="document.getElementById('file-input').click()"
+                 class="attachment-upload-zone">
+                <i id="upload-icon-status" data-lucide="cloud-upload" class="text-blue-500"></i>
+                <div id="upload-text-status" class="attachment-upload-main">點擊或拖放檔案至此處上傳</div>
+                <div class="attachment-upload-sub">支援 PDF, PNG, JPG（單檔最大 10MB）</div>
+            </div>
+        </div>
+
+        <input type="file" id="file-input" class="hidden" accept=".pdf,.png,.jpg,.jpeg" multiple onchange="handleFileUpload(this)">
+
+        <div class="attachment-list-section">
+            <div class="attachment-list-title">已上傳檔案清單（點擊可預覽）</div>
+            <div id="attachment-file-list" class="attachment-file-list"></div>
+        </div>
+
+<div id="attachment-admin-tools" class="attachment-admin-tools hidden">
+    <div class="attachment-admin-actions">
+        <button type="button"
+                onclick="batchApplyToFile()"
+                class="attachment-batch-apply">
+            將此檔案套用全年度
+        </button>
+
+        <button type="button"
+                onclick="batchClearRowAttachments()"
+                class="attachment-batch-clear">
+            清除此指標所有附件
+        </button>
     </div>
+</div>
+
+    </div>
+</div>
 
 <!-- 檔案預覽視窗 -->
 <div id="file-preview-modal" class="file-preview-modal hidden no-print">
@@ -1565,10 +2004,16 @@ main > .p-4,
         const titles = { plan: "職業安全衛生管理計畫", iso: "ISO 45001 管理審查", protect: "四大保護計畫", passive: "被動性指標", monitor: "自主監測及主動回報" };
         const icons = { plan: "clipboard-list", iso: "award", protect: "user-check", passive: "activity", monitor: "gauge" };
 
-        let currentTab = 'plan';
-        let tableDataStore = {}; 
-        let attachmentsStore = {}; 
-        let isAdmin = false;
+let currentTab = 'plan';
+let tableDataStore = {}; 
+let attachmentsStore = {}; 
+let isAdmin = false;
+
+const defaultAppDataTemplate = JSON.parse(JSON.stringify(appData));
+
+let yearFolders = [];
+let currentYearFolderId = null;
+let isYearFolderPanelOpen = false;
         let activeAttachmentTarget = null; 
         let activeSortRowIdx = null; // 當前準備排序的行索引
         let imagePreviewScale = 1;
@@ -1582,6 +2027,133 @@ const APP_DATA_VERSION = "completion-2026-06-month-popup-confirm";
 
 const DEFAULT_ADMIN_PASSWORD = "1068";
 const MASTER_RECOVERY_CODE = "SAM-SUN-CORE-RECOVERY";
+
+function deepClone(obj) {
+    return JSON.parse(JSON.stringify(obj));
+}
+
+function createBlankExecutionAppDataTemplate() {
+    const cloned = deepClone(defaultAppDataTemplate);
+
+    Object.keys(cloned).forEach(key => {
+        (cloned[key] || []).forEach(item => {
+            item.target = '-';
+        });
+    });
+
+    return cloned;
+}
+
+function normalizeYearValue(input) {
+    const raw = input === undefined || input === null ? '' : String(input).trim();
+    const match = raw.match(/\d+/);
+    if (!match) return null;
+
+    const numericYear = Number(match[0]);
+    if (!numericYear) return null;
+
+    const westernYear = numericYear > 1911 ? numericYear : numericYear + 1911;
+    if (westernYear < 1912 || westernYear > 2999) return null;
+
+    return westernYear;
+}
+
+function formatYearFolderName(year) {
+    return `${year}年度 (${year - 1911}年)`;
+}
+
+function getCarryForwardSourceFolder(targetYear) {
+    const previousFolders = yearFolders
+        .filter(folder => Number(folder.year) < Number(targetYear))
+        .sort((a, b) => Number(b.year) - Number(a.year));
+
+    return previousFolders[0] || getCurrentYearFolder();
+}
+
+function createBlankYearTableDataStore(sourceAppData) {
+    const blankStore = {};
+
+    Object.keys(sourceAppData || {}).forEach(key => {
+        blankStore[key] = (sourceAppData[key] || []).map(item => {
+            return [
+                item.schedule || '',
+                '-',
+                '', '', '', '', '', '',
+                '', '', '', '', '', ''
+            ];
+        });
+    });
+
+    return blankStore;
+}
+
+function createCarryForwardYearTableDataStore(sourceAppData, sourceTableDataStore = {}) {
+    const carriedStore = {};
+
+    Object.keys(sourceAppData || {}).forEach(key => {
+        carriedStore[key] = (sourceAppData[key] || []).map((item, idx) => {
+            const savedRow = Array.isArray(sourceTableDataStore[key]?.[idx]) ? sourceTableDataStore[key][idx] : [];
+            const scheduleValue = savedRow[0] || item.schedule || '';
+            const executionMonthsValue = resolveCarriedExecutionMonthsValue(scheduleValue, savedRow[1], item.target);
+
+            item.schedule = scheduleValue;
+            item.target = executionMonthsValue;
+
+            return [
+                scheduleValue,
+                executionMonthsValue,
+                '', '', '', '', '', '',
+                '', '', '', '', '', ''
+            ];
+        });
+    });
+
+    return carriedStore;
+}
+
+function createYearFolder(year, sourceFolder = null) {
+    const sourceAppData = sourceFolder?.appData ? deepClone(sourceFolder.appData) : createBlankExecutionAppDataTemplate();
+    const sourceTableDataStore = sourceFolder?.tableDataStore ? deepClone(sourceFolder.tableDataStore) : {};
+
+    return {
+        id: `year_${year}_${Date.now()}`,
+        year,
+        name: formatYearFolderName(year),
+        appData: sourceAppData,
+        tableDataStore: sourceFolder
+            ? createCarryForwardYearTableDataStore(sourceAppData, sourceTableDataStore)
+            : createBlankYearTableDataStore(sourceAppData),
+        attachmentsStore: {}
+    };
+}
+
+function getCurrentYearFolder() {
+    return yearFolders.find(folder => folder.id === currentYearFolderId);
+}
+
+function syncGlobalsFromCurrentYearFolder() {
+    const folder = getCurrentYearFolder();
+    if (!folder) return;
+
+    appData = folder.appData || deepClone(defaultAppDataTemplate);
+    tableDataStore = folder.tableDataStore || {};
+    attachmentsStore = folder.attachmentsStore || {};
+
+    const yearInput = document.getElementById('year-input-field');
+    if (yearInput) yearInput.value = folder.name;
+}
+
+function syncCurrentYearFolderFromGlobals() {
+    const folder = getCurrentYearFolder();
+    if (!folder) return;
+
+    folder.appData = appData;
+    folder.tableDataStore = tableDataStore;
+    folder.attachmentsStore = attachmentsStore;
+
+    const yearInput = document.getElementById('year-input-field');
+    if (yearInput) folder.name = yearInput.value || folder.name;
+}
 
         function openDB() {
             return new Promise((resolve, reject) => {
@@ -1604,30 +2176,44 @@ const MASTER_RECOVERY_CODE = "SAM-SUN-CORE-RECOVERY";
                     const req = store.get(key);
                     req.onsuccess = () => res(req.result);
                 });
-                const savedData = await getRequest('ospms_data_store');
-                if (savedData) tableDataStore = savedData;
-                const savedAttach = await getRequest('ospms_attachments');
-                if (savedAttach) attachmentsStore = savedAttach;
-const savedBaseData = await getRequest('ospms_base_data');
+const savedYearFolders = await getRequest('ospms_year_folders');
+const savedCurrentYearFolderId = await getRequest('ospms_current_year_folder_id');
 
-if (
-    savedBaseData &&
-    savedBaseData.version === APP_DATA_VERSION &&
-    savedBaseData.data
-) {
-    Object.keys(savedBaseData.data).forEach(k => {
-        if (appData[k]) appData[k] = savedBaseData.data[k];
-    });
+if (Array.isArray(savedYearFolders) && savedYearFolders.length > 0) {
+    yearFolders = savedYearFolders;
+    currentYearFolderId = savedCurrentYearFolderId || yearFolders[0].id;
+    syncGlobalsFromCurrentYearFolder();
+} else {
+    const savedData = await getRequest('ospms_data_store');
+    const savedAttach = await getRequest('ospms_attachments');
+    const savedBaseData = await getRequest('ospms_base_data');
+
+    const firstFolder = createYearFolder(2026);
+
+    if (savedBaseData && savedBaseData.version === APP_DATA_VERSION && savedBaseData.data) {
+        firstFolder.appData = savedBaseData.data;
+    }
+
+    firstFolder.tableDataStore = savedData || {};
+    firstFolder.attachmentsStore = savedAttach || {};
+
+    yearFolders = [firstFolder];
+    currentYearFolderId = firstFolder.id;
+    syncGlobalsFromCurrentYearFolder();
 }
+
                 normalizeAllExecutionMonths();
-                initNav(); 
-                switchTab('plan');
-                initDragAndDrop();
+initNav();
+renderYearFolders();
+switchTab('plan');
+initDragAndDrop();
             } catch (err) {
                 console.error("Load Error:", err);
                 normalizeAllExecutionMonths();
-                initNav(); 
-                switchTab('plan');
+initNav();
+renderYearFolders();
+switchTab('plan');
+initDragAndDrop();
             }
         }
 
@@ -1636,6 +2222,12 @@ if (
                 const db = await openDB();
                 const transaction = db.transaction(STORE_KEY, "readwrite");
                 const store = transaction.objectStore(STORE_KEY);
+syncCurrentYearFolderFromGlobals();
+
+store.put(yearFolders, 'ospms_year_folders');
+store.put(currentYearFolderId, 'ospms_current_year_folder_id');
+
+// 保留舊格式備份，不影響新年度分頁
 store.put(tableDataStore, 'ospms_data_store');
 store.put(attachmentsStore, 'ospms_attachments');
 store.put({
@@ -1758,7 +2350,8 @@ function getExecutionMonthsCheckboxesHTML(value, disabled = false) {
     const selectedMonths = parseExecutionMonths(value);
     const isNoFixed = selectedMonths.length === 0;
     const disabledAttr = disabled ? 'disabled' : '';
-    const labelText = formatExecutionMonths(selectedMonths);
+    const rawText = value === undefined || value === null ? '-' : String(value).trim();
+    const labelText = rawText === '-' || rawText === '' ? '-' : formatExecutionMonths(selectedMonths);
     const safeLabel = labelText.replace(/"/g, '&quot;');
 
     const monthBoxes = Array.from({ length: 12 }, (_, idx) => {
@@ -1774,11 +2367,11 @@ function getExecutionMonthsCheckboxesHTML(value, disabled = false) {
         <div class="execution-months-dropdown hidden" onclick="event.stopPropagation()">
             <div class="execution-months-quick-actions">
                 <button type="button" onclick="setExecutionMonthsDraftValue(this.closest('.execution-months-panel'), '1~12');">全選</button>
-                <button type="button" onclick="setExecutionMonthsDraftValue(this.closest('.execution-months-panel'), '無固定月份');">清空</button>
+                <button type="button" onclick="setExecutionMonthsDraftValue(this.closest('.execution-months-panel'), '-');">清空</button>
             </div>
             <label class="execution-months-none">
                 <input type="checkbox" class="execution-month-none-checkbox" ${isNoFixed ? 'checked' : ''} ${disabledAttr} onchange="handleExecutionMonthDraftChange(this)">
-                <span>無固定月份</span>
+                <span>空白 -</span>
             </label>
             <div class="execution-months-grid">${monthBoxes}</div>
             <div class="execution-months-confirm-actions">
@@ -1837,8 +2430,8 @@ function parseExecutionMonths(value) {
     return months.sort((a, b) => a - b);
 }
 
-function formatExecutionMonths(months) {
-    if (!months || months.length === 0) return '無固定月份';
+function formatExecutionMonths(months, emptyLabel = '無固定月份') {
+    if (!months || months.length === 0) return emptyLabel;
     if (months.length === 12 && months.every((m, i) => m === i + 1)) return '1~12';
     return months.join(',');
 }
@@ -1869,9 +2462,37 @@ function resolveExecutionMonthsValue(schedule, rawExecutionMonths) {
         raw.includes('SR')
     ) && parseExecutionMonths(raw).length === 0;
 
-    if (raw === '-' || raw === '無固定月份') return '無固定月份';
+    if (raw === '-') return '-';
+    if (raw === '無固定月份') return '無固定月份';
     if (!raw || looksLikeOldBaseline) return getDefaultExecutionMonthsBySchedule(schedule);
     return formatExecutionMonths(parseExecutionMonths(raw));
+}
+
+function resolveCarriedExecutionMonthsValue(schedule, savedExecutionMonths, baseExecutionMonths) {
+    const timing = schedule === undefined || schedule === null ? '' : String(schedule).trim();
+    const savedRaw = savedExecutionMonths === undefined || savedExecutionMonths === null ? '' : String(savedExecutionMonths).trim();
+    const baseRaw = baseExecutionMonths === undefined || baseExecutionMonths === null ? '' : String(baseExecutionMonths).trim();
+
+    if (savedRaw && savedRaw !== '-') return resolveExecutionMonthsValue(timing, savedRaw);
+
+    const baseResolved = resolveExecutionMonthsValue(timing, baseRaw);
+    if (baseResolved && baseResolved !== '-') return baseResolved;
+
+    return getDefaultExecutionMonthsBySchedule(timing);
+}
+
+function ensureRowExecutionRule(rowSaved, item) {
+    if (!Array.isArray(rowSaved)) return;
+
+    const scheduleValue = rowSaved[0] || item?.schedule || '';
+    const currentExecutionValue = rowSaved[1] === undefined || rowSaved[1] === null ? '' : String(rowSaved[1]).trim();
+
+    if (!currentExecutionValue || currentExecutionValue === '-') {
+        const resolved = resolveCarriedExecutionMonthsValue(scheduleValue, currentExecutionValue, item?.target || '');
+        rowSaved[1] = resolved;
+    } else {
+        rowSaved[1] = resolveExecutionMonthsValue(scheduleValue, currentExecutionValue);
+    }
 }
 
 function normalizeAllExecutionMonths() {
@@ -1880,14 +2501,19 @@ function normalizeAllExecutionMonths() {
             item.target = resolveExecutionMonthsValue(item.schedule, item.target);
 
             // 被動性指標 FR / SR 屬於每月檢核型指標；舊資料若以 0% 表示無職災，轉為「完成」避免誤判異常。
+            const savedRow = tableDataStore[key]?.[idx];
+            if (Array.isArray(savedRow)) {
+                savedRow[0] = savedRow[0] || item.schedule || '';
+                ensureRowExecutionRule(savedRow, item);
+            }
+
             if (key === 'passive') {
                 item.schedule = '月';
                 item.target = '1~12';
 
-                const savedRow = tableDataStore[key]?.[idx];
                 if (Array.isArray(savedRow)) {
                     savedRow[0] = savedRow[0] || '月';
-                    savedRow[1] = resolveExecutionMonthsValue(savedRow[0], savedRow[1] || item.target);
+                    savedRow[1] = '1~12';
 
                     for (let month = 2; month <= 13; month++) {
                         const raw = savedRow[month];
@@ -1921,24 +2547,20 @@ function getRowCompletionStats(rowSaved, item) {
         }
     }
 
-const effectiveMonths = plannedMonths.length > 0 ? plannedMonths : eventTriggeredMonths;
+    const effectiveMonths = plannedMonths.length > 0 ? plannedMonths : eventTriggeredMonths;
 
-const validEffectiveMonths = effectiveMonths.filter(month => {
-    const status = normalizeStatusValue(rowSaved[month + 1]);
-    return status !== 'N/A';
-});
-
-const annualRequiredCount = validEffectiveMonths.length;
-const dueMonths = validEffectiveMonths.filter(month => month <= currentDueMonth);
-
-validEffectiveMonths.forEach(month => {
-    const status = normalizeStatusValue(rowSaved[month + 1]);
-    if (status === '完成') completedCount++;
-});
-
-    dueMonths.forEach(month => {
+    const validEffectiveMonths = effectiveMonths.filter(month => {
         const status = normalizeStatusValue(rowSaved[month + 1]);
-        if (status === '進行中') progressCount++;
+        return status !== 'N/A';
+    });
+
+    const annualRequiredCount = validEffectiveMonths.length;
+    const dueMonths = validEffectiveMonths.filter(month => month <= currentDueMonth);
+
+    validEffectiveMonths.forEach(month => {
+        const status = normalizeStatusValue(rowSaved[month + 1]);
+        if (status === '完成') completedCount++;
+        else if (status === '進行中') progressCount++;
         else if (status === '未完成') incompleteCount++;
         else if (status === '延後') delayCount++;
     });
@@ -1950,12 +2572,13 @@ validEffectiveMonths.forEach(month => {
 
     if (annualRequiredCount === 0) {
         statusLabel = '無執行需求';
-    } else if (dueMonths.length === 0) {
-        statusLabel = completedCount === annualRequiredCount ? '達標' : '未到期';
     } else if (incompleteCount > 0 || delayCount > 0) {
+        // 只要使用者已在年度應執行月份手動標示「未完成」或「延後」，即時反映為異常，避免新年度因尚未到期而不變動。
         statusLabel = '異常';
     } else if (progressCount > 0) {
         statusLabel = '執行中';
+    } else if (dueMonths.length === 0) {
+        statusLabel = completedCount === annualRequiredCount ? '達標' : '未到期';
     } else if (dueCompletedCount === dueMonths.length) {
         statusLabel = '達標';
     } else {
@@ -2054,6 +2677,7 @@ function getCompletionStatsForRows(baseInfo, savedValues) {
 function exportFullReport() {
     try {
         if (isAdmin) saveCurrentTabData();
+        syncCurrentYearFolderFromGlobals();
 
         const wb = XLSX.utils.book_new();
 
@@ -3006,6 +3630,198 @@ Object.keys(titles).forEach(key => {
     }
 }
 
+function toggleYearFolders(forceOpen = null) {
+    const list = document.getElementById('year-folder-list');
+    const toggle = document.getElementById('year-folder-toggle');
+    if (!list || !toggle) return;
+
+    if (forceOpen === true) {
+        isYearFolderPanelOpen = true;
+    } else if (forceOpen === false) {
+        isYearFolderPanelOpen = false;
+    } else {
+        isYearFolderPanelOpen = !isYearFolderPanelOpen;
+    }
+
+    list.classList.toggle('hidden', !isYearFolderPanelOpen);
+    toggle.classList.toggle('is-open', isYearFolderPanelOpen);
+    lucide.createIcons();
+}
+
+function renderYearFolders() {
+    const list = document.getElementById('year-folder-list');
+    const addBtn = document.getElementById('add-year-folder-btn');
+    const toggle = document.getElementById('year-folder-toggle');
+    if (!list) return;
+
+    list.innerHTML = '';
+
+    if (addBtn) {
+        if (isAdmin) addBtn.classList.remove('hidden');
+        else addBtn.classList.add('hidden');
+    }
+
+    yearFolders.forEach(folder => {
+        const row = document.createElement('div');
+        row.className = `year-folder-item ${folder.id === currentYearFolderId ? 'active' : ''}`;
+
+        const mainBtn = document.createElement('button');
+        mainBtn.type = 'button';
+        mainBtn.className = 'year-folder-main';
+        mainBtn.onclick = () => switchYearFolder(folder.id);
+        mainBtn.innerHTML = `
+            <i data-lucide="calendar-days" class="w-3.5 h-3.5 shrink-0"></i>
+            <span class="year-folder-name">${folder.name}</span>
+        `;
+
+        row.appendChild(mainBtn);
+
+        if (isAdmin) {
+            const actions = document.createElement('span');
+            actions.className = 'year-folder-actions';
+
+            actions.innerHTML = `
+                <button type="button"
+                        class="year-folder-icon-btn"
+                        title="重新命名"
+                        onclick="renameYearFolder(event, '${folder.id}')">
+                    <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                </button>
+                <button type="button"
+                        class="year-folder-icon-btn danger"
+                        title="移除年度"
+                        onclick="removeYearFolder(event, '${folder.id}')">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                </button>
+            `;
+
+            row.appendChild(actions);
+        }
+
+        list.appendChild(row);
+    });
+
+    if (toggle) toggle.classList.toggle('is-open', isYearFolderPanelOpen);
+    list.classList.toggle('hidden', !isYearFolderPanelOpen);
+
+    lucide.createIcons();
+}
+
+async function switchYearFolder(folderId) {
+    if (folderId === currentYearFolderId) {
+        renderYearFolders();
+        return;
+    }
+
+    if (isAdmin) saveCurrentTabData();
+    syncCurrentYearFolderFromGlobals();
+
+    currentYearFolderId = folderId;
+    syncGlobalsFromCurrentYearFolder();
+
+    normalizeAllExecutionMonths();
+    renderYearFolders();
+    switchTab(currentTab, false);
+
+    await persistToStorage();
+}
+
+async function addYearFolder() {
+    if (!isAdmin) return;
+
+    const year = prompt('請輸入要新增的年度，例如：116 或 2027');
+    if (!year) return;
+
+    const numericYear = normalizeYearValue(year);
+    if (!numericYear) {
+        alert('年度格式不正確');
+        return;
+    }
+
+    if (yearFolders.some(folder => Number(folder.year) === numericYear)) {
+        alert(`${formatYearFolderName(numericYear)} 已存在`);
+        return;
+    }
+
+    // 先完整保存目前年度，再建立新年度；新年度沿用前一年度指標設定，但 1~12 月執行狀態全部清空。
+    saveCurrentTabData();
+    syncCurrentYearFolderFromGlobals();
+
+    const sourceFolder = getCarryForwardSourceFolder(numericYear);
+    const folder = createYearFolder(numericYear, sourceFolder);
+    yearFolders.push(folder);
+
+    currentYearFolderId = folder.id;
+    syncGlobalsFromCurrentYearFolder();
+
+    normalizeAllExecutionMonths();
+    isYearFolderPanelOpen = true;
+    renderYearFolders();
+    switchTab('plan', false);
+
+    await persistToStorage();
+}
+
+async function renameYearFolder(event, folderId) {
+    event.stopPropagation();
+    if (!isAdmin) return;
+
+    const folder = yearFolders.find(item => item.id === folderId);
+    if (!folder) return;
+
+    const newName = prompt('請輸入新的年度資料夾名稱，例如：116 或 2027', folder.name);
+    if (!newName) return;
+
+    const numericYear = normalizeYearValue(newName);
+    if (!numericYear) {
+        alert('年度格式不正確');
+        return;
+    }
+
+    const duplicated = yearFolders.some(item => item.id !== folderId && Number(item.year) === numericYear);
+    if (duplicated) {
+        alert(`${formatYearFolderName(numericYear)} 已存在`);
+        return;
+    }
+
+    folder.year = numericYear;
+    folder.name = formatYearFolderName(numericYear);
+
+    if (folder.id === currentYearFolderId) {
+        const yearInput = document.getElementById('year-input-field');
+        if (yearInput) yearInput.value = folder.name;
+    }
+
+    renderYearFolders();
+    await persistToStorage();
+}
+
+async function removeYearFolder(event, folderId) {
+    event.stopPropagation();
+    if (!isAdmin) return;
+
+    if (yearFolders.length <= 1) {
+        alert('至少需要保留一個年度資料夾');
+        return;
+    }
+
+    const folder = yearFolders.find(item => item.id === folderId);
+    if (!folder) return;
+
+    if (!confirm(`確定移除「${folder.name}」？此年度的填報資料與附件都會移除。`)) return;
+
+    yearFolders = yearFolders.filter(item => item.id !== folderId);
+
+    if (currentYearFolderId === folderId) {
+        currentYearFolderId = yearFolders[0].id;
+        syncGlobalsFromCurrentYearFolder();
+        switchTab('plan', false);
+    }
+
+    renderYearFolders();
+    await persistToStorage();
+}
+
         function initNav() {
             const nav = document.getElementById('nav-tabs');
             nav.innerHTML = '';
@@ -3020,10 +3836,10 @@ Object.keys(titles).forEach(key => {
             lucide.createIcons();
         }
 
-function switchTab(type) {
-    if (isAdmin) saveCurrentTabData();
+function switchTab(type, shouldSave = true) {
+    if (shouldSave && isAdmin) saveCurrentTabData();
     currentTab = type;
-    document.querySelectorAll('nav button').forEach(btn => {
+    document.querySelectorAll('#nav-tabs > button').forEach(btn => {
         btn.classList.remove('text-white', 'bg-slate-800', 'border-blue-500');
         btn.classList.add('text-slate-400', 'border-transparent');
     });
@@ -3100,6 +3916,10 @@ function switchTab(type) {
                 }
 
                 const scheduleValue = rowSaved[0] || item.schedule || "";
+                if (Array.isArray(rowSaved)) {
+                    rowSaved[0] = scheduleValue;
+                    ensureRowExecutionRule(rowSaved, item);
+                }
                 const executionMonthsValue = resolveExecutionMonthsValue(scheduleValue, rowSaved[1] || item.target || "");
                 const syntheticValues = [scheduleValue, executionMonthsValue, ...Array.from({ length: 12 }, (_, i) => rowSaved[i + 2] || "")];
                 const rowStat = getRowCompletionStats(syntheticValues, item);
@@ -3227,49 +4047,121 @@ function switchTab(type) {
             return attachmentsStore[currentTab][row][month];
         }
 
+function formatFileSize(bytes) {
+    if (!bytes) return '';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function formatFileSize(bytes) {
+    const size = Number(bytes);
+
+    if (!size || Number.isNaN(size)) {
+        return '未知大小';
+    }
+
+    if (size < 1024) {
+        return `${size} B`;
+    }
+
+    if (size < 1024 * 1024) {
+        return `${(size / 1024).toFixed(1)} KB`;
+    }
+
+    return `${(size / 1024 / 1024).toFixed(1)} MB`;
+}
+
         function renderAttachmentFileList(files, previewOnly = false) {
-            const list = document.getElementById('attachment-file-list');
-            list.innerHTML = '';
-            if (!files.length) {
-                if (previewOnly) list.innerHTML = '<p class="text-center text-slate-400 text-sm font-bold py-4">目前沒有可預覽附件</p>';
-                return;
-            }
-            files.forEach((file, index) => {
-                const row = document.createElement('div');
-                row.className = 'bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 flex items-center justify-between';
+    const list = document.getElementById('attachment-file-list');
+    list.innerHTML = '';
 
-                const info = document.createElement('div');
-                info.className = 'min-w-0 pr-3';
-                info.innerHTML = `
-                    <p class="text-[12px] font-bold text-slate-700 truncate">${index + 1}. ${file.name}</p>
-                    <p class="text-[10px] text-slate-400">${file.type || '附件檔案'}</p>
-                `;
+    if (!files.length) {
+        list.innerHTML = '<p class="text-center text-slate-400 text-sm font-bold py-4">目前尚未上傳附件</p>';
+        return;
+    }
 
-                const actions = document.createElement('div');
-                actions.className = 'shrink-0 flex items-center space-x-2';
+    files.forEach((file, index) => {
+        const row = document.createElement('div');
+        row.className = 'attachment-file-row';
+        row.onclick = () => viewFileDirectly(file);
+        row.title = '點擊預覽附件';
 
-                const previewBtn = document.createElement('button');
-                previewBtn.type = 'button';
-                previewBtn.className = 'px-3 py-2 bg-white border border-slate-200 rounded-lg text-[11px] font-bold text-blue-600 hover:bg-blue-50 transition';
-                previewBtn.innerText = '預覽';
-                previewBtn.onclick = () => viewFileDirectly(file);
-                actions.appendChild(previewBtn);
+        const info = document.createElement('div');
+        info.className = 'attachment-file-info';
 
-                if (isAdmin && !previewOnly) {
-                    const removeBtn = document.createElement('button');
-                    removeBtn.type = 'button';
-                    removeBtn.className = 'px-3 py-2 bg-white border border-red-100 rounded-lg text-[11px] font-bold text-red-400 hover:text-red-600 hover:bg-red-50 transition';
-                    removeBtn.innerText = '移除';
-                    removeBtn.title = '移除此檔案';
-                    removeBtn.onclick = () => removeAttachmentFile(index);
-                    actions.appendChild(removeBtn);
-                }
+        const icon = document.createElement('div');
 
-                row.appendChild(info);
-                row.appendChild(actions);
-                list.appendChild(row);
-            });
+if (file.type === 'application/pdf') {
+    icon.innerHTML = '<i data-lucide="file-text" class="w-7 h-7 text-red-500"></i>';
+} else {
+    icon.innerHTML = '<i data-lucide="image" class="w-7 h-7 text-blue-500"></i>';
+}
+
+        const textBox = document.createElement('div');
+        textBox.className = 'min-w-0';
+
+        const name = document.createElement('div');
+        name.className = 'attachment-file-name';
+        name.innerText = file.name || '未命名附件';
+
+        const size = document.createElement('div');
+        size.className = 'attachment-file-size';
+        size.innerText = formatFileSize(file.size);
+
+        textBox.appendChild(name);
+        textBox.appendChild(size);
+        info.appendChild(icon);
+        info.appendChild(textBox);
+
+        row.appendChild(info);
+
+        if (isAdmin && !previewOnly) {
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'attachment-file-remove';
+            removeBtn.innerHTML = '<i data-lucide="trash-2" class="w-3.5 h-3.5"></i>';
+            removeBtn.title = '移除此檔案';
+            removeBtn.onclick = (event) => {
+                event.stopPropagation();
+                removeAttachmentFile(index);
+            };
+
+            row.appendChild(removeBtn);
         }
+
+        list.appendChild(row);
+    });
+}
+
+async function clearCurrentMonthAttachments(event) {
+    if (event) event.stopPropagation();
+    if (!activeAttachmentTarget || !isAdmin) return;
+
+    const rowIndex = activeAttachmentTarget.row;
+    const monthIndex = activeAttachmentTarget.month;
+
+    const files = getAttachmentFiles(attachmentsStore[currentTab]?.[rowIndex]?.[monthIndex]);
+    if (!files.length) {
+        alert('該月份目前沒有附件可清除');
+        return;
+    }
+
+    if (!confirm('確定清除該月所有附件？')) return;
+
+    if (attachmentsStore[currentTab]?.[rowIndex]) {
+        delete attachmentsStore[currentTab][rowIndex][monthIndex];
+
+        if (Object.keys(attachmentsStore[currentTab][rowIndex]).length === 0) {
+            delete attachmentsStore[currentTab][rowIndex];
+        }
+    }
+
+    saveCurrentTabData();
+    await persistToStorage();
+    renderTable(currentTab);
+    openAttachmentModal(rowIndex, monthIndex);
+}
 
         async function removeAttachmentFile(fileIndex) {
             if (!activeAttachmentTarget || !isAdmin) return;
@@ -3292,50 +4184,43 @@ function switchTab(type) {
             else { openAttachmentPreviewModal(rowIndex, monthIndex); }
         }
 
-        function openAttachmentPreviewModal(rowIndex, monthIndex) {
-            activeAttachmentTarget = { row: rowIndex, month: monthIndex };
-            const item = appData[currentTab][rowIndex];
-            const files = getAttachmentFiles(attachmentsStore[currentTab]?.[rowIndex]?.[monthIndex]);
-            document.getElementById('target-label-display').innerText = `${item.name} - ${monthIndex}月`;
-            document.getElementById('attachment-modal-title').innerText = '附件預覽';
-            document.getElementById('attachment-modal').classList.remove('hidden');
-            document.getElementById('delete-single-attachment-btn').classList.add('hidden');
-            document.getElementById('upload-status-box').parentElement.classList.add('hidden');
-            document.getElementById('view-file-btn').classList.add('hidden');
-            document.getElementById('attachment-admin-divider').classList.add('hidden');
-            document.getElementById('attachment-admin-tools').classList.add('hidden');
-            renderAttachmentFileList(files, true);
-            lucide.createIcons();
-        }
+function openAttachmentPreviewModal(rowIndex, monthIndex) {
+    activeAttachmentTarget = { row: rowIndex, month: monthIndex };
 
-        function openAttachmentModal(rowIndex, monthIndex) {
-            activeAttachmentTarget = { row: rowIndex, month: monthIndex };
-            const item = appData[currentTab][rowIndex];
-            document.getElementById('target-label-display').innerText = `${item.name} - ${monthIndex}月`;
-            document.getElementById('attachment-modal-title').innerText = '附件與快速填充';
-            const modal = document.getElementById('attachment-modal');
-            const statusBox = document.getElementById('upload-status-box');
-            const statusIcon = document.getElementById('upload-icon-status');
-            const statusText = document.getElementById('upload-text-status');
-            const viewBtn = document.getElementById('view-file-btn');
-            const deleteSingleBtn = document.getElementById('delete-single-attachment-btn');
-            statusBox.parentElement.classList.remove('hidden');
-            document.getElementById('attachment-admin-divider').classList.remove('hidden');
-            document.getElementById('attachment-admin-tools').classList.remove('hidden');
-            modal.classList.remove('hidden');
-            const existingFiles = getAttachmentFiles(attachmentsStore[currentTab]?.[rowIndex]?.[monthIndex]);
-            if (existingFiles.length > 0) {
-                statusBox.classList.replace('border-blue-200', 'border-blue-400'); statusBox.classList.add('bg-blue-50');
-                statusIcon.setAttribute('data-lucide', 'check-circle'); statusText.innerText = `${existingFiles.length} 個檔案已就緒 (可再拖移新增)`;
-                viewBtn.classList.remove('hidden'); deleteSingleBtn.classList.remove('hidden');
-            } else {
-                statusBox.classList.replace('border-blue-400', 'border-blue-200'); statusBox.classList.remove('bg-blue-50');
-                statusIcon.setAttribute('data-lucide', 'cloud-upload'); statusText.innerText = "點擊或拖移檔案至此";
-                viewBtn.classList.add('hidden'); deleteSingleBtn.classList.add('hidden');
-            }
-            renderAttachmentFileList(existingFiles, false);
-            lucide.createIcons();
-        }
+    const item = appData[currentTab][rowIndex];
+    const files = getAttachmentFiles(attachmentsStore[currentTab]?.[rowIndex]?.[monthIndex]);
+
+    document.getElementById('attachment-modal-title').innerText = '佐證附件管理';
+    document.getElementById('attachment-context-label').innerText = `（${item.name} - ${monthIndex}月）`;
+
+    document.getElementById('attachment-upload-section').classList.add('hidden');
+    const adminTools = document.getElementById('attachment-admin-tools');
+if (adminTools) adminTools.classList.add('hidden');
+    document.getElementById('clear-month-attachments-btn').classList.add('hidden');
+    document.getElementById('attachment-modal').classList.remove('hidden');
+
+    renderAttachmentFileList(files, true);
+    lucide.createIcons();
+}
+
+function openAttachmentModal(rowIndex, monthIndex) {
+    activeAttachmentTarget = { row: rowIndex, month: monthIndex };
+
+    const item = appData[currentTab][rowIndex];
+    const files = getAttachmentFiles(attachmentsStore[currentTab]?.[rowIndex]?.[monthIndex]);
+
+    document.getElementById('attachment-modal-title').innerText = '佐證附件管理';
+    document.getElementById('attachment-context-label').innerText = `（${item.name} - ${monthIndex}月）`;
+
+    document.getElementById('attachment-upload-section').classList.remove('hidden');
+    const adminTools = document.getElementById('attachment-admin-tools');
+if (adminTools) adminTools.classList.remove('hidden');
+    document.getElementById('clear-month-attachments-btn').classList.remove('hidden');
+    document.getElementById('attachment-modal').classList.remove('hidden');
+
+    renderAttachmentFileList(files, false);
+    lucide.createIcons();
+}
 
         function closeAttachmentModal() { document.getElementById('attachment-modal').classList.add('hidden'); document.getElementById('file-input').value = ''; activeAttachmentTarget = null; }
         function closeAttachmentModalOutside(event) { closeAttachmentModal(); }
@@ -3360,7 +4245,7 @@ function switchTab(type) {
 
             Promise.all(validFiles.map(file => new Promise((resolve) => {
                 const reader = new FileReader();
-                reader.onload = (e) => resolve({ name: file.name, type: file.type, data: e.target.result });
+                reader.onload = (e) => resolve({ name: file.name, type: file.type, size: file.size, data: e.target.result });
                 reader.readAsDataURL(file);
             }))).then(async newFiles => {
                 const slot = ensureAttachmentSlot(activeAttachmentTarget.row, activeAttachmentTarget.month);
@@ -3540,7 +4425,14 @@ function updateMobileSidebarToggleIcon() {
         function autoResize(textarea) { textarea.style.height = 'auto'; textarea.style.height = textarea.scrollHeight + 'px'; }
 
         function handleAuthClick() {
-            if (isAdmin) { if (confirm("退出管理模式？")) { isAdmin = false; updateUIState(); renderTable(currentTab); } } 
+            if (isAdmin) {
+                if (confirm("退出管理模式？")) {
+                    isAdmin = false;
+                    updateUIState();
+                    renderYearFolders();
+                    renderTable(currentTab);
+                }
+            } 
             else { openLoginModal(); }
         }
 
@@ -3575,6 +4467,7 @@ function attemptLogin() {
 
 if (inputPwd === getAdminPassword()) {
     isAdmin = true;
+    renderYearFolders();
     updateUIState();
     closeLoginModal();
     renderTable(currentTab);
@@ -3605,6 +4498,7 @@ if (inputPwd === getAdminPassword()) {
     saveCurrentTabData();
     await persistToStorage();
     isAdmin = false;
+    renderYearFolders();
     updateUIState();
     renderTable(currentTab);
 
@@ -3615,24 +4509,37 @@ if (inputPwd === getAdminPassword()) {
     alert("已儲存並登出");
 }
 
-        function addNewRow() { saveCurrentTabData(); appData[currentTab].push({ id: (appData[currentTab].length + 1).toString(), name: "新項目", content: "內容描述", schedule: "適時", target: "無固定月份" }); renderTable(currentTab); }
+        function addNewRow() { saveCurrentTabData(); appData[currentTab].push({ id: (appData[currentTab].length + 1).toString(), name: "新項目", content: "內容描述", schedule: "適時", target: "-" }); renderTable(currentTab); }
         async function deleteRow(idx) { if (confirm("確定刪除？")) { saveCurrentTabData(); appData[currentTab].splice(idx, 1); if (attachmentsStore[currentTab]?.[idx]) delete attachmentsStore[currentTab][idx]; await persistToStorage(); renderTable(currentTab); } }
 
         function handleYearFormat(input) {
-            let val = input.value.trim(); let match = val.match(/\d+/);
-            if (match) { let y = parseInt(match[0]); if (y > 1911) input.value = `${y}年度 (${y - 1911}年)`; else input.value = `${y + 1911}年度 (${y}年)`; }
+            const numericYear = normalizeYearValue(input.value);
+            if (!numericYear) return;
+
+            input.value = formatYearFolderName(numericYear);
+
+            const folder = getCurrentYearFolder();
+            if (folder && isAdmin) {
+                folder.year = numericYear;
+                folder.name = input.value;
+                renderYearFolders();
+                persistToStorage();
+            }
         }
 
         function getExecutionMonthsDisplayText(value) {
-            const months = parseExecutionMonths(value);
-            return formatExecutionMonths(months);
+            const raw = value === undefined || value === null ? '-' : String(value).trim();
+            if (raw === '-' || raw === '') return '-';
+            if (raw === '無固定月份') return '無固定月份';
+            const months = parseExecutionMonths(raw);
+            return formatExecutionMonths(months, '-');
         }
 
         function updateExecutionMonthsPanelLabel(panel) {
             if (!panel) return;
             const hidden = panel.querySelector('.execution-months-value');
             const label = panel.querySelector('.execution-months-label');
-            const value = hidden ? hidden.value : '無固定月份';
+            const value = hidden ? hidden.value : '-';
             const displayText = getExecutionMonthsDisplayText(value);
 
             if (label) {
@@ -3669,11 +4576,13 @@ if (inputPwd === getAdminPassword()) {
 
         function setExecutionMonthsPanelValue(panel, value) {
             if (!panel) return;
-            const months = parseExecutionMonths(value);
+            const raw = value === undefined || value === null ? '-' : String(value).trim();
+            const months = parseExecutionMonths(raw);
+            const finalValue = raw === '無固定月份' ? '無固定月份' : (months.length > 0 ? formatExecutionMonths(months, '-') : '-');
             const hidden = panel.querySelector('.execution-months-value');
 
-            if (hidden) hidden.value = formatExecutionMonths(months);
-            setExecutionMonthsDraftValue(panel, formatExecutionMonths(months));
+            if (hidden) hidden.value = finalValue;
+            setExecutionMonthsDraftValue(panel, finalValue);
             updateExecutionMonthsPanelLabel(panel);
         }
 
@@ -3683,7 +4592,7 @@ if (inputPwd === getAdminPassword()) {
                 .filter(item => item.checked)
                 .map(item => Number(item.value))
                 .sort((a, b) => a - b);
-            return formatExecutionMonths(selectedMonths);
+            return formatExecutionMonths(selectedMonths, '-');
         }
 
         function updateExecutionMonthsDraftLabel(panel) {
@@ -3708,7 +4617,7 @@ if (inputPwd === getAdminPassword()) {
         function resetExecutionMonthsDraft(panel) {
             if (!panel) return;
             const hidden = panel.querySelector('.execution-months-value');
-            setExecutionMonthsDraftValue(panel, hidden ? hidden.value : '無固定月份');
+            setExecutionMonthsDraftValue(panel, hidden ? hidden.value : '-');
         }
 
         function cancelExecutionMonthsSelection(panel, silent = false) {
@@ -3820,7 +4729,17 @@ if (inputPwd === getAdminPassword()) {
             select.value = status;
             select.classList.remove('status-empty', 'status-complete', 'status-progress', 'status-incomplete', 'status-delay', 'status-na');
             select.classList.add(getStatusClass(status));
-            refreshRowSummary(select.closest('tr'));
+
+            const row = select.closest('tr');
+            refreshRowSummary(row);
+
+            // 同步目前列資料，讓畫面統計、年度資料夾資料與匯出統計都讀到剛選取的月份狀態。
+            if (row && row.parentElement) {
+                const rowIndex = Array.from(row.parentElement.rows).indexOf(row);
+                if (!tableDataStore[currentTab]) tableDataStore[currentTab] = [];
+                tableDataStore[currentTab][rowIndex] = Array.from(row.querySelectorAll('.input-cell')).map(input => input.value);
+                syncCurrentYearFolderFromGlobals();
+            }
         }
 
         function formatInput(input) {

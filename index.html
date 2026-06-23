@@ -602,12 +602,48 @@
     border-radius: 12px;
 }
 
+.image-preview-toolbar {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    background: rgba(15, 23, 42, 0.96);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+.image-preview-toolbar.hidden {
+    display: none;
+}
+
+.image-preview-toolbar button {
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.image-preview-toolbar button:hover {
+    background: rgba(255, 255, 255, 0.22);
+}
+
 #file-preview-image {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: none;
+    max-height: none;
+    margin: auto;
     border-radius: 12px;
     background: white;
+    transform-origin: center center;
+}
+
+#file-preview-image.hidden,
+#file-preview-frame.hidden {
+    display: none !important;
 }
 
 body.file-preview-open {
@@ -1439,10 +1475,16 @@ main > .p-4,
         </button>
     </div>
 
-    <div class="file-preview-body">
-        <iframe id="file-preview-frame" class="hidden"></iframe>
-        <img id="file-preview-image" class="hidden" alt="附件預覽">
-    </div>
+<div id="image-preview-toolbar" class="image-preview-toolbar hidden">
+    <button type="button" onclick="zoomPreviewImage(0.2)">＋</button>
+    <button type="button" onclick="zoomPreviewImage(-0.2)">－</button>
+    <button type="button" onclick="resetPreviewImageZoom()">重置</button>
+</div>
+
+<div class="file-preview-body">
+    <iframe id="file-preview-frame" class="hidden"></iframe>
+    <img id="file-preview-image" class="hidden" alt="附件預覽">
+</div>
 </div>
 
     <script>
@@ -1529,6 +1571,8 @@ main > .p-4,
         let isAdmin = false;
         let activeAttachmentTarget = null; 
         let activeSortRowIdx = null; // 當前準備排序的行索引
+        let imagePreviewScale = 1;
+let imagePreviewDefaultScale = 1;
 
         // --- IndexedDB ---
 const DB_NAME = "OSPMS_DB";
@@ -3348,11 +3392,43 @@ function dataUrlToBlobUrl(dataUrl) {
     return URL.createObjectURL(blob);
 }
 
+function getInitialImagePreviewScale(file) {
+    if (!file || !file.type) return 1;
+
+    if (file.type === 'image/png') {
+        return 0.95;
+    }
+
+    if (file.type === 'image/jpeg' || file.type === 'image/jpg') {
+        return 0.95;
+    }
+
+    return 0.9;
+}
+
+function applyPreviewImageScale() {
+    const image = document.getElementById('file-preview-image');
+    if (!image) return;
+
+    image.style.transform = `scale(${imagePreviewScale})`;
+}
+
+function zoomPreviewImage(delta) {
+    imagePreviewScale = Math.min(3, Math.max(0.6, imagePreviewScale + delta));
+    applyPreviewImageScale();
+}
+
+function resetPreviewImageZoom() {
+    imagePreviewScale = imagePreviewDefaultScale;
+    applyPreviewImageScale();
+}
+
 function viewFileDirectly(file) {
     const modal = document.getElementById('file-preview-modal');
     const title = document.getElementById('file-preview-title');
     const frame = document.getElementById('file-preview-frame');
     const image = document.getElementById('file-preview-image');
+    const toolbar = document.getElementById('image-preview-toolbar');
 
     if (!modal || !frame || !image || !file) return;
 
@@ -3362,20 +3438,28 @@ function viewFileDirectly(file) {
     image.classList.add('hidden');
     frame.removeAttribute('src');
     image.removeAttribute('src');
+    if (toolbar) toolbar.classList.add('hidden');
 
-    if (file.type === 'application/pdf') {
-        if (isMobilePdfPreviewDevice()) {
-            const pdfUrl = dataUrlToBlobUrl(file.data);
-            window.open(pdfUrl, '_blank');
-            return;
-        }
+if (file.type === 'application/pdf') {
+    const pdfUrl = dataUrlToBlobUrl(file.data);
 
-        frame.src = file.data;
-        frame.classList.remove('hidden');
-    } else {
-        image.src = file.data;
-        image.classList.remove('hidden');
+    if (isMobilePdfPreviewDevice()) {
+        window.open(pdfUrl, '_blank');
+        return;
     }
+
+    frame.src = pdfUrl;
+    frame.classList.remove('hidden');
+} else {
+    imagePreviewDefaultScale = getInitialImagePreviewScale(file);
+    imagePreviewScale = imagePreviewDefaultScale;
+
+    image.src = file.data;
+    image.style.transform = `scale(${imagePreviewScale})`;
+
+    if (toolbar) toolbar.classList.remove('hidden');
+    image.classList.remove('hidden');
+}
 
     document.body.classList.add('file-preview-open');
     modal.classList.remove('hidden');
@@ -3388,10 +3472,17 @@ function closeFilePreviewModal() {
     const image = document.getElementById('file-preview-image');
 
     if (frame) frame.removeAttribute('src');
-    if (image) image.removeAttribute('src');
+if (image) {
+    image.removeAttribute('src');
+    image.style.transform = '';
+}
 
     if (frame) frame.classList.add('hidden');
     if (image) image.classList.add('hidden');
+
+const toolbar = document.getElementById('image-preview-toolbar');
+if (toolbar) toolbar.classList.add('hidden');
+
     if (modal) modal.classList.add('hidden');
 
     document.body.classList.remove('file-preview-open');

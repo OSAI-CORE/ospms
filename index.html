@@ -5194,12 +5194,16 @@ function openImagePreview(file) {
 
     setFilePreviewLoading(true, '圖片載入中...');
     image.classList.remove('hidden');
-    image.onload = () => {
-        filePreviewDefaultScale = getImageFitPreviewScale(image);
-        filePreviewScale = filePreviewDefaultScale;
-        applyPreviewImageScale();
-        setFilePreviewLoading(false);
-    };
+image.onload = () => {
+    const baseImageScale = getImageFitPreviewScale(image);
+    const isDesktopPreview = window.matchMedia('(min-width: 901px)').matches;
+
+    filePreviewDefaultScale = baseImageScale;
+    filePreviewScale = isDesktopPreview ? baseImageScale * 1.6 : baseImageScale;
+
+    applyPreviewImageScale();
+    setFilePreviewLoading(false);
+};
     image.onerror = () => {
         setFilePreviewLoading(false);
         alert('圖片預覽載入失敗，請確認檔案是否完整。');

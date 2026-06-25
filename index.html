@@ -940,32 +940,63 @@
     background: rgba(255, 255, 255, 0.2);
 }
 
-/* 手機預覽用：讓關閉叉叉固定在右上角，避免 PDF / 圖片內容蓋住 */
-@media screen and (max-width: 900px) {
-    .file-preview-modal {
-        z-index: 999;
-    }
+/* 手機 PDF 外開返回層：不改變 PDF 原本 window.open 開啟方式 */
+.mobile-pdf-return-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: rgba(15, 23, 42, 0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
 
-    .file-preview-header {
-        position: relative;
-        z-index: 1001;
-    }
+.mobile-pdf-return-modal.hidden {
+    display: none;
+}
 
-    .file-preview-close {
-        position: fixed;
-        top: calc(10px + env(safe-area-inset-top));
-        right: calc(10px + env(safe-area-inset-right));
-        z-index: 1002;
-        width: 44px;
-        height: 44px;
-        background: rgba(15, 23, 42, 0.82);
-        border: 1px solid rgba(255, 255, 255, 0.22);
-        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
-    }
+.mobile-pdf-return-card {
+    width: min(86vw, 360px);
+    padding: 24px 20px;
+    border-radius: 18px;
+    background: rgba(15, 23, 42, 0.96);
+    color: white;
+    text-align: center;
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.32);
+}
 
-    .file-preview-close:active {
-        transform: scale(0.94);
-    }
+.mobile-pdf-return-card h3 {
+    font-size: 16px;
+    font-weight: 900;
+    margin-bottom: 8px;
+}
+
+.mobile-pdf-return-card p {
+    font-size: 13px;
+    line-height: 1.7;
+    color: #cbd5e1;
+}
+
+.mobile-pdf-return-close {
+    position: fixed;
+    top: calc(10px + env(safe-area-inset-top));
+    right: calc(10px + env(safe-area-inset-right));
+    z-index: 1000;
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.9);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mobile-pdf-return-close:active {
+    transform: scale(0.94);
 }
 
 .file-preview-body {
@@ -973,10 +1004,10 @@
     min-height: 0;
     overflow: auto;
     display: flex;
-    align-items: flex-start;
-    justify-content: flex-start;
-    padding: 24px;
-    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
 }
 
 #file-preview-frame {
@@ -985,22 +1016,6 @@
     border: 0;
     background: white;
     border-radius: 12px;
-}
-
-@media screen and (max-width: 900px) {
-    #file-preview-frame {
-        width: 100%;
-        height: 100%;
-        border-radius: 8px;
-    }
-}
-
-@media screen and (max-width: 900px) {
-    .file-preview-body {
-        align-items: flex-start;
-        justify-content: center;
-        padding-top: 72px;
-    }
 }
 
 .image-preview-toolbar {
@@ -1039,7 +1054,10 @@
     margin: auto;
     border-radius: 12px;
     background: white;
-    object-fit: contain;
+    transform-origin: center center;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 #file-preview-image.hidden,
@@ -1949,6 +1967,21 @@ main > .p-4,
     </div>
 </div>
 
+<!-- 手機 PDF 外開返回層 -->
+<div id="mobile-pdf-return-modal" class="mobile-pdf-return-modal hidden no-print">
+    <button type="button"
+            class="mobile-pdf-return-close"
+            onclick="closeMobilePdfReturnModal()"
+            aria-label="關閉 PDF 返回層">
+        <i data-lucide="x" class="w-5 h-5"></i>
+    </button>
+
+    <div class="mobile-pdf-return-card">
+        <h3>PDF 已開啟</h3>
+        <p>請查看 PDF 檔案。返回此頁後，可點擊右上角叉叉回到績效管理系統。</p>
+    </div>
+</div>
+
 <!-- 檔案預覽視窗 -->
 <div id="file-preview-modal" class="file-preview-modal hidden no-print">
     <div class="file-preview-header">
@@ -2060,8 +2093,10 @@ let currentYearFolderId = null;
 let isYearFolderPanelOpen = false;
         let activeAttachmentTarget = null; 
         let activeSortRowIdx = null; // 當前準備排序的行索引
-        let imagePreviewScale = 1;
+let imagePreviewScale = 1;
 let imagePreviewDefaultScale = 1;
+let imagePreviewTouchStartDistance = 0;
+let imagePreviewTouchStartScale = 1;
 
         // --- IndexedDB ---
 const DB_NAME = "OSPMS_DB";
@@ -4373,27 +4408,25 @@ function getInitialImagePreviewScale(file) {
     const isMobile = window.matchMedia('(max-width: 900px)').matches;
 
     if (file.type === 'image/png') {
-        return isMobile ? 0.82 : 0.95;
+        return isMobile ? 0.78 : 0.95;
     }
 
     if (file.type === 'image/jpeg' || file.type === 'image/jpg') {
-        return isMobile ? 0.82 : 0.95;
+        return isMobile ? 0.72 : 0.95;
     }
 
-    return isMobile ? 0.82 : 0.9;
+    return isMobile ? 0.78 : 0.9;
 }
 
 function applyPreviewImageScale() {
     const image = document.getElementById('file-preview-image');
-    if (!image || !image.naturalWidth || !image.naturalHeight) return;
+    if (!image) return;
 
-    image.style.transform = '';
-    image.style.width = `${Math.round(image.naturalWidth * imagePreviewScale)}px`;
-    image.style.height = `${Math.round(image.naturalHeight * imagePreviewScale)}px`;
+    image.style.transform = `scale(${imagePreviewScale})`;
 }
 
 function zoomPreviewImage(delta) {
-    imagePreviewScale = Math.min(4, Math.max(0.2, imagePreviewScale + delta));
+    imagePreviewScale = Math.min(3, Math.max(0.6, imagePreviewScale + delta));
     applyPreviewImageScale();
 }
 
@@ -4402,18 +4435,60 @@ function resetPreviewImageZoom() {
     applyPreviewImageScale();
 }
 
-function handlePreviewImageWheelZoom(event) {
-    const modal = document.getElementById('file-preview-modal');
-    const image = document.getElementById('file-preview-image');
+function getTouchDistance(touches) {
+    if (!touches || touches.length < 2) return 0;
 
-    if (!modal || modal.classList.contains('hidden')) return;
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+
+    return Math.sqrt(dx * dx + dy * dy);
+}
+
+function handlePreviewImageTouchStart(event) {
+    const image = document.getElementById('file-preview-image');
     if (!image || image.classList.contains('hidden')) return;
-    if (!event.ctrlKey) return;
+    if (event.touches.length !== 2) return;
+
+    imagePreviewTouchStartDistance = getTouchDistance(event.touches);
+    imagePreviewTouchStartScale = imagePreviewScale;
+}
+
+function handlePreviewImageTouchMove(event) {
+    const image = document.getElementById('file-preview-image');
+    if (!image || image.classList.contains('hidden')) return;
+    if (event.touches.length !== 2) return;
+    if (!imagePreviewTouchStartDistance) return;
 
     event.preventDefault();
 
-    const delta = event.deltaY < 0 ? 0.1 : -0.1;
-    zoomPreviewImage(delta);
+    const currentDistance = getTouchDistance(event.touches);
+    const ratio = currentDistance / imagePreviewTouchStartDistance;
+
+    imagePreviewScale = Math.min(3, Math.max(0.5, imagePreviewTouchStartScale * ratio));
+    applyPreviewImageScale();
+}
+
+function handlePreviewImageTouchEnd(event) {
+    if (event.touches.length < 2) {
+        imagePreviewTouchStartDistance = 0;
+        imagePreviewTouchStartScale = imagePreviewScale;
+    }
+}
+
+function showMobilePdfReturnModal() {
+    const modal = document.getElementById('mobile-pdf-return-modal');
+    if (!modal) return;
+
+    document.body.classList.add('file-preview-open');
+    modal.classList.remove('hidden');
+    lucide.createIcons();
+}
+
+function closeMobilePdfReturnModal() {
+    const modal = document.getElementById('mobile-pdf-return-modal');
+    if (modal) modal.classList.add('hidden');
+
+    document.body.classList.remove('file-preview-open');
 }
 
 function viewFileDirectly(file) {
@@ -4436,28 +4511,25 @@ function viewFileDirectly(file) {
 if (file.type === 'application/pdf') {
     const pdfUrl = dataUrlToBlobUrl(file.data);
 
-    /* 修改重點：
-       手機不再 window.open()，
-       改用原本的 file-preview-modal + iframe，
-       這樣右上角叉叉才會出現。
-    */
+    if (isMobilePdfPreviewDevice()) {
+        showMobilePdfReturnModal();
+        window.open(pdfUrl, '_blank');
+        return;
+    }
+
     frame.src = pdfUrl;
     frame.classList.remove('hidden');
 } else {
     imagePreviewDefaultScale = getInitialImagePreviewScale(file);
     imagePreviewScale = imagePreviewDefaultScale;
 
-image.onload = function () {
-    applyPreviewImageScale();
-
-    const previewBody = document.querySelector('.file-preview-body');
-    if (previewBody) {
-        previewBody.scrollTop = 0;
-        previewBody.scrollLeft = 0;
-    }
-};
-
 image.src = file.data;
+image.style.transform = `scale(${imagePreviewScale})`;
+
+image.ontouchstart = handlePreviewImageTouchStart;
+image.ontouchmove = handlePreviewImageTouchMove;
+image.ontouchend = handlePreviewImageTouchEnd;
+image.ontouchcancel = handlePreviewImageTouchEnd;
 
 if (toolbar) toolbar.classList.remove('hidden');
 image.classList.remove('hidden');
@@ -4475,11 +4547,16 @@ function closeFilePreviewModal() {
 
     if (frame) frame.removeAttribute('src');
 if (image) {
-    image.onload = null;
     image.removeAttribute('src');
     image.style.transform = '';
-    image.style.width = '';
-    image.style.height = '';
+
+    image.ontouchstart = null;
+    image.ontouchmove = null;
+    image.ontouchend = null;
+    image.ontouchcancel = null;
+
+    imagePreviewTouchStartDistance = 0;
+    imagePreviewTouchStartScale = 1;
 }
 
     if (frame) frame.classList.add('hidden');
@@ -4964,10 +5041,7 @@ document.addEventListener('click', function(event) {
     }
 });
 
-window.onload = function () {
-    loadFromStorage();
-    document.addEventListener('wheel', handlePreviewImageWheelZoom, { passive: false });
-};
+window.onload = () => { loadFromStorage(); };
     </script>
 </body>
 </html>

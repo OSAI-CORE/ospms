@@ -1945,7 +1945,7 @@ main > .p-4,
             </div>
 
             <button class="w-full bg-blue-600 text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center space-x-2 hover:bg-blue-500 transition" onclick="exportFullReport()">
-                <i data-lucide="file-up" class="w-4 h-4"></i><span>匯出全年度績效報表 (Excel)</span>
+                <i data-lucide="file-up" class="w-4 h-4"></i><span>匯出全年度績效報表</span>
             </button>
         </div>
     </aside>
@@ -1995,7 +1995,10 @@ main > .p-4,
                             <th class="px-3 py-3 sticky-col-name border-b">績效指標內容</th>
                             <th class="px-3 py-3 min-w-[310px] border-b border-l">完成標準</th>
                             <th class="px-1.5 py-2 text-center min-w-[56px] border-b border-l">
-                                <div>時程規劃</div>
+                                <div class="leading-tight">
+    <span class="block">時程</span>
+    <span class="block">規劃</span>
+</div>
                                 <select id="schedule-filter" class="header-filter no-print" onchange="applyTableFilters()">
                                     <option value="">全部</option>
                                     <option value="月">月</option>
@@ -2037,7 +2040,7 @@ main > .p-4,
                             <th class="px-1 py-3 text-center border-b border-l bg-blue-50/30 text-blue-600 min-w-[54px]">10月</th>
                             <th class="px-1 py-3 text-center border-b border-l bg-blue-50/30 text-blue-600 min-w-[54px]">11月</th>
                             <th class="px-1 py-3 text-center border-b border-l bg-blue-50/30 text-blue-600 min-w-[54px]">12月</th>
-                            <th class="px-1 py-3 text-center border-b border-l bg-emerald-50 text-emerald-700 min-w-[70px]">年度完成率</th>
+                            <th class="px-1 py-3 text-center border-b border-l bg-emerald-50 text-emerald-700 min-w-[70px]">完成率</th>
                             <th class="px-1 py-3 text-center border-b border-l bg-emerald-50 text-emerald-700 min-w-[70px]">執行狀態</th>
                             <th id="admin-header-action" class="hidden px-2 py-4 text-center border-b border-l text-red-500">操作</th>
                         </tr>
@@ -3083,7 +3086,7 @@ function exportFullReport() {
             "10月",
             "11月",
             "12月",
-            "年度完成率",
+            "完成率",
             "執行狀態"
         ];
 
@@ -3743,7 +3746,7 @@ rows.push([
     stat.annualRequiredCount,
     "完成格數",
     stat.completedCount,
-    "年度完成率",
+    "完成率",
     `${stat.rate}%`,
     "執行狀態",
     stat.statusLabel,

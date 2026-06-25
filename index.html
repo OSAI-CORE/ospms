@@ -672,10 +672,53 @@
     background: #ffe4e6;
 }
 
-#upload-icon-status svg {
-    width: 34px;
-    height: 34px;
-    stroke-width: 2.5;
+.attachment-symbol {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.attachment-title-folder-icon {
+    width: 28px;
+    height: 28px;
+    color: #2563eb;
+}
+
+.attachment-upload-symbol {
+    width: 44px;
+    height: 44px;
+    color: #60a5fa;
+}
+
+.attachment-file-type-symbol {
+    width: 30px;
+    height: 30px;
+}
+
+.attachment-file-type-image {
+    color: #3b82f6;
+}
+
+.attachment-file-type-pdf {
+    color: #ef4444;
+}
+
+.attachment-trash-symbol {
+    width: 17px;
+    height: 17px;
+}
+
+.attachment-header-remove .attachment-trash-symbol {
+    width: 16px;
+    height: 16px;
+}
+
+#upload-icon-status svg,
+.attachment-symbol svg {
+    width: 100%;
+    height: 100%;
+    display: block;
 }
 
         /* 排序選單樣式 */
@@ -1081,7 +1124,7 @@
     background-position: 0 0, 0 13px, 13px -13px, -13px 0;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
-    touch-action: pan-x pan-y pinch-zoom;
+    touch-action: pan-x pan-y;
 }
 
 #file-preview-stage {
@@ -1123,6 +1166,8 @@
     background: #ffffff;
     box-shadow: 0 20px 50px rgba(2, 6, 23, 0.34);
     overflow: hidden;
+    contain: layout paint;
+    will-change: width, height;
 }
 
 .pdf-preview-page-number {
@@ -1141,6 +1186,7 @@
 .pdf-preview-page-canvas {
     display: block;
     background: #ffffff;
+    transform-origin: top left;
 }
 
 #file-preview-frame {
@@ -1857,10 +1903,12 @@ main > .p-4,
                      onclick="toggleYearFolders()"
                      onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleYearFolders(); }"
                      class="year-folder-toggle">
-                    <span class="year-folder-toggle-title">
-                        <i data-lucide="folder-tree" class="w-3.5 h-3.5"></i>
-                        <span>年度資料夾</span>
-                    </span>
+<span class="year-folder-toggle-title">
+    <span id="year-folder-toggle-icon" class="inline-flex w-3.5 h-3.5 items-center justify-center">
+        <i data-lucide="folder" class="w-3.5 h-3.5"></i>
+    </span>
+    <span>年度資料夾</span>
+</span>
 
                     <span class="year-folder-toggle-actions">
                         <button id="add-year-folder-btn"
@@ -2078,7 +2126,7 @@ main > .p-4,
     <div onclick="event.stopPropagation()" class="attachment-panel">
         <div class="attachment-panel-header">
             <div class="attachment-panel-title">
-                <i data-lucide="link" class="w-7 h-7 text-blue-600 rotate-45"></i>
+<i data-lucide="paperclip" class="w-6 h-6 text-blue-600"></i>
 <h3 id="attachment-modal-title">佐證附件管理</h3>
 <span id="attachment-context-label"></span>
 
@@ -2087,7 +2135,12 @@ main > .p-4,
         class="attachment-file-remove attachment-header-remove"
         title="清除該月所有附件"
         onclick="clearCurrentMonthAttachments(event)">
-    <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+    <span class="attachment-symbol attachment-trash-symbol" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+            <path fill="currentColor" d="M9 3.5h6l.8 1.7H20a1 1 0 1 1 0 2H4a1 1 0 0 1 0-2h4.2L9 3.5Z"/>
+            <path fill="currentColor" d="M6.2 8.7h11.6l-.8 10.1A2.5 2.5 0 0 1 14.5 21h-5a2.5 2.5 0 0 1-2.5-2.2L6.2 8.7Zm3.2 2.2a.8.8 0 0 0-.8.8l.3 5.6a.8.8 0 0 0 1.6-.1l-.3-5.6a.8.8 0 0 0-.8-.7Zm5.2 0a.8.8 0 0 0-.8.7l-.3 5.6a.8.8 0 1 0 1.6.1l.3-5.6a.8.8 0 0 0-.8-.8Z"/>
+        </svg>
+    </span>
 </button>
             </div>
 
@@ -2100,7 +2153,12 @@ main > .p-4,
             <div id="upload-status-box"
                  onclick="document.getElementById('file-input').click()"
                  class="attachment-upload-zone">
-                <i id="upload-icon-status" data-lucide="cloud-upload" class="text-blue-500"></i>
+                <span id="upload-icon-status" class="attachment-symbol attachment-upload-symbol" aria-hidden="true">
+                    <svg viewBox="0 0 48 48" focusable="false">
+                        <path fill="currentColor" d="M18.2 36.5h18.1c5.3 0 9.4-3.8 9.4-8.7 0-4.5-3.5-8.1-8.2-8.6C36.3 13.1 31 8.5 24.7 8.5c-5.6 0-10.4 3.7-12 8.8C6.8 18 2.3 22 2.3 27.1c0 5.3 4.8 9.4 10.8 9.4h5.1Z"/>
+                        <path fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M24 31V18m0 0-6 6m6-6 6 6"/>
+                    </svg>
+                </span>
                 <div id="upload-text-status" class="attachment-upload-main">點擊或拖放檔案至此處上傳</div>
                 <div class="attachment-upload-sub">支援 PDF, PNG, JPG（單檔最大 10MB）</div>
             </div>
@@ -2253,7 +2311,13 @@ main > .p-4,
         };
 
         const titles = { plan: "職業安全衛生管理計畫", iso: "ISO 45001 管理審查", protect: "四大保護計畫", passive: "被動性指標", monitor: "自主監測及主動回報" };
-        const icons = { plan: "clipboard-list", iso: "award", protect: "user-check", passive: "activity", monitor: "gauge" };
+        const icons = { 
+    plan: "clipboard-list", 
+    iso: "clipboard-check", 
+    protect: "shield-plus", 
+    passive: "trending-down", 
+    monitor: "gauge" 
+};
 
 let currentTab = 'plan';
 let tableDataStore = {}; 
@@ -2275,6 +2339,8 @@ let filePreviewDefaultScale = 1;
 let filePreviewPdfDocument = null;
 let filePreviewPdfRenderSerial = 0;
 let filePreviewPdfRenderTimer = null;
+let filePreviewPdfScaleFrame = null;
+let filePreviewPdfAppliedRelativeScale = 1;
 let filePreviewObjectUrl = null;
 let filePreviewTouchDistance = null;
 let filePreviewTouchScale = 1;
@@ -3945,6 +4011,17 @@ Object.keys(titles).forEach(key => {
     }
 }
 
+function updateYearFolderToggleIcon() {
+    const iconHost = document.getElementById('year-folder-toggle-icon');
+    if (!iconHost) return;
+
+    const iconName = isYearFolderPanelOpen ? 'folder-open' : 'folder';
+
+    iconHost.innerHTML = `
+        <i data-lucide="${iconName}" class="w-3.5 h-3.5"></i>
+    `;
+}
+
 function toggleYearFolders(forceOpen = null) {
     const list = document.getElementById('year-folder-list');
     const toggle = document.getElementById('year-folder-toggle');
@@ -3960,6 +4037,8 @@ function toggleYearFolders(forceOpen = null) {
 
     list.classList.toggle('hidden', !isYearFolderPanelOpen);
     toggle.classList.toggle('is-open', isYearFolderPanelOpen);
+
+    updateYearFolderToggleIcon();
     lucide.createIcons();
 }
 
@@ -3985,7 +4064,7 @@ function renderYearFolders() {
         mainBtn.className = 'year-folder-main';
         mainBtn.onclick = () => switchYearFolder(folder.id);
         mainBtn.innerHTML = `
-            <i data-lucide="calendar-days" class="w-3.5 h-3.5 shrink-0"></i>
+            <i data-lucide="calendar" class="w-3.5 h-3.5 shrink-0"></i>
             <span class="year-folder-name">${folder.name}</span>
         `;
 
@@ -3998,7 +4077,7 @@ function renderYearFolders() {
             actions.innerHTML = `
                 <button type="button"
                         class="year-folder-icon-btn"
-                        title="重新命名"
+                        title="編輯年度"
                         onclick="renameYearFolder(event, '${folder.id}')">
                     <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
                 </button>
@@ -4016,10 +4095,11 @@ function renderYearFolders() {
         list.appendChild(row);
     });
 
-    if (toggle) toggle.classList.toggle('is-open', isYearFolderPanelOpen);
-    list.classList.toggle('hidden', !isYearFolderPanelOpen);
+if (toggle) toggle.classList.toggle('is-open', isYearFolderPanelOpen);
+list.classList.toggle('hidden', !isYearFolderPanelOpen);
 
-    lucide.createIcons();
+updateYearFolderToggleIcon();
+lucide.createIcons();
 }
 
 async function switchYearFolder(folderId) {
@@ -4084,7 +4164,7 @@ async function renameYearFolder(event, folderId) {
     const folder = yearFolders.find(item => item.id === folderId);
     if (!folder) return;
 
-    const newName = prompt('請輸入新的年度資料夾名稱', folder.name);
+    const newName = prompt('請輸入年度', folder.year || folder.name);
     if (!newName) return;
 
     const numericYear = normalizeYearValue(newName);
@@ -4225,7 +4305,7 @@ function switchTab(type, shouldSave = true) {
                             ${getStatusOptionsHTML(statusVal)}
                         </select>
                         <span class="attachment-btn ${btnClass}" onclick="handleAttachmentClick(${rowIndex}, ${i})">
-                            <i data-lucide="link"></i>
+                            <i data-lucide="paperclip"></i>
                         </span>
                     </td>`;
                 }
@@ -4380,6 +4460,37 @@ function formatFileSize(bytes) {
     return `${(size / 1024 / 1024).toFixed(1)} MB`;
 }
 
+function getAttachmentFileIconHtml(file) {
+    const fileType = String(file?.type || '').toLowerCase();
+
+    if (fileType === 'application/pdf') {
+        return `<span class="attachment-symbol attachment-file-type-symbol attachment-file-type-pdf" aria-hidden="true">
+            <svg viewBox="0 0 32 32" focusable="false">
+                <path fill="currentColor" d="M8 3h12l5 5v21H8a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3Z"/>
+                <path fill="#fecaca" d="M20 3v6h6l-6-6Z"/>
+                <text x="15.5" y="25" text-anchor="middle" font-size="7.7" font-weight="900" fill="#ffffff" font-family="Arial, sans-serif">PDF</text>
+            </svg>
+        </span>`;
+    }
+
+    return `<span class="attachment-symbol attachment-file-type-symbol attachment-file-type-image" aria-hidden="true">
+        <svg viewBox="0 0 32 32" focusable="false">
+            <rect x="4" y="4" width="24" height="24" rx="3.8" fill="currentColor"/>
+            <circle cx="11" cy="11" r="2.5" fill="#ffffff"/>
+            <path fill="#ffffff" d="M8 23.5 14.2 16l4.5 5.1 2.6-3.1 3.8 5.5H8Z"/>
+        </svg>
+    </span>`;
+}
+
+function getAttachmentTrashIconHtml() {
+    return `<span class="attachment-symbol attachment-trash-symbol" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+            <path fill="currentColor" d="M9 3.5h6l.8 1.7H20a1 1 0 1 1 0 2H4a1 1 0 0 1 0-2h4.2L9 3.5Z"/>
+            <path fill="currentColor" d="M6.2 8.7h11.6l-.8 10.1A2.5 2.5 0 0 1 14.5 21h-5a2.5 2.5 0 0 1-2.5-2.2L6.2 8.7Zm3.2 2.2a.8.8 0 0 0-.8.8l.3 5.6a.8.8 0 0 0 1.6-.1l-.3-5.6a.8.8 0 0 0-.8-.7Zm5.2 0a.8.8 0 0 0-.8.7l-.3 5.6a.8.8 0 1 0 1.6.1l.3-5.6a.8.8 0 0 0-.8-.8Z"/>
+        </svg>
+    </span>`;
+}
+
         function renderAttachmentFileList(files, previewOnly = false) {
     const list = document.getElementById('attachment-file-list');
     list.innerHTML = '';
@@ -4399,12 +4510,8 @@ function formatFileSize(bytes) {
         info.className = 'attachment-file-info';
 
         const icon = document.createElement('div');
-
-if (file.type === 'application/pdf') {
-    icon.innerHTML = '<i data-lucide="file-text" class="w-7 h-7 text-red-500"></i>';
-} else {
-    icon.innerHTML = '<i data-lucide="image" class="w-7 h-7 text-blue-500"></i>';
-}
+        icon.className = 'attachment-file-icon-wrap';
+        icon.innerHTML = getAttachmentFileIconHtml(file);
 
         const textBox = document.createElement('div');
         textBox.className = 'min-w-0';
@@ -4428,7 +4535,7 @@ if (file.type === 'application/pdf') {
             const removeBtn = document.createElement('button');
             removeBtn.type = 'button';
             removeBtn.className = 'attachment-file-remove';
-            removeBtn.innerHTML = '<i data-lucide="trash-2" class="w-3.5 h-3.5"></i>';
+            removeBtn.innerHTML = getAttachmentTrashIconHtml();
             removeBtn.title = '移除此檔案';
             removeBtn.onclick = (event) => {
                 event.stopPropagation();
@@ -4613,12 +4720,28 @@ function getFilePreviewElements() {
     };
 }
 
-function setFilePreviewLoading(isLoading, message = '載入中...') {
+function setFilePreviewLoading(isLoading, message = '載入中.', delay = 1000) {
     const { loading, loadingText } = getFilePreviewElements();
     if (!loading) return;
 
-    if (loadingText) loadingText.innerText = message;
-    loading.classList.toggle('hidden', !isLoading);
+    if (setFilePreviewLoading._timer) {
+        clearTimeout(setFilePreviewLoading._timer);
+        setFilePreviewLoading._timer = null;
+    }
+
+    if (!isLoading) {
+        loading.classList.add('hidden');
+        return;
+    }
+
+    loading.classList.add('hidden');
+
+    setFilePreviewLoading._timer = setTimeout(() => {
+        setFilePreviewLoading._timer = null;
+
+        if (loadingText) loadingText.innerText = message;
+        loading.classList.remove('hidden');
+    }, delay);
 }
 
 function updateFilePreviewZoomLabel() {
@@ -4646,6 +4769,11 @@ function resetFilePreviewContent() {
         filePreviewPdfRenderTimer = null;
     }
 
+    if (filePreviewPdfScaleFrame) {
+        cancelAnimationFrame(filePreviewPdfScaleFrame);
+        filePreviewPdfScaleFrame = null;
+    }
+
     if (filePreviewPdfDocument && typeof filePreviewPdfDocument.destroy === 'function') {
         try { filePreviewPdfDocument.destroy(); } catch (err) { console.warn('PDF preview cleanup skipped', err); }
     }
@@ -4658,6 +4786,7 @@ function resetFilePreviewContent() {
     imagePreviewDefaultScale = 1;
     filePreviewTouchDistance = null;
     filePreviewTouchScale = 1;
+    filePreviewPdfAppliedRelativeScale = 1;
 
     revokeCurrentPreviewObjectUrl();
 
@@ -4682,6 +4811,7 @@ function resetFilePreviewContent() {
     if (pdfPages) {
         pdfPages.innerHTML = '';
         pdfPages.classList.add('hidden');
+        pdfPages.style.gap = '';
     }
 
     if (toolbar) toolbar.classList.add('hidden');
@@ -4723,14 +4853,75 @@ function applyPreviewFrameScale() {
     updateFilePreviewZoomLabel();
 }
 
+function applyPreviewPdfScale(options = {}) {
+    const { body, pdfPages } = getFilePreviewElements();
+    if (!pdfPages) return;
+
+    const preserveScroll = options.preserveScroll !== false;
+    const baseScale = filePreviewDefaultScale || 1;
+    const relativeScale = Math.max(0.05, filePreviewScale / baseScale);
+    const previousRelativeScale = filePreviewPdfAppliedRelativeScale || 1;
+
+    let anchorX = null;
+    let anchorY = null;
+
+    if (preserveScroll && body) {
+        anchorX = (body.scrollLeft + (body.clientWidth / 2)) / previousRelativeScale;
+        anchorY = (body.scrollTop + (body.clientHeight / 2)) / previousRelativeScale;
+    }
+
+    pdfPages.style.gap = `${Math.max(10, Math.round(18 * relativeScale))}px`;
+
+    pdfPages.querySelectorAll('.pdf-preview-page-shell').forEach(shell => {
+        const baseWidth = Number(shell.dataset.baseWidth || shell.offsetWidth || 1);
+        const baseHeight = Number(shell.dataset.baseHeight || shell.offsetHeight || 1);
+        const scaledWidth = Math.max(1, Math.round(baseWidth * relativeScale));
+        const scaledHeight = Math.max(1, Math.round(baseHeight * relativeScale));
+
+        shell.style.width = `${scaledWidth}px`;
+        shell.style.height = `${scaledHeight}px`;
+
+        const canvas = shell.querySelector('.pdf-preview-page-canvas');
+        if (canvas) {
+            canvas.style.width = `${scaledWidth}px`;
+            canvas.style.height = `${scaledHeight}px`;
+        }
+
+        const badge = shell.querySelector('.pdf-preview-page-number');
+        if (badge) {
+            const badgeScale = Math.max(0.72, Math.min(1, 1 / relativeScale));
+            badge.style.transform = `scale(${badgeScale})`;
+            badge.style.transformOrigin = 'top right';
+        }
+    });
+
+    filePreviewPdfAppliedRelativeScale = relativeScale;
+    updateFilePreviewZoomLabel();
+
+    if (preserveScroll && body && Number.isFinite(anchorX) && Number.isFinite(anchorY)) {
+        body.scrollLeft = Math.max(0, (anchorX * relativeScale) - (body.clientWidth / 2));
+        body.scrollTop = Math.max(0, (anchorY * relativeScale) - (body.clientHeight / 2));
+    }
+}
+
+function schedulePreviewPdfScaleApply() {
+    updateFilePreviewZoomLabel();
+
+    if (filePreviewPdfScaleFrame) return;
+
+    filePreviewPdfScaleFrame = requestAnimationFrame(() => {
+        filePreviewPdfScaleFrame = null;
+        applyPreviewPdfScale({ preserveScroll: true });
+    });
+}
+
 function setFilePreviewScale(nextScale) {
     filePreviewScale = clampPreviewScale(nextScale);
 
     if (filePreviewMode === 'image') {
         applyPreviewImageScale();
     } else if (filePreviewMode === 'pdf') {
-        updateFilePreviewZoomLabel();
-        queuePdfPreviewRender();
+        schedulePreviewPdfScaleApply();
     } else if (filePreviewMode === 'pdf-frame') {
         applyPreviewFrameScale();
     } else {
@@ -4747,7 +4938,7 @@ function fitFilePreviewToScreen() {
     setFilePreviewScale(filePreviewDefaultScale || 1);
 
     const { body } = getFilePreviewElements();
-    if (body) {
+    if (body && filePreviewMode !== 'pdf') {
         body.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
     }
 }
@@ -4836,13 +5027,7 @@ function ensurePdfJsLoaded() {
 
 function queuePdfPreviewRender() {
     if (filePreviewMode !== 'pdf' || !filePreviewPdfDocument) return;
-
-    if (filePreviewPdfRenderTimer) clearTimeout(filePreviewPdfRenderTimer);
-    setFilePreviewLoading(true, '調整縮放中...');
-
-    filePreviewPdfRenderTimer = setTimeout(() => {
-        renderPdfPreviewPages();
-    }, 90);
+    schedulePreviewPdfScaleApply();
 }
 
 async function renderPdfPreviewPages() {
@@ -4852,9 +5037,11 @@ async function renderPdfPreviewPages() {
     const renderSerial = ++filePreviewPdfRenderSerial;
     const pdf = filePreviewPdfDocument;
     const scale = filePreviewScale;
-    const outputScale = Math.min(window.devicePixelRatio || 1, 2);
+    const outputScale = Math.min(Math.max(window.devicePixelRatio || 1, 1.5), 2.5);
 
     pdfPages.innerHTML = '';
+    pdfPages.style.gap = '';
+    filePreviewPdfAppliedRelativeScale = 1;
     pdfPages.classList.remove('hidden');
 
     try {
@@ -4865,15 +5052,23 @@ async function renderPdfPreviewPages() {
             if (renderSerial !== filePreviewPdfRenderSerial) return;
 
             const viewport = page.getViewport({ scale });
+            const pageWidth = Math.floor(viewport.width);
+            const pageHeight = Math.floor(viewport.height);
             const pageShell = document.createElement('div');
             pageShell.className = 'pdf-preview-page-shell';
+            pageShell.dataset.baseWidth = String(pageWidth);
+            pageShell.dataset.baseHeight = String(pageHeight);
+            pageShell.style.width = `${pageWidth}px`;
+            pageShell.style.height = `${pageHeight}px`;
 
             const canvas = document.createElement('canvas');
             canvas.className = 'pdf-preview-page-canvas';
+            canvas.dataset.baseWidth = String(pageWidth);
+            canvas.dataset.baseHeight = String(pageHeight);
             canvas.width = Math.floor(viewport.width * outputScale);
             canvas.height = Math.floor(viewport.height * outputScale);
-            canvas.style.width = `${Math.floor(viewport.width)}px`;
-            canvas.style.height = `${Math.floor(viewport.height)}px`;
+            canvas.style.width = `${pageWidth}px`;
+            canvas.style.height = `${pageHeight}px`;
 
             const pageBadge = document.createElement('div');
             pageBadge.className = 'pdf-preview-page-number';
@@ -4896,6 +5091,7 @@ async function renderPdfPreviewPages() {
         }
     } finally {
         if (renderSerial === filePreviewPdfRenderSerial) {
+            applyPreviewPdfScale({ preserveScroll: false });
             setFilePreviewLoading(false);
             updateFilePreviewZoomLabel();
         }
@@ -4913,7 +5109,7 @@ async function openPdfPreview(file) {
     if (pdfPages) pdfPages.classList.remove('hidden');
     if (toolbar) toolbar.classList.remove('hidden');
 
-    setFilePreviewLoading(true, 'PDF 載入中...');
+    setFilePreviewLoading(true, 'PDF 載入中.', 1000);
 
     try {
         const pdfjsLib = await ensurePdfJsLoaded();
@@ -4930,13 +5126,23 @@ async function openPdfPreview(file) {
         const firstPage = await pdf.getPage(1);
         if (previewSerial !== filePreviewPdfRenderSerial || filePreviewMode !== 'pdf') return;
 
-        const firstViewport = firstPage.getViewport({ scale: 1 });
-        const availableWidth = Math.max(280, (body?.clientWidth || window.innerWidth) - 44);
-        filePreviewDefaultScale = clampPreviewScale(availableWidth / firstViewport.width, 0.35, 1.7);
-        filePreviewScale = filePreviewDefaultScale;
-        updateFilePreviewZoomLabel();
+const firstViewport = firstPage.getViewport({ scale: 1 });
+const availableWidth = Math.max(280, (body?.clientWidth || window.innerWidth) - 44);
 
-        await renderPdfPreviewPages();
+// 桌機預設略縮小，手機維持原本適合寬度
+const isDesktopPreview = window.matchMedia('(min-width: 901px)').matches;
+const initialPdfScaleRatio = isDesktopPreview ? 0.70 : 1;
+
+filePreviewDefaultScale = clampPreviewScale(
+    (availableWidth / firstViewport.width) * initialPdfScaleRatio,
+    0.35,
+    1.7
+);
+
+filePreviewScale = filePreviewDefaultScale;
+updateFilePreviewZoomLabel();
+
+await renderPdfPreviewPages();
     } catch (err) {
         if (previewSerial !== filePreviewPdfRenderSerial || filePreviewMode !== 'pdf') return;
         console.warn('PDF.js preview unavailable, falling back to browser PDF viewer', err);

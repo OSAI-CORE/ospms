@@ -2130,7 +2130,7 @@ main > .p-4,
         <div class="attachment-panel-header">
             <div class="attachment-panel-title">
 <i data-lucide="paperclip" class="w-6 h-6 text-blue-600"></i>
-<h3 id="attachment-modal-title">佐證附件管理</h3>
+<h3 id="attachment-modal-title">附件資料管理</h3>
 <span id="attachment-context-label"></span>
 
 <button id="clear-month-attachments-btn"
@@ -4608,7 +4608,7 @@ function openAttachmentPreviewModal(rowIndex, monthIndex) {
     const item = appData[currentTab][rowIndex];
     const files = getAttachmentFiles(attachmentsStore[currentTab]?.[rowIndex]?.[monthIndex]);
 
-    document.getElementById('attachment-modal-title').innerText = '佐證附件管理';
+    document.getElementById('attachment-modal-title').innerText = '附件資料管理';
     document.getElementById('attachment-context-label').innerText = `（${item.name} - ${monthIndex}月）`;
 
     document.getElementById('attachment-upload-section').classList.add('hidden');
@@ -4627,7 +4627,7 @@ function openAttachmentModal(rowIndex, monthIndex) {
     const item = appData[currentTab][rowIndex];
     const files = getAttachmentFiles(attachmentsStore[currentTab]?.[rowIndex]?.[monthIndex]);
 
-    document.getElementById('attachment-modal-title').innerText = '佐證附件管理';
+    document.getElementById('attachment-modal-title').innerText = '附件資料管理';
     document.getElementById('attachment-context-label').innerText = `（${item.name} - ${monthIndex}月）`;
 
     document.getElementById('attachment-upload-section').classList.remove('hidden');

@@ -2924,6 +2924,12 @@ async function importJSON(event) {
         try {
             const imported = JSON.parse(e.target.result);
 
+            const importLabel = isAdmin ? '匯入資料' : '載入資料';
+
+            if (!confirm(`${importLabel}將覆蓋目前所有紀錄，確定要繼續嗎？`)) {
+                return;
+            }
+
             applyImportedPerformanceData(imported);
 
             /*
@@ -2945,7 +2951,7 @@ async function importJSON(event) {
             switchTab(currentTab, false);
             updateUIState();
 
-            alert("JSON 資料載入成功！");
+            alert(`${importLabel}成功！`);
 
         } catch (err) {
             console.error(err);

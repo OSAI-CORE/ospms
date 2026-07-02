@@ -1949,7 +1949,7 @@ main > .p-4,
             onclick="exportJSON()"
             class="hidden bg-slate-700 text-slate-200 py-2 rounded-lg text-[11px] font-bold flex items-center justify-center space-x-1 hover:bg-slate-600 transition">
         <i data-lucide="file-output" class="w-3 h-3"></i>
-        <span>匯出備份</span>
+        <span>匯出資料</span>
     </button>
 
     <button id="import-json-btn"
@@ -2175,7 +2175,7 @@ main > .p-4,
                     </label>
 
                     <p class="text-[11px] text-slate-400 leading-snug">
-                        使用者權限可編輯、上傳附件、儲存與匯出備份；刪除、匯入及權限設定仍限管理者。
+                        使用者權限可編輯、上傳附件、儲存與匯出資料；刪除、匯入及權限設定仍限管理者。
                     </p>
 
 <div class="flex space-x-2 pt-1">
@@ -2435,7 +2435,7 @@ const STORE_KEY = "main_data";
 const APP_DATA_VERSION = "completion-2026-06-month-popup-confirm";
 
 const DEFAULT_ADMIN_PASSWORD = "SamCore@1068";
-const DEFAULT_EDITOR_PASSWORD = "TeamEdit116";
+const DEFAULT_EDITOR_PASSWORD = "TeamUser001";
 const MASTER_RECOVERY_CODE = "SAM-SUN-CORE-RECOVERY";
 
 let systemPassword = DEFAULT_ADMIN_PASSWORD;
@@ -2757,7 +2757,7 @@ function triggerLoadPreviewJSON() {
 
 function triggerImportJSON() {
     if (!canImportData()) {
-        alert('只有管理者可以匯入備份。');
+        alert('只有管理者可以匯入資料。');
         openLoginModal();
         return;
     }
@@ -2816,7 +2816,7 @@ function exportJSON() {
 
     a.href = url;
     a.download = isFullBackup
-        ? `職業安全績效管理系統_匯出備份_${exportDate}.json`
+        ? `職業安全績效管理系統_匯出資料_${exportDate}.json`
         : `職業安全績效管理系統_使用者審核檔_${exportDate}.json`;
 
     document.body.appendChild(a);
@@ -2901,7 +2901,7 @@ async function loadPreviewJSON(event) {
 
 async function importJSON(event) {
     if (!canImportData()) {
-        alert('只有管理者可以匯入備份。');
+        alert('只有管理者可以匯入資料。');
         event.target.value = '';
         openLoginModal();
         return;
@@ -2963,11 +2963,11 @@ function updateJsonActionButtons() {
         exportJsonBtn.classList.toggle('hidden', !canExportReviewData());
 
         if (isAdmin) {
-            exportJsonBtn.innerHTML = '<i data-lucide="file-output" class="w-3 h-3"></i><span>匯出備份</span>';
-            exportJsonBtn.title = '匯出完整系統備份';
+            exportJsonBtn.innerHTML = '<i data-lucide="file-output" class="w-3 h-3"></i><span>匯出資料</span>';
+            exportJsonBtn.title = '匯出完整系統資料';
         } else if (isEditor) {
-            exportJsonBtn.innerHTML = '<i data-lucide="file-output" class="w-3 h-3"></i><span>匯出備份</span>';
-            exportJsonBtn.title = '匯出使用者編輯後的備份 JSON';
+            exportJsonBtn.innerHTML = '<i data-lucide="file-output" class="w-3 h-3"></i><span>匯出資料</span>';
+            exportJsonBtn.title = '匯出使用者編輯後的資料 JSON';
         }
     }
 
@@ -2975,7 +2975,7 @@ function updateJsonActionButtons() {
         importJsonBtn.classList.remove('hidden');
 
         if (isAdmin) {
-            importJsonBtn.innerHTML = '<i data-lucide="file-input" class="w-3 h-3"></i><span>匯入備份</span>';
+            importJsonBtn.innerHTML = '<i data-lucide="file-input" class="w-3 h-3"></i><span>匯入資料</span>';
             importJsonBtn.title = '管理者正式匯入備份資料';
         } else if (isEditor) {
             importJsonBtn.innerHTML = '<i data-lucide="file-input" class="w-3 h-3"></i><span>載入資料</span>';

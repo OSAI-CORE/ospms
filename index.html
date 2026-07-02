@@ -2175,7 +2175,7 @@ main > .p-4,
                     </label>
 
                     <p class="text-[11px] text-slate-400 leading-snug">
-                        使用者權限可編輯、上傳附件、儲存與匯出資料；刪除、匯入及權限設定仍限管理者。
+                        使用者權限可編輯、上傳附件、儲存、載入與匯出資料；刪除與權限設定仍限管理者。
                     </p>
 
 <div class="flex space-x-2 pt-1">
@@ -2404,6 +2404,9 @@ let isEditor = false;
 let pendingOpenPermissionSettings = false;
 let isLoggingOut = false;
 
+/* 預覽載入模式：只暫存在目前頁面，不寫入瀏覽器 IndexedDB */
+let isPreviewDataMode = false;
+
 const defaultAppDataTemplate = JSON.parse(JSON.stringify(appData));
 
 let yearFolders = [];
@@ -2461,7 +2464,7 @@ function canChangePassword() {
 }
 
 function canImportData() {
-    return isAdmin;
+    return isAdmin || isEditor;
 }
 
 function canExportReviewData() {
@@ -2744,7 +2747,7 @@ store.put({
         // --- 功能模組 ---
 
 function handleJsonLoadButton() {
-    if (isAdmin) {
+    if (canImportData()) {
         triggerImportJSON();
     } else {
         triggerLoadPreviewJSON();
@@ -2757,7 +2760,7 @@ function triggerLoadPreviewJSON() {
 
 function triggerImportJSON() {
     if (!canImportData()) {
-        alert('只有管理者可以匯入資料。');
+        alert('請先登入使用者或管理者權限後再載入資料。');
         openLoginModal();
         return;
     }
@@ -2765,14 +2768,15 @@ function triggerImportJSON() {
     document.getElementById('import-input').click();
 }
 
-function buildPerformanceExportData(isFullBackup) {
-    if (canEditData()) saveCurrentTabData();
-    syncCurrentYearFolderFromGlobals();
+function buildPerformanceExportData() {
+    if (canEditData() && !isPreviewDataMode) {
+        saveCurrentTabData();
+        syncCurrentYearFolderFromGlobals();
+    }
 
-    const exportData = {
-        version: APP_DATA_VERSION,
-        exportType: isFullBackup ? "full-backup" : "editor-review",
-        exportedBy: isFullBackup ? "admin" : "editor",
+    return {
+        version: "performance-system-json-v2",
+        exportType: "unified-data",
         exportedAt: new Date().toISOString(),
 
         year_folders: yearFolders,
@@ -2785,18 +2789,14 @@ function buildPerformanceExportData(isFullBackup) {
             data: appData
         },
 
+        /*
+         * 統一版 JSON 不匯出：
+         * admin_password
+         * editor_password
+         * editor_enabled
+         */
         config: {}
     };
-
-    if (isFullBackup) {
-        exportData.config = {
-            admin_password: systemPassword,
-            editor_password: editorPassword,
-            editor_enabled: editorEnabled
-        };
-    }
-
-    return exportData;
 }
 
 function exportJSON() {
@@ -2806,18 +2806,23 @@ function exportJSON() {
         return;
     }
 
-    const isFullBackup = isAdmin;
-    const exportDate = new Date().toISOString().slice(0, 10);
-    const dataToExport = buildPerformanceExportData(isFullBackup);
+    if (isPreviewDataMode) {
+        alert('目前為預覽資料模式，請先以使用者或管理者身分正式載入資料後再匯出 JSON。');
+        return;
+    }
 
-    const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: "application/json" });
+    const exportDate = new Date().toISOString().slice(0, 10);
+    const dataToExport = buildPerformanceExportData();
+
+    const blob = new Blob([JSON.stringify(dataToExport, null, 2)], {
+        type: "application/json"
+    });
+
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
 
     a.href = url;
-    a.download = isFullBackup
-        ? `職業安全績效管理系統_匯出資料_${exportDate}.json`
-        : `職業安全績效管理系統_使用者審核檔_${exportDate}.json`;
+    a.download = `職安績效管理PMS_${exportDate}.json`;
 
     document.body.appendChild(a);
     a.click();
@@ -2871,13 +2876,17 @@ async function loadPreviewJSON(event) {
 
             applyImportedPerformanceData(imported);
 
-            // 預覽 / 使用者載入資料不處理：
-            // admin_password
-            // editor_password
-            // editor_enabled
+            /*
+             * 預覽載入不處理：
+             * admin_password
+             * editor_password
+             * editor_enabled
+             *
+             * 預覽模式只更新目前頁面變數，不寫入 IndexedDB。
+             */
+            isPreviewDataMode = true;
 
             normalizeAllExecutionMonths();
-            await persistToStorage();
 
             event.target.value = '';
 
@@ -2885,14 +2894,13 @@ async function loadPreviewJSON(event) {
             switchTab(currentTab, false);
             updateUIState();
 
-            alert(isEditor
-                ? '資料已載入完成，可接續編輯並匯出備份檔。'
-                : '預覽資料已載入完成。'
-            );
+            alert('預覽資料已載入完成。');
 
         } catch (err) {
             console.error(err);
             alert("載入失敗：檔案格式錯誤或內容已損毀。");
+        } finally {
+            event.target.value = '';
         }
     };
 
@@ -2901,7 +2909,7 @@ async function loadPreviewJSON(event) {
 
 async function importJSON(event) {
     if (!canImportData()) {
-        alert('只有管理者可以匯入資料。');
+        alert('請先登入使用者或管理者權限後再載入資料。');
         event.target.value = '';
         openLoginModal();
         return;
@@ -2918,22 +2926,15 @@ async function importJSON(event) {
 
             applyImportedPerformanceData(imported);
 
-            const config = imported.config || {};
-
-            if (config.admin_password) {
-                systemPassword = config.admin_password;
-                await setConfig('admin_password', systemPassword);
-            }
-
-            if (config.editor_password) {
-                editorPassword = config.editor_password;
-                await setConfig('editor_password', editorPassword);
-            }
-
-            if ('editor_enabled' in config) {
-                editorEnabled = Boolean(config.editor_enabled);
-                await setConfig('editor_enabled', editorEnabled);
-            }
+            /*
+             * 正式載入 / 匯入不處理：
+             * admin_password
+             * editor_password
+             * editor_enabled
+             *
+             * 密碼與權限設定維持目前瀏覽器原本設定。
+             */
+            isPreviewDataMode = false;
 
             normalizeAllExecutionMonths();
             await persistToStorage();
@@ -2944,11 +2945,13 @@ async function importJSON(event) {
             switchTab(currentTab, false);
             updateUIState();
 
-            alert("備份已匯入完成。");
+            alert("JSON 資料載入成功！");
 
         } catch (err) {
             console.error(err);
             alert("匯入失敗：檔案格式錯誤或內容已損毀。");
+        } finally {
+            event.target.value = '';
         }
     };
 
@@ -2962,13 +2965,13 @@ function updateJsonActionButtons() {
     if (exportJsonBtn) {
         exportJsonBtn.classList.toggle('hidden', !canExportReviewData());
 
-        if (isAdmin) {
-            exportJsonBtn.innerHTML = '<i data-lucide="file-output" class="w-3 h-3"></i><span>匯出資料</span>';
-            exportJsonBtn.title = '匯出完整系統資料';
-        } else if (isEditor) {
-            exportJsonBtn.innerHTML = '<i data-lucide="file-output" class="w-3 h-3"></i><span>匯出資料</span>';
-            exportJsonBtn.title = '匯出使用者編輯後的資料 JSON';
-        }
+if (isAdmin) {
+    exportJsonBtn.innerHTML = '<i data-lucide="file-output" class="w-3 h-3"></i><span>匯出資料</span>';
+    exportJsonBtn.title = '匯出系統資料';
+} else if (isEditor) {
+    exportJsonBtn.innerHTML = '<i data-lucide="file-output" class="w-3 h-3"></i><span>匯出資料</span>';
+    exportJsonBtn.title = '匯出系統資料';
+}
     }
 
     if (importJsonBtn) {
@@ -2976,10 +2979,10 @@ function updateJsonActionButtons() {
 
         if (isAdmin) {
             importJsonBtn.innerHTML = '<i data-lucide="file-input" class="w-3 h-3"></i><span>匯入資料</span>';
-            importJsonBtn.title = '管理者正式匯入備份資料';
+            importJsonBtn.title = '載入 JSON 資料';
         } else if (isEditor) {
             importJsonBtn.innerHTML = '<i data-lucide="file-input" class="w-3 h-3"></i><span>載入資料</span>';
-            importJsonBtn.title = '載入 JSON 資料以接續編輯';
+            importJsonBtn.title = '載入 JSON 資料';
         } else {
             importJsonBtn.innerHTML = '<i data-lucide="file-search" class="w-3 h-3"></i><span>載入預覽</span>';
             importJsonBtn.title = '載入 JSON 預覽資料';
@@ -3381,8 +3384,10 @@ function getCompletionStatsForRows(baseInfo, savedValues) {
 
 function exportFullReport() {
     try {
-        if (canEditData()) saveCurrentTabData();
-        syncCurrentYearFolderFromGlobals();
+        if (canEditData() && !isPreviewDataMode) {
+            saveCurrentTabData();
+            syncCurrentYearFolderFromGlobals();
+        }
 
         const wb = XLSX.utils.book_new();
 
@@ -4375,7 +4380,7 @@ function renderYearFolders() {
     list.innerHTML = '';
 
 if (addBtn) {
-    if (canCreateYearFolders()) addBtn.classList.remove('hidden');
+    if (canCreateYearFolders() && !isPreviewDataMode) addBtn.classList.remove('hidden');
     else addBtn.classList.add('hidden');
 }
 
@@ -4394,7 +4399,7 @@ if (addBtn) {
 
         row.appendChild(mainBtn);
 
-if (canManageYearFolders()) {
+if (canManageYearFolders() && !isPreviewDataMode) {
     const actions = document.createElement('span');
             actions.className = 'year-folder-actions';
 
@@ -4432,8 +4437,10 @@ async function switchYearFolder(folderId) {
         return;
     }
 
-    if (canEditData()) saveCurrentTabData();
-    syncCurrentYearFolderFromGlobals();
+    if (canEditData() && !isPreviewDataMode) {
+        saveCurrentTabData();
+        syncCurrentYearFolderFromGlobals();
+    }
 
     currentYearFolderId = folderId;
     syncGlobalsFromCurrentYearFolder();
@@ -4442,10 +4449,17 @@ async function switchYearFolder(folderId) {
     renderYearFolders();
     switchTab(currentTab, false);
 
-    await persistToStorage();
+    if (!isPreviewDataMode) {
+        await persistToStorage();
+    }
 }
 
 async function addYearFolder() {
+    if (isPreviewDataMode) {
+        alert('目前為預覽資料模式，不能新增年度資料夾。請先以使用者或管理者身分正式載入資料後再操作。');
+        return;
+    }
+
     if (!canCreateYearFolders()) return;
 
 
@@ -4484,6 +4498,12 @@ if (!year) return;
 
 async function renameYearFolder(event, folderId) {
     event.stopPropagation();
+
+    if (isPreviewDataMode) {
+        alert('目前為預覽資料模式，不能修改年度資料夾。請先以管理者身分正式載入資料後再操作。');
+        return;
+    }
+
     if (!canManageYearFolders()) return;
 
     const folder = yearFolders.find(item => item.id === folderId);
@@ -4518,6 +4538,12 @@ async function renameYearFolder(event, folderId) {
 
 async function removeYearFolder(event, folderId) {
     event.stopPropagation();
+
+    if (isPreviewDataMode) {
+        alert('目前為預覽資料模式，不能刪除年度資料夾。請先以管理者身分正式載入資料後再操作。');
+        return;
+    }
+
     if (!canManageYearFolders()) return;
 
     if (yearFolders.length <= 1) {
@@ -4557,7 +4583,7 @@ async function removeYearFolder(event, folderId) {
         }
 
 function switchTab(type, shouldSave = true) {
-    if (shouldSave && canEditData()) saveCurrentTabData();
+    if (shouldSave && canEditData() && !isPreviewDataMode) saveCurrentTabData();
     currentTab = type;
     document.querySelectorAll('#nav-tabs > button').forEach(btn => {
         btn.classList.remove('text-white', 'bg-slate-800', 'border-blue-500');
@@ -4600,15 +4626,18 @@ function switchTab(type, shouldSave = true) {
             const headerAction = document.getElementById('admin-header-action');
             const adminSection = document.getElementById('admin-add-section');
             const saveBtn = document.getElementById('save-logout-btn');
-            const permissionSettingsBtn = document.getElementById('permission-settings-btn');
+const permissionSettingsBtn = document.getElementById('permission-settings-btn');
 
-if (canDeleteData()) {
+const canWriteInTable = canEditData() && !isPreviewDataMode;
+const canDeleteInTable = canDeleteData() && !isPreviewDataMode;
+
+if (canDeleteInTable) {
     headerAction.classList.remove('hidden');
 } else {
     headerAction.classList.add('hidden');
 }
 
-if (canEditData()) {
+if (canEditData() && !isPreviewDataMode) {
     adminSection.classList.remove('hidden');
     saveBtn.classList.remove('hidden');
 } else {
@@ -4634,7 +4663,7 @@ if (canEditData()) {
 
                     monthCells += `<td class="px-0.5 py-1.5 border-l border-b relative">
 <select class="input-cell status-cell ${statusClass}"
-        ${!canEditData() ? 'disabled' : ''}
+        ${!canWriteInTable ? 'disabled' : ''}
                                 onchange="handleStatusChange(this)">
                             ${getStatusOptionsHTML(statusVal)}
                         </select>
@@ -4655,24 +4684,24 @@ if (canEditData()) {
                 const rateClass = getCompletionRateClass(rowStat.rate, rowStat.statusLabel);
                 const executionClass = getExecutionStatusClass(rowStat.statusLabel);
 
-                const idContent = canEditData() 
+                const idContent = canWriteInTable 
                     ? `<button onclick="toggleSortMenu(event, ${rowIndex})" class="w-full h-full bg-yellow-50 hover:bg-yellow-200 transition-colors font-bold text-slate-700 py-2 rounded border border-yellow-200">${item.id}</button>` 
                     : item.id;
 
-                const nameHTML = canEditData() ? `<textarea class="admin-name-input w-full text-[11px] leading-tight admin-edit-cell rounded p-1 h-12" oninput="autoResize(this)">${item.name}</textarea>` : `<div class="text-[11px] font-bold leading-tight text-slate-600">${item.name}</div>`;
-                const contentHTML = canEditData() ? `<textarea class="admin-content-input w-full text-[10px] leading-normal admin-edit-cell rounded p-1 h-12" oninput="autoResize(this)">${item.content}</textarea>` : `<div class="text-[10px] text-slate-600 leading-normal">${item.content}</div>`;
+                const nameHTML = canWriteInTable ? `<textarea class="admin-name-input w-full text-[11px] leading-tight admin-edit-cell rounded p-1 h-12" oninput="autoResize(this)">${item.name}</textarea>` : `<div class="text-[11px] font-bold leading-tight text-slate-600">${item.name}</div>`;
+                const contentHTML = canWriteInTable ? `<textarea class="admin-content-input w-full text-[10px] leading-normal admin-edit-cell rounded p-1 h-12" oninput="autoResize(this)">${item.content}</textarea>` : `<div class="text-[10px] text-slate-600 leading-normal">${item.content}</div>`;
 
                 row.innerHTML = `
                     <td class="px-1 py-1 text-[10px] sticky-col-num border-b">${idContent}</td>
                     <td class="px-3 py-3 sticky-col-name border-b">${nameHTML}</td>
                     <td class="px-3 py-3 border-l border-b bg-white group-hover:bg-slate-50/50">${contentHTML}</td>
                     <td class="px-1 py-1.5 border-l border-b bg-white group-hover:bg-slate-50/50">
-                        <select class="input-cell fixed-select-cell font-light" ${!canEditData() ? 'disabled' : ''} onchange="handleScheduleSelectChange(this)" onkeydown="handleKeyDown(event, this)">
+                        <select class="input-cell fixed-select-cell font-light" ${!canWriteInTable ? 'disabled' : ''} onchange="handleScheduleSelectChange(this)" onkeydown="handleKeyDown(event, this)">
                             ${getScheduleOptionsHTML(scheduleValue)}
                         </select>
                     </td>
                     <td class="px-1 py-1.5 border-l border-b bg-white group-hover:bg-slate-50/50">
-                        ${getExecutionMonthsCheckboxesHTML(executionMonthsValue, !canEditData())}
+                        ${getExecutionMonthsCheckboxesHTML(executionMonthsValue, !canWriteInTable)}
                     </td>
                     ${monthCells}
                     <td class="px-1 py-1.5 border-l border-b bg-white group-hover:bg-slate-50/50 text-center">
@@ -4681,7 +4710,7 @@ if (canEditData()) {
                     <td class="px-1 py-1.5 border-l border-b bg-white group-hover:bg-slate-50/50 text-center">
                         <span class="completion-summary-cell ${executionClass}">${rowStat.statusLabel}</span>
                     </td>
-                    <td class="${canDeleteData() ? '' : 'hidden'} px-2 py-2 border-l border-b text-center">
+                    <td class="${canDeleteInTable ? '' : 'hidden'} px-2 py-2 border-l border-b text-center">
                         <button onclick="deleteRow(${rowIndex})" class="text-red-400 hover:text-red-600 transition"><i data-lucide="trash-2" class="w-4 h-4 mx-auto"></i></button>
                     </td>
                 `;
@@ -4714,7 +4743,12 @@ if (canEditData()) {
             setTimeout(() => document.addEventListener('click', closeMenu), 0);
         }
 
-        async function moveRow(direction) {
+async function moveRow(direction) {
+            if (isPreviewDataMode) {
+                alert('目前為預覽資料模式，不能調整績效指標排序。請先以管理者身分正式載入資料後再操作。');
+                return;
+            }
+
             if (activeSortRowIdx === null) return;
             
             // 排序前先儲存目前的輸入值到 Store
@@ -4865,7 +4899,7 @@ function getAttachmentTrashIconHtml() {
 
         row.appendChild(info);
 
-        if (canEditData() && !previewOnly) {
+        if (canEditData() && !previewOnly && !isPreviewDataMode) {
             const removeBtn = document.createElement('button');
             removeBtn.type = 'button';
             removeBtn.className = 'attachment-file-remove';
@@ -4885,6 +4919,12 @@ function getAttachmentTrashIconHtml() {
 
 async function clearCurrentMonthAttachments(event) {
     if (event) event.stopPropagation();
+
+    if (isPreviewDataMode) {
+        alert('目前為預覽資料模式，不能清除或保存附件。請先以使用者或管理者身分正式載入資料後再操作。');
+        return;
+    }
+
     if (!activeAttachmentTarget || !canEditData()) return;
     const rowIndex = activeAttachmentTarget.row;
     const monthIndex = activeAttachmentTarget.month;
@@ -4911,8 +4951,13 @@ async function clearCurrentMonthAttachments(event) {
     openAttachmentModal(rowIndex, monthIndex);
 }
 
-        async function removeAttachmentFile(fileIndex) {
-            if (!activeAttachmentTarget || !canEditData()) return;
+async function removeAttachmentFile(fileIndex) {
+    if (isPreviewDataMode) {
+        alert('目前為預覽資料模式，不能移除或保存附件。請先以使用者或管理者身分正式載入資料後再操作。');
+        return;
+    }
+
+    if (!activeAttachmentTarget || !canEditData()) return;
             const files = ensureAttachmentSlot(activeAttachmentTarget.row, activeAttachmentTarget.month);
             if (fileIndex < 0 || fileIndex >= files.length) return;
             if (!confirm('確定移除此檔案？')) return;
@@ -4963,12 +5008,19 @@ function openAttachmentModal(rowIndex, monthIndex) {
     document.getElementById('attachment-modal-title').innerText = '附件資料管理';
     document.getElementById('attachment-context-label').innerText = `（${item.name} - ${monthIndex}月）`;
 
-    document.getElementById('attachment-upload-section').classList.remove('hidden');
+    const attachmentUploadSection = document.getElementById('attachment-upload-section');
+if (attachmentUploadSection) {
+    attachmentUploadSection.classList.toggle('hidden', !canEditData() || isPreviewDataMode);
+}
 const adminTools = document.getElementById('attachment-admin-tools');
 if (adminTools) {
-    adminTools.classList.toggle('hidden', !canDeleteData());
+    adminTools.classList.toggle('hidden', !canDeleteData() || isPreviewDataMode);
 }
-    document.getElementById('clear-month-attachments-btn').classList.remove('hidden');
+
+const clearMonthBtn = document.getElementById('clear-month-attachments-btn');
+if (clearMonthBtn) {
+    clearMonthBtn.classList.toggle('hidden', isPreviewDataMode || !canEditData());
+}
     document.getElementById('attachment-modal').classList.remove('hidden');
 
     renderAttachmentFileList(files, false);
@@ -4987,6 +5039,11 @@ if (adminTools) {
         }
 
 function processFiles(files) {
+    if (isPreviewDataMode) {
+        alert('目前為預覽資料模式，不能上傳或保存附件。請先以使用者或管理者身分正式載入資料後再操作。');
+        return;
+    }
+
     if (!activeAttachmentTarget || !canEditData()) return;
 
     const validFiles = Array.from(files || []);
@@ -5656,6 +5713,11 @@ function closeFilePreviewByBackdrop(event) {
         function viewCurrentFile() { const files = getAttachmentFiles(attachmentsStore[currentTab]?.[activeAttachmentTarget.row]?.[activeAttachmentTarget.month]); if (files.length > 0) viewFileDirectly(files[0]); }
 
 async function deleteSingleAttachment() {
+    if (isPreviewDataMode) {
+        alert('目前為預覽資料模式，不能刪除或保存附件。請先以使用者或管理者身分正式載入資料後再操作。');
+        return;
+    }
+
     if (!activeAttachmentTarget || !canEditData()) return;
 
     if (!confirm("確定刪除此月份全部附件？")) return;
@@ -5679,6 +5741,11 @@ openAttachmentModal(activeAttachmentTarget.row, activeAttachmentTarget.month);
 }
 
 async function batchApplyToFile() {
+    if (isPreviewDataMode) {
+        alert('目前為預覽資料模式，不能批次套用或保存附件。請先以管理者身分正式載入資料後再操作。');
+        return;
+    }
+
     if (!activeAttachmentTarget || !canDeleteData()) {
         alert('只有管理者可以將附件套用至全年度。');
         return;
@@ -5718,6 +5785,11 @@ alert("套用成功");
 }
 
 async function batchClearRowAttachments() {
+    if (isPreviewDataMode) {
+        alert('目前為預覽資料模式，不能批次清除或保存附件。請先以管理者身分正式載入資料後再操作。');
+        return;
+    }
+
     if (!activeAttachmentTarget || !canDeleteData()) {
         alert('只有管理者可以清除此指標所有附件。');
         return;
@@ -6093,7 +6165,7 @@ function updateUIState() {
 }
 
 async function saveAndLogout() {
-    if (canEditData()) {
+    if (canEditData() && !isPreviewDataMode) {
         saveCurrentTabData();
         syncCurrentYearFolderFromGlobals();
         await persistToStorage();
@@ -6115,6 +6187,11 @@ setTimeout(function() {
 }
 
 function addNewRow() {
+    if (isPreviewDataMode) {
+        alert('目前為預覽資料模式，不能新增或保存績效指標。請先以使用者或管理者身分正式載入資料後再操作。');
+        return;
+    }
+
     if (!canEditData()) {
         alert('請先登入使用者或管理者權限。');
         openLoginModal();
@@ -6136,6 +6213,11 @@ function addNewRow() {
 }
 
 async function deleteRow(idx) {
+    if (isPreviewDataMode) {
+        alert('目前為預覽資料模式，不能刪除或保存績效指標。請先以管理者身分正式載入資料後再操作。');
+        return;
+    }
+
     if (!canDeleteData()) {
         alert('只有管理者可以刪除績效指標項目。');
         return;
@@ -6182,8 +6264,14 @@ scrollRowNearView(Math.max(0, idx - 1));
 }
 
 function handleYearFormat(input) {
-            const numericYear = normalizeYearValue(input.value);
-            if (!numericYear) return;
+    if (isPreviewDataMode) {
+        alert('目前為預覽資料模式，不能修改年度資料夾。請先以管理者身分正式載入資料後再操作。');
+        syncGlobalsFromCurrentYearFolder();
+        return;
+    }
+
+    const numericYear = normalizeYearValue(input.value);
+    if (!numericYear) return;
 
             input.value = formatYearFolderName(numericYear);
 

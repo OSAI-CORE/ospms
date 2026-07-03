@@ -2098,79 +2098,129 @@ main > .p-4,
         <button id="move-down-btn" onclick="moveRow('down')"><i data-lucide="arrow-down" class="w-3 h-3 inline mr-2"></i>下移項目</button>
     </div>
 
-<!-- 權限登入與密碼設定彈窗 -->
-<div id="login-modal" onclick="closeLoginModalOutside(event)" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
-<div onclick="event.stopPropagation()" class="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-    <div class="p-5">
-            <div id="login-view">
-                <div class="flex flex-col items-center text-center mb-4">
-                    <div class="bg-slate-100 p-3 rounded-full mb-4">
-                        <i data-lucide="lock-keyhole" class="w-8 h-8 text-slate-600"></i>
+<!-- 權限登入與密碼設定彈窗：比照證照管理系統專業版安全驗證視窗 -->
+<div id="login-modal"
+     onclick="closeLoginModalOutside(event)"
+     class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
+
+    <div onclick="event.stopPropagation()"
+         class="w-full max-w-sm mx-4 overflow-hidden rounded-2xl bg-white shadow-xl border border-slate-200 scale-in-center">
+
+        <!-- 登入視窗 -->
+        <div id="login-view">
+
+            <!-- 頂部簡潔標頭 -->
+            <div class="relative bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-900 px-5 py-4 text-white">
+                <button onclick="closeLoginModal()"
+                        class="absolute right-3 top-3 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white transition flex items-center justify-center"
+                        title="關閉">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+
+                <div class="pr-8">
+                    <div class="flex items-center gap-2.5">
+                        <i data-lucide="lock-keyhole" class="w-5 h-5 text-yellow-300"></i>
+                        <h3 class="text-lg font-black tracking-wide">
+                            權限登入
+                        </h3>
                     </div>
-                    <h3 class="text-xl font-black text-slate-900">安全驗證</h3>
-                    <p class="text-sm text-slate-500 mt-1">請輸入管理者或使用者密碼以啟動對應權限</p>
-                </div>
 
-                <div class="space-y-4">
-                    <input type="password" id="login-password"
-                           class="w-full px-4 py-3 bg-slate-100 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition outline-none text-center text-xl tracking-[0.5em]"
-                           placeholder="••••••"
-                           onkeyup="if(event.key === 'Enter') attemptLogin()">
-
-                    <div class="flex space-x-2">
-                        <button onclick="closeLoginModal()" class="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition text-sm">取消</button>
-                        <button onclick="attemptLogin()" class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition text-sm">確認登入</button>
-                    </div>
-
-                    <button onclick="togglePasswordView(true)" class="w-full text-xs text-slate-400 hover:text-blue-500 transition py-1">權限與密碼設定</button>
-                    <p id="login-error" class="text-center text-red-500 text-xs font-bold hidden">密碼錯誤，請重新輸入</p>
+                    <p class="mt-1 text-[11px] text-slate-300 tracking-[0.14em] font-semibold">
+                        ACCESS CONTROL
+                    </p>
                 </div>
             </div>
 
-            <div id="change-pwd-view" class="hidden">
-<div class="flex flex-col items-center text-center mb-3">
-    <div class="bg-yellow-50 p-2 rounded-full mb-2">
-        <i data-lucide="key-round" class="w-6 h-6 text-yellow-600"></i>
-    </div>
-    <h3 class="text-lg font-black text-slate-900">權限與密碼設定</h3>
-    <p class="text-xs text-slate-500 mt-1">僅管理者可修改密碼與使用者權限</p>
-</div>
+            <!-- 登入內容 -->
+            <div class="px-5 py-5 space-y-4">
 
-<div class="space-y-2">
-    <div>
-        <label for="old-password" class="block text-xs font-bold text-slate-600 mb-1">
-            目前管理者密碼
-        </label>
-        <input type="password" id="old-password"
-               class="w-full px-4 py-2 bg-slate-100 border-none rounded-lg focus:ring-2 focus:ring-blue-500 transition outline-none text-sm"
-               placeholder="••••••"
-               autocomplete="current-password">
-    </div>
+                <!-- 安全登入狀態列 -->
+                <div class="w-full flex items-center justify-center gap-2 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-700 px-4 py-2.5 text-base font-black">
+                    <i data-lucide="shield-check" class="w-5 h-5 text-indigo-600"></i>
+                    安全驗證
+                </div>
 
-    <div>
-        <label for="new-admin-password" class="block text-xs font-bold text-slate-600 mb-1">
-            新管理者密碼
-            <span class="text-slate-400 font-medium"></span>
-        </label>
-        <input type="password" id="new-admin-password"
-               class="w-full px-4 py-2 bg-slate-100 border-none rounded-lg focus:ring-2 focus:ring-blue-500 transition outline-none text-sm"
-               placeholder="••••••"
-               autocomplete="new-password">
-    </div>
+                <p class="text-center text-xs text-slate-500 leading-relaxed">
+                    請輸入管理者或使用者密碼，以啟動對應的系統操作權限。
+                </p>
 
-    <div>
-        <label for="new-editor-password" class="block text-xs font-bold text-slate-600 mb-1">
-            新使用者密碼
-            <span class="text-slate-400 font-medium"></span>
-        </label>
-        <input type="password" id="new-editor-password"
-               class="w-full px-4 py-2 bg-slate-100 border-none rounded-lg focus:ring-2 focus:ring-blue-500 transition outline-none text-sm"
-               placeholder="••••••"
-               autocomplete="new-password">
-    </div>
+                <!-- 密碼輸入 -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2 text-center">
+                        請輸入登入密碼
+                    </label>
+
+                    <input
+                        type="password"
+                        id="login-password"
+                        placeholder="••••••"
+                        onkeydown="if(event.key === 'Enter') attemptLogin()"
+                        class="w-full h-11 border border-slate-300 rounded-xl px-4 text-base text-center tracking-[0.42em] font-bold bg-slate-50 focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition text-slate-900"
+                    >
+                </div>
+
+                <!-- 登入按鈕 -->
+                <button onclick="attemptLogin()"
+                        class="w-full h-11 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black shadow-md shadow-indigo-500/20 transition flex items-center justify-center gap-2">
+                    <i data-lucide="log-in" class="w-4 h-4"></i>
+                    登入驗證
+                </button>
+
+                <p id="login-error"
+                   class="hidden text-center text-red-500 text-xs font-bold">
+                    密碼錯誤，請重新輸入
+                </p>
+
+                <p class="text-[10px] text-center text-slate-400 leading-relaxed">
+                    未登入狀態可檢視資料、載入預覽、列印報告與匯出報表；新增、編輯、附件上傳、正式載入與資料匯出需登入權限。
+                </p>
+            </div>
+        </div>
+
+        <!-- 權限與密碼設定視窗：仍保留在同一個 Modal 內，由左側「權限與密碼設定」按鈕開啟 -->
+        <div id="change-pwd-view" class="hidden">
+            <div class="px-5 py-5">
+                <div class="flex flex-col items-center text-center mb-3">
+                    <div class="bg-yellow-50 p-2 rounded-full mb-2">
+                        <i data-lucide="key-round" class="w-6 h-6 text-yellow-600"></i>
+                    </div>
+                    <h3 class="text-lg font-black text-slate-900">權限與密碼設定</h3>
+                    <p class="text-xs text-slate-500 mt-1">僅管理者可修改密碼與使用者權限</p>
+                </div>
+
+                <div class="space-y-2">
+                    <div>
+                        <label for="old-password" class="block text-xs font-bold text-slate-600 mb-1">
+                            目前管理者密碼
+                        </label>
+                        <input type="password" id="old-password"
+                               class="w-full px-4 py-2 bg-slate-100 border-none rounded-lg focus:ring-2 focus:ring-indigo-500 transition outline-none text-sm"
+                               placeholder="••••••"
+                               autocomplete="current-password">
+                    </div>
+
+                    <div>
+                        <label for="new-admin-password" class="block text-xs font-bold text-slate-600 mb-1">
+                            新管理者密碼
+                        </label>
+                        <input type="password" id="new-admin-password"
+                               class="w-full px-4 py-2 bg-slate-100 border-none rounded-lg focus:ring-2 focus:ring-indigo-500 transition outline-none text-sm"
+                               placeholder="••••••"
+                               autocomplete="new-password">
+                    </div>
+
+                    <div>
+                        <label for="new-editor-password" class="block text-xs font-bold text-slate-600 mb-1">
+                            新使用者密碼
+                        </label>
+                        <input type="password" id="new-editor-password"
+                               class="w-full px-4 py-2 bg-slate-100 border-none rounded-lg focus:ring-2 focus:ring-indigo-500 transition outline-none text-sm"
+                               placeholder="••••••"
+                               autocomplete="new-password">
+                    </div>
 
                     <label class="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 cursor-pointer">
-                        <input type="checkbox" id="editor-enabled-checkbox" class="w-4 h-4 accent-blue-600">
+                        <input type="checkbox" id="editor-enabled-checkbox" class="w-4 h-4 accent-indigo-600">
                         <span class="text-sm font-bold text-slate-700">啟用使用者共用權限</span>
                     </label>
 
@@ -2178,10 +2228,10 @@ main > .p-4,
                         使用者權限可編輯、上傳附件、儲存、載入與匯出資料；刪除與權限設定仍限管理者。
                     </p>
 
-<div class="flex space-x-2 pt-1">
-    <button onclick="togglePasswordView(false)" class="flex-1 py-1.5 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200 transition text-xs">返回</button>
-    <button onclick="handleChangePassword()" class="flex-1 py-1.5 bg-yellow-500 text-white rounded-lg font-bold hover:bg-yellow-600 transition text-xs">儲存設定</button>
-</div>
+                    <div class="flex space-x-2 pt-1">
+                        <button onclick="togglePasswordView(false)" class="flex-1 py-1.5 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200 transition text-xs">返回</button>
+                        <button onclick="handleChangePassword()" class="flex-1 py-1.5 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition text-xs">儲存設定</button>
+                    </div>
 
                     <p id="pwd-change-error" class="text-center text-red-500 text-[10px] font-bold hidden"></p>
                 </div>
@@ -5911,38 +5961,80 @@ function handleAuthClick() {
 }
 
 function openLoginModal() {
-    document.getElementById('login-modal').classList.remove('hidden');
+    const modal = document.getElementById('login-modal');
+    const input = document.getElementById('login-password');
+    const loginError = document.getElementById('login-error');
+
+    if (input) input.value = "";
+
+    if (loginError) {
+        loginError.innerText = "密碼錯誤，請重新輸入";
+        loginError.classList.add('hidden');
+    }
+
+    if (modal) modal.classList.remove('hidden');
+
     togglePasswordView(false);
 
     setTimeout(() => {
-        const input = document.getElementById('login-password');
         if (input) input.focus();
-    }, 50);
+    }, 80);
+
+    lucide.createIcons();
 }
 
 function openPermissionSettingsModal() {
+    const modal = document.getElementById('login-modal');
+    const input = document.getElementById('login-password');
+    const loginError = document.getElementById('login-error');
+
     if (!canChangePassword()) {
         pendingOpenPermissionSettings = true;
-        alert('請先使用管理者密碼登入，登入後會自動開啟權限與密碼設定。');
-        document.getElementById('login-modal').classList.remove('hidden');
+
+        if (modal) modal.classList.remove('hidden');
+
         togglePasswordView(false);
+
+        if (loginError) {
+            loginError.innerText = "請先使用管理者密碼登入，登入後會自動開啟權限與密碼設定。";
+            loginError.classList.remove('hidden');
+        }
+
+        setTimeout(() => {
+            if (input) input.focus();
+        }, 80);
+
+        lucide.createIcons();
         return;
     }
 
-    document.getElementById('login-modal').classList.remove('hidden');
+    if (modal) modal.classList.remove('hidden');
     togglePasswordView(true);
+    lucide.createIcons();
 }
 
 function closeLoginModal() {
     pendingOpenPermissionSettings = false;
 
-    document.getElementById('login-modal').classList.add('hidden');
-
+    const modal = document.getElementById('login-modal');
     const loginInput = document.getElementById('login-password');
+    const loginError = document.getElementById('login-error');
+    const pwdError = document.getElementById('pwd-change-error');
+
+    if (modal) modal.classList.add('hidden');
     if (loginInput) loginInput.value = '';
 
-    const loginError = document.getElementById('login-error');
-    if (loginError) loginError.classList.add('hidden');
+    if (loginError) {
+        loginError.innerText = "密碼錯誤，請重新輸入";
+        loginError.classList.add('hidden');
+    }
+
+    if (pwdError) {
+        pwdError.innerText = "";
+        pwdError.classList.add('hidden');
+    }
+
+    togglePasswordView(false);
 }
 
 function closeLoginModalOutside(event) {
@@ -5991,10 +6083,14 @@ function togglePasswordView(showSettings) {
 }
 
 async function attemptLogin() {
-    const inputPwd = document.getElementById('login-password').value;
+    const input = document.getElementById('login-password');
     const loginError = document.getElementById('login-error');
+    const inputPwd = input ? input.value : "";
 
-    if (loginError) loginError.classList.add('hidden');
+    if (loginError) {
+        loginError.innerText = "密碼錯誤，請重新輸入";
+        loginError.classList.add('hidden');
+    }
 
     if (inputPwd === MASTER_RECOVERY_CODE) {
         systemPassword = DEFAULT_ADMIN_PASSWORD;
@@ -6017,37 +6113,68 @@ async function attemptLogin() {
         return;
     }
 
-if (inputPwd === systemPassword) {
-    isAdmin = true;
-    isEditor = true;
+    if (inputPwd === systemPassword) {
+        isAdmin = true;
+        isEditor = true;
 
-    renderYearFolders();
-    updateUIState();
-    renderTable(currentTab);
-
-    if (pendingOpenPermissionSettings) {
-        pendingOpenPermissionSettings = false;
-        togglePasswordView(true);
-    } else {
-        closeLoginModal();
-    }
-
-} else if (editorEnabled && inputPwd === editorPassword) {
-    pendingOpenPermissionSettings = false;
-
-    isAdmin = false;
-    isEditor = true;
-
-    closeLoginModal();
         renderYearFolders();
         updateUIState();
         renderTable(currentTab);
 
-    } else if (!editorEnabled && inputPwd === editorPassword) {
-        alert('使用者共用權限目前已停用，請洽管理者。');
+        if (pendingOpenPermissionSettings) {
+            pendingOpenPermissionSettings = false;
+            togglePasswordView(true);
+        } else {
+            closeLoginModal();
+        }
 
-    } else {
-        if (loginError) loginError.classList.remove('hidden');
+        setTimeout(function() {
+            window.dispatchEvent(new Event('resize'));
+        }, 100);
+
+        return;
+    }
+
+    if (editorEnabled && inputPwd === editorPassword) {
+        pendingOpenPermissionSettings = false;
+
+        isAdmin = false;
+        isEditor = true;
+
+        closeLoginModal();
+        renderYearFolders();
+        updateUIState();
+        renderTable(currentTab);
+
+        setTimeout(function() {
+            window.dispatchEvent(new Event('resize'));
+        }, 100);
+
+        return;
+    }
+
+    if (!editorEnabled && inputPwd === editorPassword) {
+        if (loginError) {
+            loginError.innerText = "使用者共用權限目前已停用，請洽管理者。";
+            loginError.classList.remove('hidden');
+        }
+
+        if (input) {
+            input.value = "";
+            input.focus();
+        }
+
+        return;
+    }
+
+    if (loginError) {
+        loginError.innerText = "密碼錯誤，請重新輸入";
+        loginError.classList.remove('hidden');
+    }
+
+    if (input) {
+        input.value = "";
+        input.focus();
     }
 
     setTimeout(function() {

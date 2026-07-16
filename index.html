@@ -542,6 +542,17 @@
     font-weight: 500;
 }
 
+.attachment-upload-zone.is-processing {
+    cursor: wait;
+    pointer-events: none;
+    border-color: #93c5fd;
+    background: #eff6ff;
+}
+
+.attachment-upload-zone.is-processing .attachment-upload-main {
+    color: #1d4ed8;
+}
+
 .attachment-list-section {
     margin-top: 18px;
 }
@@ -719,6 +730,29 @@
     width: 100%;
     height: 100%;
     display: block;
+}
+
+/* 管理者操作欄：與報表其他欄位一致 */
+#main-table th:nth-child(20),
+#main-table td:nth-child(20) {
+    width: 58px;
+}
+
+.admin-action-header {
+    background: #f1f5f9 !important;
+    color: #64748b !important;
+    border-left: 1px solid #e2e8f0 !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.admin-action-cell {
+    background: #f8fafc !important;
+    border-left: 1px solid #e2e8f0 !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.report-row-delete-btn {
+    margin: 0 auto;
 }
 
         /* 排序選單樣式 */
@@ -1496,6 +1530,72 @@ body.file-preview-open {
         font-size: 8px;
     }
 
+    /* 手機直式表頭：
+       年度靠左，儲存與列印圖示靠右 */
+    header {
+        display: block !important;
+        padding: 10px 12px 12px !important;
+    }
+
+    header > .flex.items-center.gap-3.min-w-0 {
+        width: 100%;
+    }
+
+    #header-action-buttons {
+        position: absolute;
+        right: 12px;
+        bottom: 12px;
+        display: flex;
+        flex-wrap: nowrap !important;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px !important;
+        margin: 0;
+    }
+
+    #header-action-buttons button {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        padding: 0 !important;
+        border-radius: 12px !important;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 10px rgba(15, 23, 42, 0.10);
+    }
+
+    #header-action-buttons button span {
+        display: none !important;
+    }
+
+    #header-action-buttons button i {
+        width: 18px !important;
+        height: 18px !important;
+        margin: 0 !important;
+    }
+
+    #year-input-field {
+        width: 150px;
+    }
+
+}
+
+@media screen and (max-width: 360px) and (orientation: portrait) {
+    #year-input-field {
+        width: 135px;
+        font-size: 10px;
+    }
+
+    #header-action-buttons button {
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
+    }
+
+    #header-action-buttons button i {
+        width: 16px !important;
+        height: 16px !important;
+    }
 }
 
 /* 手機橫式：保留左側欄，但縮小 header，避免上方被切掉 */
@@ -1967,7 +2067,7 @@ main > .p-4,
 </div>
 
             <button class="w-full bg-blue-600 text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center space-x-2 hover:bg-blue-500 transition" onclick="exportFullReport()">
-                <i data-lucide="file-up" class="w-4 h-4"></i><span>匯出全年度績效報表</span>
+                <i data-lucide="file-up" class="w-4 h-4"></i><span>匯出年度績效報表</span>
             </button>
         </div>
     </aside>
@@ -1998,14 +2098,20 @@ main > .p-4,
     </div>
 </div>
 
-<div class="flex items-center space-x-3 no-print">
+<div id="header-action-buttons"
+     class="flex items-center gap-3 no-print">
 <button id="save-logout-btn"
         onclick="confirmSaveAndLogout()"
+        title="儲存並登出"
+        aria-label="儲存並登出"
         class="hidden flex items-center space-x-2 px-5 py-2.5 bg-green-600 text-white rounded-full text-sm font-bold transition shadow-sm hover:bg-green-700">
     <i data-lucide="save" class="w-4 h-4"></i>
-    <span>儲存並登出系統</span>
+    <span>儲存並登出</span>
 </button>
-                <button onclick="printCurrentReport()" class="flex items-center space-x-2 px-5 py-2.5 bg-white border border-slate-200 rounded-full text-sm font-bold text-slate-700 transition shadow-sm hover:shadow-md">
+                <button onclick="printCurrentReport()"
+        title="列印報告"
+        aria-label="列印報告"
+        class="flex items-center space-x-2 px-5 py-2.5 bg-white border border-slate-200 rounded-full text-sm font-bold text-slate-700 transition shadow-sm hover:shadow-md">
                     <i data-lucide="printer" class="w-4 h-4 text-slate-600"></i><span>列印報告</span>
                 </button>
             </div>
@@ -2022,7 +2128,6 @@ main > .p-4,
                             <th class="px-1.5 py-2 text-center min-w-[56px] border-b border-l">
                                 <div class="leading-tight">
     <span class="block">時程</span>
-    <span class="block">規劃</span>
 </div>
                                 <select id="schedule-filter" class="header-filter no-print" onchange="applyTableFilters()">
                                     <option value="">全部</option>
@@ -2067,7 +2172,10 @@ main > .p-4,
                             <th class="px-1 py-3 text-center border-b border-l bg-blue-50/30 text-blue-600 min-w-[54px]">12月</th>
                             <th class="px-1 py-3 text-center border-b border-l bg-emerald-50 text-emerald-700 min-w-[70px]">完成率</th>
                             <th class="px-1 py-3 text-center border-b border-l bg-emerald-50 text-emerald-700 min-w-[70px]">執行狀態</th>
-                            <th id="admin-header-action" class="hidden px-2 py-4 text-center border-b border-l text-red-500">操作</th>
+                            <th id="admin-header-action"
+    class="admin-action-header hidden px-2 py-4 text-center">
+    操作
+</th>
                         </tr>
                     </thead>
                     <tbody id="table-body" class="bg-white"></tbody>
@@ -2281,7 +2389,11 @@ main > .p-4,
                         <path fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M24 31V18m0 0-6 6m6-6 6 6"/>
                     </svg>
                 </span>
-                <div id="upload-text-status" class="attachment-upload-main">點擊或拖放檔案至此處上傳</div>
+                <div id="upload-text-status"
+     class="attachment-upload-main"
+     aria-live="polite">
+    點擊或拖放檔案至此處上傳
+</div>
                 <div class="attachment-upload-sub">支援 PDF, PNG, JPG（單檔最大 10MB）</div>
             </div>
         </div>
@@ -2465,8 +2577,9 @@ const defaultAppDataTemplate = JSON.parse(JSON.stringify(appData));
 let yearFolders = [];
 let currentYearFolderId = null;
 let isYearFolderPanelOpen = false;
-        let activeAttachmentTarget = null; 
-        let activeSortRowIdx = null; // 當前準備排序的行索引
+let activeAttachmentTarget = null;
+let isAttachmentUploadBusy = false;
+let activeSortRowIdx = null;
 let imagePreviewScale = 1;
 let imagePreviewDefaultScale = 1;
 let filePreviewMode = '';
@@ -2796,6 +2909,101 @@ store.put({
                 return new Promise((resolve) => { transaction.oncomplete = () => resolve(); });
             } catch (err) { console.error("Save Error:", err); }
         }
+
+async function persistToStorageConfirmed() {
+    const db = await openDB();
+
+    return new Promise((resolve, reject) => {
+        let settled = false;
+
+        const rejectOnce = (error) => {
+            if (settled) return;
+            settled = true;
+
+            try {
+                db.close();
+            } catch (closeError) {
+                console.warn('IndexedDB 關閉失敗：', closeError);
+            }
+
+            reject(
+                error instanceof Error
+                    ? error
+                    : new Error('IndexedDB 儲存失敗')
+            );
+        };
+
+        try {
+            const transaction = db.transaction(
+                STORE_KEY,
+                'readwrite'
+            );
+
+            const store =
+                transaction.objectStore(STORE_KEY);
+
+            syncCurrentYearFolderFromGlobals();
+
+            store.put(
+                yearFolders,
+                'ospms_year_folders'
+            );
+
+            store.put(
+                currentYearFolderId,
+                'ospms_current_year_folder_id'
+            );
+
+            store.put(
+                tableDataStore,
+                'ospms_data_store'
+            );
+
+            store.put(
+                attachmentsStore,
+                'ospms_attachments'
+            );
+
+            store.put({
+                version: APP_DATA_VERSION,
+                data: appData
+            }, 'ospms_base_data');
+
+            transaction.oncomplete = () => {
+                if (settled) return;
+                settled = true;
+
+                try {
+                    db.close();
+                } catch (closeError) {
+                    console.warn(
+                        'IndexedDB 關閉失敗：',
+                        closeError
+                    );
+                }
+
+                resolve();
+            };
+
+            transaction.onerror = () => {
+                rejectOnce(
+                    transaction.error ||
+                    new Error('IndexedDB 交易失敗')
+                );
+            };
+
+            transaction.onabort = () => {
+                rejectOnce(
+                    transaction.error ||
+                    new Error('IndexedDB 交易已中止')
+                );
+            };
+
+        } catch (error) {
+            rejectOnce(error);
+        }
+    });
+}        
 
         // --- 功能模組 ---
 
@@ -3457,7 +3665,7 @@ function exportFullReport() {
             "編號",
             "績效指標內容",
             "完成標準",
-            "時程規劃",
+            "時程",
             "執行月份",
             "1月",
             "2月",
@@ -3910,7 +4118,7 @@ function addOverviewSheet() {
     const attachmentCount = getAttachmentCount();
 
 const rows = [
-    ["職業安全績效管理系統 OSPMS｜全年度績效報表"],
+    ["職業安全績效管理系統 OSPMS｜年度績效報表"],
     [`年度：${yearLabel}`, "", "", `匯出時間：${exportDate}`, "", "", "", ""],
     [],
     ["年度管理摘要", "", "", "", "", "", "", ""],
@@ -4014,7 +4222,7 @@ function addMissingItemsSheet() {
         [`年度：${yearLabel}`, "", "", `匯出時間：${exportDate}`, "", "", ""],
         [],
         ["待追蹤項目清單", "", "", "", "", "", ""],
-        ["分類名稱", "編號", "績效指標內容", "月份", "時程規劃", "執行月份", "狀態"]
+        ["分類名稱", "編號", "績效指標內容", "月份", "時程", "執行月份", "狀態"]
     ];
 
     Object.keys(titles).forEach(key => {
@@ -4379,19 +4587,33 @@ Object.keys(titles).forEach(key => {
 });
 
         wb.Props = {
-            Title: "職業安全績效管理系統全年度績效報表",
+            Title: "職業安全績效管理系統年度績效報表",
             Subject: yearLabel,
             Author: "職業安全績效管理系統 OSPMS",
             CreatedDate: new Date()
         };
 
-        const safeYear = yearLabel.replace(/[\\/:*?"<>|\s]+/g, "_");
+const exportFileDate = (() => {
+    const now = new Date();
 
-        XLSX.writeFile(
-            wb,
-            `OSPMS_${safeYear}_全年度績效報表.xlsx`,
-            { cellStyles: true }
-        );
+    const year = now.getFullYear();
+
+    const month = String(
+        now.getMonth() + 1
+    ).padStart(2, '0');
+
+    const day = String(
+        now.getDate()
+    ).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+})();
+
+XLSX.writeFile(
+    wb,
+    `職安年度績效報表PMS_${exportFileDate}.xlsx`,
+    { cellStyles: true }
+);
 
     } catch (error) {
         console.error(error);
@@ -4769,9 +4991,14 @@ if (canEditData() && !isPreviewDataMode) {
                     <td class="px-1 py-1.5 border-l border-b bg-white group-hover:bg-slate-50/50 text-center">
                         <span class="completion-summary-cell ${executionClass}">${rowStat.statusLabel}</span>
                     </td>
-                    <td class="${canDeleteInTable ? '' : 'hidden'} px-2 py-2 border-l border-b text-center">
-                        <button onclick="deleteRow(${rowIndex})" class="text-red-400 hover:text-red-600 transition"><i data-lucide="trash-2" class="w-4 h-4 mx-auto"></i></button>
-                    </td>
+<td class="admin-action-cell ${canDeleteInTable ? '' : 'hidden'} px-2 py-2 text-center">
+    <button type="button"
+            onclick="deleteRow(${rowIndex})"
+            class="attachment-file-remove report-row-delete-btn"
+            title="刪除此績效指標">
+        ${getAttachmentTrashIconHtml()}
+    </button>
+</td>
                 `;
                 tbody.appendChild(row);
                 row.querySelectorAll('.input-cell').forEach(input => formatInput(input));
@@ -5004,10 +5231,15 @@ async function clearCurrentMonthAttachments(event) {
         }
     }
 
-    saveCurrentTabData();
-    await persistToStorage();
-    renderTable(currentTab);
-    openAttachmentModal(rowIndex, monthIndex);
+const scrollState = getTableScrollState();
+
+saveCurrentTabData();
+await persistToStorage();
+
+renderTable(currentTab);
+restoreTableScrollState(scrollState);
+
+openAttachmentModal(rowIndex, monthIndex);
 }
 
 async function removeAttachmentFile(fileIndex) {
@@ -5017,19 +5249,40 @@ async function removeAttachmentFile(fileIndex) {
     }
 
     if (!activeAttachmentTarget || !canEditData()) return;
-            const files = ensureAttachmentSlot(activeAttachmentTarget.row, activeAttachmentTarget.month);
-            if (fileIndex < 0 || fileIndex >= files.length) return;
-            if (!confirm('確定移除此檔案？')) return;
-            files.splice(fileIndex, 1);
-            if (files.length === 0 && attachmentsStore[currentTab]?.[activeAttachmentTarget.row]) {
-                delete attachmentsStore[currentTab][activeAttachmentTarget.row][activeAttachmentTarget.month];
-                if (Object.keys(attachmentsStore[currentTab][activeAttachmentTarget.row]).length === 0) delete attachmentsStore[currentTab][activeAttachmentTarget.row];
-            }
-            saveCurrentTabData();
-            await persistToStorage();
-            renderTable(currentTab);
-            openAttachmentModal(activeAttachmentTarget.row, activeAttachmentTarget.month);
+
+    const rowIndex = activeAttachmentTarget.row;
+    const monthIndex = activeAttachmentTarget.month;
+
+    const files = ensureAttachmentSlot(rowIndex, monthIndex);
+
+    if (fileIndex < 0 || fileIndex >= files.length) return;
+    if (!confirm('確定移除此檔案？')) return;
+
+    const scrollState = getTableScrollState();
+
+    files.splice(fileIndex, 1);
+
+    if (
+        files.length === 0 &&
+        attachmentsStore[currentTab]?.[rowIndex]
+    ) {
+        delete attachmentsStore[currentTab][rowIndex][monthIndex];
+
+        if (
+            Object.keys(attachmentsStore[currentTab][rowIndex]).length === 0
+        ) {
+            delete attachmentsStore[currentTab][rowIndex];
         }
+    }
+
+    saveCurrentTabData();
+    await persistToStorage();
+
+    renderTable(currentTab);
+    restoreTableScrollState(scrollState);
+
+    openAttachmentModal(rowIndex, monthIndex);
+}
 
 function handleAttachmentClick(rowIndex, monthIndex) {
     if (canEditData()) {
@@ -5061,6 +5314,10 @@ if (adminTools) adminTools.classList.add('hidden');
 function openAttachmentModal(rowIndex, monthIndex) {
     activeAttachmentTarget = { row: rowIndex, month: monthIndex };
 
+    if (!isAttachmentUploadBusy) {
+        resetAttachmentUploadStatus();
+    }
+
     const item = appData[currentTab][rowIndex];
     const files = getAttachmentFiles(attachmentsStore[currentTab]?.[rowIndex]?.[monthIndex]);
 
@@ -5086,8 +5343,49 @@ if (clearMonthBtn) {
     lucide.createIcons();
 }
 
-        function closeAttachmentModal() { document.getElementById('attachment-modal').classList.add('hidden'); document.getElementById('file-input').value = ''; activeAttachmentTarget = null; }
-        function closeAttachmentModalOutside(event) { closeAttachmentModal(); }
+function closeAttachmentModal() {
+    if (isAttachmentUploadBusy) {
+        alert(
+            '附件仍在處理或儲存中，請待上傳完成後再關閉。'
+        );
+        return;
+    }
+
+    const modal =
+        document.getElementById(
+            'attachment-modal'
+        );
+
+    const fileInput =
+        document.getElementById(
+            'file-input'
+        );
+
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+
+    if (fileInput) {
+        fileInput.value = '';
+    }
+
+    activeAttachmentTarget = null;
+}
+
+function closeAttachmentModalOutside(event) {
+    /*
+     * 只有點擊真正的背景區域才關閉，
+     * 點擊視窗內容不執行關閉。
+     */
+    if (
+        event &&
+        event.target !== event.currentTarget
+    ) {
+        return;
+    }
+
+    closeAttachmentModal();
+}
 
         function initDragAndDrop() {
             const dropZone = document.getElementById('upload-status-box');
@@ -5097,54 +5395,284 @@ if (clearMonthBtn) {
             dropZone.addEventListener('drop', e => { const files = Array.from(e.dataTransfer.files || []); if (files.length > 0) processFiles(files); }, false);
         }
 
+function setAttachmentUploadStatus(message, busy = false) {
+    const statusText = document.getElementById('upload-text-status');
+    const uploadBox = document.getElementById('upload-status-box');
+
+    if (statusText) {
+        statusText.innerText = message;
+    }
+
+    if (uploadBox) {
+        uploadBox.classList.toggle('is-processing', busy);
+        uploadBox.setAttribute(
+            'aria-busy',
+            busy ? 'true' : 'false'
+        );
+    }
+}
+
+function resetAttachmentUploadStatus() {
+    setAttachmentUploadStatus(
+        '點擊或拖放檔案至此處上傳',
+        false
+    );
+}
+
+function getAttachmentProcessingLabel(files) {
+    const firstName = files[0]?.name || '附件';
+
+    return files.length > 1
+        ? `正在處理 ${firstName} 等 ${files.length} 個檔案...`
+        : `正在處理 ${firstName}...`;
+}
+
 function processFiles(files) {
     if (isPreviewDataMode) {
-        alert('目前為預覽資料模式，不能上傳或保存附件。請先以使用者或管理者身分正式載入資料後再操作。');
+        alert(
+            '目前為預覽資料模式，不能上傳或保存附件。請先以使用者或管理者身分正式載入資料後再操作。'
+        );
         return;
     }
 
-    if (!activeAttachmentTarget || !canEditData()) return;
+    if (
+        !activeAttachmentTarget ||
+        !canEditData()
+    ) {
+        return;
+    }
 
-    const validFiles = Array.from(files || []);
-    if (validFiles.length === 0) return;
+    /*
+     * 防止上一批附件尚未完成時，
+     * 又再次點擊或拖入其他檔案。
+     */
+    if (isAttachmentUploadBusy) {
+        return;
+    }
 
-    const allowed = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'];
-    const tooLarge = validFiles.find(file => file.size > 10 * 1024 * 1024);
-    const unsupported = validFiles.find(file => !allowed.includes(file.type));
+    const validFiles =
+        Array.from(files || []);
+
+    if (validFiles.length === 0) {
+        return;
+    }
+
+    const allowed = [
+        'application/pdf',
+        'image/png',
+        'image/jpeg',
+        'image/jpg'
+    ];
+
+    const tooLarge = validFiles.find(
+        file => file.size > 10 * 1024 * 1024
+    );
+
+    const unsupported = validFiles.find(
+        file => !allowed.includes(file.type)
+    );
 
     if (unsupported) {
-        alert("不支援此格式！");
+        alert('不支援此格式！');
+        resetAttachmentUploadStatus();
         return;
     }
 
     if (tooLarge) {
-        alert("檔案太大 (單檔限 10MB)");
+        alert('檔案太大 (單檔限 10MB)');
+        resetAttachmentUploadStatus();
         return;
     }
 
-    Promise.all(validFiles.map(file => new Promise((resolve) => {
-        const reader = new FileReader();
+    /*
+     * 固定目前操作的項目、月份及表格位置。
+     */
+    const rowIndex =
+        activeAttachmentTarget.row;
 
-        reader.onload = (e) => resolve({
-            name: file.name,
-            type: file.type,
-            size: file.size,
-            data: e.target.result
-        });
+    const monthIndex =
+        activeAttachmentTarget.month;
 
-        reader.readAsDataURL(file);
-    }))).then(async newFiles => {
-        const slot = ensureAttachmentSlot(
-            activeAttachmentTarget.row,
-            activeAttachmentTarget.month
+    const scrollState =
+        getTableScrollState();
+
+    /*
+     * 儲存失敗時，用來回復尚未完成的附件資料。
+     */
+    let slot = null;
+    let previousLength = 0;
+
+    isAttachmentUploadBusy = true;
+
+    setAttachmentUploadStatus(
+        getAttachmentProcessingLabel(validFiles),
+        true
+    );
+
+    Promise.all(
+        validFiles.map(file => {
+            return new Promise(
+                (resolve, reject) => {
+                    const reader =
+                        new FileReader();
+
+                    reader.onload = event => {
+                        resolve({
+                            name: file.name,
+                            type: file.type,
+                            size: file.size,
+                            data: event.target.result
+                        });
+                    };
+
+                    reader.onerror = () => {
+                        reject(
+                            new Error(
+                                `無法讀取檔案：${file.name}`
+                            )
+                        );
+                    };
+
+                    reader.readAsDataURL(file);
+                }
+            );
+        })
+    )
+    .then(async newFiles => {
+        slot = ensureAttachmentSlot(
+            rowIndex,
+            monthIndex
         );
 
+        previousLength = slot.length;
+
+        /*
+         * 先暫時放入資料結構，
+         * 但此時還不顯示在附件清單。
+         */
         slot.push(...newFiles);
 
+        setAttachmentUploadStatus(
+            '附件處理完成，正在儲存...',
+            true
+        );
+
         saveCurrentTabData();
-        await persistToStorage();
+
+        /*
+         * 必須等 IndexedDB 確認交易完成。
+         */
+        await persistToStorageConfirmed();
+
+        /*
+         * 到這裡才代表附件真正儲存成功。
+         */
         renderTable(currentTab);
-        openAttachmentModal(activeAttachmentTarget.row, activeAttachmentTarget.month);
+        restoreTableScrollState(scrollState);
+
+        const attachmentModal =
+            document.getElementById(
+                'attachment-modal'
+            );
+
+        const isSameTarget =
+            activeAttachmentTarget &&
+            activeAttachmentTarget.row ===
+                rowIndex &&
+            activeAttachmentTarget.month ===
+                monthIndex;
+
+        /*
+         * 儲存成功後，附件才出現在清單中。
+         */
+        if (
+            attachmentModal &&
+            !attachmentModal.classList.contains(
+                'hidden'
+            ) &&
+            isSameTarget
+        ) {
+            renderAttachmentFileList(
+                slot,
+                false
+            );
+
+            lucide.createIcons();
+        }
+
+        setAttachmentUploadStatus(
+            '附件上傳完成',
+            true
+        );
+
+        /*
+         * 短暫顯示完成狀態後，
+         * 恢復原始提示文字。
+         */
+        setTimeout(() => {
+            if (!isAttachmentUploadBusy) {
+                resetAttachmentUploadStatus();
+            }
+        }, 800);
+    })
+    .catch(error => {
+        /*
+         * 若儲存失敗，移除這次尚未完成的附件，
+         * 保留原本已成功儲存的附件。
+         */
+        if (slot) {
+            slot.splice(previousLength);
+
+            if (
+                slot.length === 0 &&
+                attachmentsStore[currentTab]?.[
+                    rowIndex
+                ]
+            ) {
+                delete attachmentsStore[
+                    currentTab
+                ][rowIndex][monthIndex];
+
+                if (
+                    Object.keys(
+                        attachmentsStore[
+                            currentTab
+                        ][rowIndex]
+                    ).length === 0
+                ) {
+                    delete attachmentsStore[
+                        currentTab
+                    ][rowIndex];
+                }
+            }
+        }
+
+        console.error(
+            '附件上傳失敗：',
+            error
+        );
+
+        alert(
+            '附件未能完成儲存，因此沒有加入已上傳檔案清單。請確認瀏覽器儲存空間後再試一次。'
+        );
+
+        resetAttachmentUploadStatus();
+    })
+    .finally(() => {
+        isAttachmentUploadBusy = false;
+
+        /*
+         * 清空檔案選擇框，
+         * 讓相同檔案之後仍可再次選取。
+         */
+        const fileInput =
+            document.getElementById(
+                'file-input'
+            );
+
+        if (fileInput) {
+            fileInput.value = '';
+        }
     });
 }
 
@@ -6118,11 +6646,17 @@ async function attemptLogin() {
         return;
     }
 
-    if (inputPwd === systemPassword) {
-        isAdmin = true;
-        isEditor = true;
+if (inputPwd === systemPassword) {
+    isAdmin = true;
+    isEditor = true;
 
-        renderYearFolders();
+    /*
+     * 已完成管理者驗證，
+     * 將目前載入的預覽資料切換為可編輯工作資料。
+     */
+    isPreviewDataMode = false;
+
+    renderYearFolders();
         updateUIState();
         renderTable(currentTab);
 
@@ -6140,13 +6674,19 @@ async function attemptLogin() {
         return;
     }
 
-    if (editorEnabled && inputPwd === editorPassword) {
-        pendingOpenPermissionSettings = false;
+if (editorEnabled && inputPwd === editorPassword) {
+    pendingOpenPermissionSettings = false;
 
-        isAdmin = false;
-        isEditor = true;
+    isAdmin = false;
+    isEditor = true;
 
-        closeLoginModal();
+    /*
+     * 已完成使用者驗證，
+     * 將目前載入的預覽資料切換為可編輯工作資料。
+     */
+    isPreviewDataMode = false;
+
+    closeLoginModal();
         renderYearFolders();
         updateUIState();
         renderTable(currentTab);

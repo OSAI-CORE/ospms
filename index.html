@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; overflow: hidden; }
@@ -1963,7 +1962,8 @@ main > .p-4,
         <span>載入預覽</span>
     </button>
 
-
+    <input type="file" id="preview-json-input" class="hidden" accept=".json" onchange="loadPreviewJSON(event)">
+    <input type="file" id="import-input" class="hidden" accept=".json" onchange="importJSON(event)">
 </div>
 
             <button class="w-full bg-blue-600 text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center space-x-2 hover:bg-blue-500 transition" onclick="exportFullReport()">
@@ -1975,19 +1975,6 @@ main > .p-4,
 <div id="mobile-sidebar-backdrop"
      class="mobile-sidebar-backdrop no-print"
      onclick="closeMobileSidebar()"></div>
-
-<!-- 資料備份檔案選擇欄位：移出手機收合側欄，避免行動瀏覽器無法觸發 -->
-<input type="file"
-       id="preview-json-input"
-       accept=".zip,.json,application/zip,application/json"
-       onchange="loadPreviewJSON(event)"
-       style="position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;">
-
-<input type="file"
-       id="import-input"
-       accept=".zip,.json,application/zip,application/json"
-       onchange="importJSON(event)"
-       style="position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;">
 
     <main class="flex-1 flex flex-col min-w-0">
         <header class="bg-white px-8 py-5 border-b border-slate-200 flex justify-between items-center shrink-0">
@@ -2016,7 +2003,7 @@ main > .p-4,
         onclick="confirmSaveAndLogout()"
         class="hidden flex items-center space-x-2 px-5 py-2.5 bg-green-600 text-white rounded-full text-sm font-bold transition shadow-sm hover:bg-green-700">
     <i data-lucide="save" class="w-4 h-4"></i>
-    <span>儲存並登出系統</span>
+    <span>儲存並登出</span>
 </button>
                 <button onclick="printCurrentReport()" class="flex items-center space-x-2 px-5 py-2.5 bg-white border border-slate-200 rounded-full text-sm font-bold text-slate-700 transition shadow-sm hover:shadow-md">
                     <i data-lucide="printer" class="w-4 h-4 text-slate-600"></i><span>列印報告</span>
@@ -2286,7 +2273,7 @@ main > .p-4,
 
         <div id="attachment-upload-section">
             <div id="upload-status-box"
-                 onclick="openAttachmentFilePicker()"
+                 onclick="document.getElementById('file-input').click()"
                  class="attachment-upload-zone">
                 <span id="upload-icon-status" class="attachment-symbol attachment-upload-symbol" aria-hidden="true">
                     <svg viewBox="0 0 48 48" focusable="false">
@@ -2299,7 +2286,7 @@ main > .p-4,
             </div>
         </div>
 
-        <input type="file" id="file-input" accept=".pdf,.png,.jpg,.jpeg" multiple onchange="handleFileUpload(this)" style="position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;">
+        <input type="file" id="file-input" class="hidden" accept=".pdf,.png,.jpg,.jpeg" multiple onchange="handleFileUpload(this)">
 
         <div class="attachment-list-section">
             <div class="attachment-list-title">已上傳檔案清單（點擊可預覽）</div>
@@ -2463,16 +2450,7 @@ main > .p-4,
 
 let currentTab = 'plan';
 let tableDataStore = {}; 
-let attachmentsStore = {};
-
-/*
- * 附件採「索引 + Blob」分離儲存：
- * attachmentsStore 只保存附件 ID；attachmentIndex 只保存檔名、格式、大小等資訊；
- * 原始檔案 Blob 另存 IndexedDB，避免 Base64 與全年套用造成容量倍增。
- */
-let attachmentIndex = {};
-let previewPackageZip = null;
-let previewAttachmentBlobs = new Map();
+let attachmentsStore = {}; 
 
 let isAdmin = false;
 let isEditor = false;
@@ -2509,9 +2487,8 @@ let filePreviewPdfJsLoadingPromise = null;
 
         // --- IndexedDB ---
 const DB_NAME = "OSPMS_DB";
-const DB_VERSION = 2;
+const DB_VERSION = 1;
 const STORE_KEY = "main_data";
-const ATTACHMENT_STORE_KEY = "attachment_files";
 const APP_DATA_VERSION = "completion-2026-06-month-popup-confirm";
 
 const DEFAULT_ADMIN_PASSWORD = "SamCore@1068";
@@ -2690,27 +2667,18 @@ function syncCurrentYearFolderFromGlobals() {
     const yearInput = document.getElementById('year-input-field');
     if (yearInput) folder.name = yearInput.value || folder.name;
 }
-function openDB() {
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-        request.onupgradeneeded = (event) => {
-            const db = event.target.result;
-
-            if (!db.objectStoreNames.contains(STORE_KEY)) {
-                db.createObjectStore(STORE_KEY);
-            }
-
-            if (!db.objectStoreNames.contains(ATTACHMENT_STORE_KEY)) {
-                db.createObjectStore(ATTACHMENT_STORE_KEY, { keyPath: 'id' });
-            }
-        };
-
-        request.onsuccess = (event) => resolve(event.target.result);
-        request.onerror = () => reject(request.error || new Error('DB Open Error'));
-        request.onblocked = () => reject(new Error('資料庫升級被其他頁面阻擋，請關閉其他系統分頁後重試'));
-    });
-}
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(STORE_KEY)) db.createObjectStore(STORE_KEY);
+                };
+                request.onsuccess = (e) => resolve(e.target.result);
+                request.onerror = (e) => reject("DB Open Error");
+            });
+        }
 
 async function getConfig(key) {
     const db = await openDB();
@@ -2739,557 +2707,124 @@ async function setConfig(key, value) {
     });
 }        
 
-async function getAttachmentBlobRecord(id) {
-    if (!id) return null;
-    const db = await openDB();
-
-    return new Promise((resolve) => {
-        const transaction = db.transaction(ATTACHMENT_STORE_KEY, 'readonly');
-        const request = transaction.objectStore(ATTACHMENT_STORE_KEY).get(id);
-
-        request.onsuccess = () => resolve(request.result || null);
-        request.onerror = () => resolve(null);
-        transaction.oncomplete = () => db.close();
-        transaction.onabort = () => db.close();
-    });
-}
-
-async function putAttachmentBlobRecord(id, blob) {
-    const db = await openDB();
-
-    return new Promise((resolve, reject) => {
-        const transaction = db.transaction(ATTACHMENT_STORE_KEY, 'readwrite');
-        transaction.objectStore(ATTACHMENT_STORE_KEY).put({ id, blob });
-
-        transaction.oncomplete = () => {
-            db.close();
-            resolve(true);
-        };
-
-        transaction.onerror = () => {
-            const error = transaction.error || new Error('附件寫入失敗');
-            db.close();
-            reject(error);
-        };
-
-        transaction.onabort = () => {
-            const error = transaction.error || new Error('附件寫入中止');
-            db.close();
-            reject(error);
-        };
-    });
-}
-
-async function getAllAttachmentBlobIds() {
-    const db = await openDB();
-
-    return new Promise((resolve) => {
-        const transaction = db.transaction(ATTACHMENT_STORE_KEY, 'readonly');
-        const request = transaction.objectStore(ATTACHMENT_STORE_KEY).getAllKeys();
-
-        request.onsuccess = () => resolve(request.result || []);
-        request.onerror = () => resolve([]);
-        transaction.oncomplete = () => db.close();
-        transaction.onabort = () => db.close();
-    });
-}
-
-async function deleteAttachmentBlobRecords(ids) {
-    const targetIds = Array.from(new Set(ids || [])).filter(Boolean);
-    if (!targetIds.length) return;
-
-    const db = await openDB();
-
-    return new Promise((resolve) => {
-        const transaction = db.transaction(ATTACHMENT_STORE_KEY, 'readwrite');
-        const store = transaction.objectStore(ATTACHMENT_STORE_KEY);
-
-        targetIds.forEach(id => store.delete(id));
-
-        transaction.oncomplete = () => {
-            db.close();
-            resolve();
-        };
-
-        transaction.onerror = () => {
-            console.error('附件清理失敗：', transaction.error);
-            db.close();
-            resolve();
-        };
-
-        transaction.onabort = () => {
-            console.error('附件清理中止：', transaction.error);
-            db.close();
-            resolve();
-        };
-    });
-}
-
-function clearPreviewAttachmentSources() {
-    previewPackageZip = null;
-    previewAttachmentBlobs.clear();
-}
-
-function dataUrlToBlob(dataUrl) {
-    const source = String(dataUrl || '');
-    const parts = source.split(',');
-    const mimeMatch = parts[0]?.match(/data:(.*?);base64/i);
-    const mime = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
-    const binary = atob(parts[1] || '');
-    const bytes = new Uint8Array(binary.length);
-
-    for (let i = 0; i < binary.length; i++) {
-        bytes[i] = binary.charCodeAt(i);
-    }
-
-    return new Blob([bytes], { type: mime });
-}
-
-function fastAttachmentHash(value) {
-    let hash = 2166136261;
-    const text = String(value || '');
-
-    for (let i = 0; i < text.length; i++) {
-        hash ^= text.charCodeAt(i);
-        hash = Math.imul(hash, 16777619);
-    }
-
-    return (hash >>> 0).toString(16).padStart(8, '0');
-}
-
-function createLegacyAttachmentId(file) {
-    const data = String(file?.data || '');
-    const fingerprint = [
-        file?.name || '',
-        file?.type || '',
-        Number(file?.size) || 0,
-        data.length,
-        data.slice(0, 768),
-        data.slice(-768)
-    ].join('|');
-
-    return `att_legacy_${fastAttachmentHash(fingerprint)}_${data.length}`;
-}
-
-async function createAttachmentId(file) {
-    const sampleSize = 64 * 1024;
-    const headBuffer = await file.slice(0, Math.min(sampleSize, file.size)).arrayBuffer();
-    const tailStart = Math.max(0, file.size - sampleSize);
-    const tailBuffer = await file.slice(tailStart, file.size).arrayBuffer();
-    const metadataBytes = new TextEncoder().encode([
-        file.name,
-        file.type,
-        file.size,
-        file.lastModified || 0
-    ].join('|'));
-
-    const combined = new Uint8Array(
-        metadataBytes.length + headBuffer.byteLength + tailBuffer.byteLength
-    );
-
-    combined.set(metadataBytes, 0);
-    combined.set(new Uint8Array(headBuffer), metadataBytes.length);
-    combined.set(
-        new Uint8Array(tailBuffer),
-        metadataBytes.length + headBuffer.byteLength
-    );
-
-    const digest = await crypto.subtle.digest('SHA-256', combined);
-    const hash = Array.from(new Uint8Array(digest))
-        .map(byte => byte.toString(16).padStart(2, '0'))
-        .join('');
-
-    return `att_${hash}`;
-}
-
-function collectUsedAttachmentIds(folders = yearFolders) {
-    const usedIds = new Set();
-
-    (folders || []).forEach(folder => {
-        const store = folder?.attachmentsStore || {};
-
-        Object.values(store).forEach(category => {
-            Object.values(category || {}).forEach(row => {
-                Object.values(row || {}).forEach(slot => {
-                    getAttachmentRefs(slot).forEach(id => usedIds.add(id));
+        async function loadFromStorage() {
+            try {
+                const db = await openDB();
+                const transaction = db.transaction(STORE_KEY, "readonly");
+                const store = transaction.objectStore(STORE_KEY);
+                const getRequest = (key) => new Promise((res) => {
+                    const req = store.get(key);
+                    req.onsuccess = () => res(req.result);
                 });
-            });
-        });
-    });
+const savedAdminPwd = await getRequest('admin_password');
+const savedEditorPwd = await getRequest('editor_password');
+const savedEditorEnabled = await getRequest('editor_enabled');
 
-    return usedIds;
+// 舊版管理員密碼 localStorage 遷移：若舊系統曾修改過密碼，優先保留舊密碼
+const legacyAdminPwd = localStorage.getItem('ospms_admin_pwd');
+
+systemPassword = savedAdminPwd || legacyAdminPwd || DEFAULT_ADMIN_PASSWORD;
+editorPassword = savedEditorPwd || DEFAULT_EDITOR_PASSWORD;
+editorEnabled = savedEditorEnabled === null || savedEditorEnabled === undefined
+    ? true
+    : Boolean(savedEditorEnabled);
+
+if (!savedAdminPwd) await setConfig('admin_password', systemPassword);
+if (!savedEditorPwd) await setConfig('editor_password', editorPassword);
+if (savedEditorEnabled === null || savedEditorEnabled === undefined) {
+    await setConfig('editor_enabled', editorEnabled);
+}
+                const savedYearFolders = await getRequest('ospms_year_folders');
+const savedCurrentYearFolderId = await getRequest('ospms_current_year_folder_id');
+
+if (Array.isArray(savedYearFolders) && savedYearFolders.length > 0) {
+    yearFolders = savedYearFolders;
+    currentYearFolderId = savedCurrentYearFolderId || yearFolders[0].id;
+    syncGlobalsFromCurrentYearFolder();
+} else {
+    const savedData = await getRequest('ospms_data_store');
+    const savedAttach = await getRequest('ospms_attachments');
+    const savedBaseData = await getRequest('ospms_base_data');
+
+    const firstFolder = createYearFolder(2026);
+
+    if (savedBaseData && savedBaseData.version === APP_DATA_VERSION && savedBaseData.data) {
+        firstFolder.appData = savedBaseData.data;
+    }
+
+    firstFolder.tableDataStore = savedData || {};
+    firstFolder.attachmentsStore = savedAttach || {};
+
+    yearFolders = [firstFolder];
+    currentYearFolderId = firstFolder.id;
+    syncGlobalsFromCurrentYearFolder();
 }
 
-async function cleanupUnusedAttachmentRecords() {
-    const usedIds = collectUsedAttachmentIds();
-    const indexIds = Object.keys(attachmentIndex || {});
-    let indexChanged = false;
-
-    indexIds.forEach(id => {
-        if (!usedIds.has(id)) {
-            delete attachmentIndex[id];
-            indexChanged = true;
-        }
-    });
-
-    const storedIds = await getAllAttachmentBlobIds();
-    const unusedStoredIds = storedIds.filter(id => !usedIds.has(String(id)));
-
-    if (unusedStoredIds.length) {
-        await deleteAttachmentBlobRecords(unusedStoredIds);
-    }
-
-    if (indexChanged) {
-        await setConfig('ospms_attachment_index', attachmentIndex);
-    }
-}
-
-async function migrateInlineAttachmentsInFolders(
-    folders,
-    targetIndex,
-    { writeToIndexedDB = false, previewMap = null } = {}
-) {
-    const pendingFiles = new Map();
-    let changed = false;
-
-    (folders || []).forEach(folder => {
-        const store = folder?.attachmentsStore || {};
-
-        Object.values(store).forEach(category => {
-            Object.values(category || {}).forEach(row => {
-                Object.keys(row || {}).forEach(monthKey => {
-                    const slot = row[monthKey];
-                    const list = Array.isArray(slot) ? slot : (slot ? [slot] : []);
-                    const refs = [];
-
-                    list.forEach(item => {
-                        if (typeof item === 'string') {
-                            refs.push(item);
-                            return;
-                        }
-
-                        if (!item || typeof item !== 'object') return;
-
-                        const existingId = item.attachmentId || (
-                            item.id && !item.data ? item.id : null
-                        );
-
-                        if (existingId) {
-                            refs.push(existingId);
-                            return;
-                        }
-
-                        if (!item.data) return;
-
-                        const id = createLegacyAttachmentId(item);
-
-                        if (!targetIndex[id]) {
-                            targetIndex[id] = {
-                                id,
-                                name: item.name || '未命名附件',
-                                type: item.type || 'application/octet-stream',
-                                size: Number(item.size) || 0,
-                                lastModified: Number(item.lastModified) || 0,
-                                createdAt: item.createdAt || new Date().toISOString(),
-                                storagePath: `attachments/${id}`
-                            };
-                        }
-
-                        if (!pendingFiles.has(id)) {
-                            pendingFiles.set(id, item);
-                        }
-
-                        refs.push(id);
-                        changed = true;
-                    });
-
-                    row[monthKey] = Array.from(new Set(refs));
-                });
-            });
-        });
-    });
-
-    for (const [id, item] of pendingFiles.entries()) {
-        const blob = dataUrlToBlob(item.data);
-
-        if (previewMap) {
-            previewMap.set(id, blob);
-        }
-
-        if (writeToIndexedDB) {
-            await putAttachmentBlobRecord(id, blob);
-        }
-    }
-
-    return changed;
-}
-
-function normalizeImportedPerformanceData(imported) {
-    if (!imported || typeof imported !== 'object' || Array.isArray(imported)) {
-        throw new Error('選取的檔案不是有效的系統備份資料');
-    }
-
-    if (Array.isArray(imported.year_folders) && imported.year_folders.length > 0) {
-        return {
-            version: imported.version || 'performance-system-json-v2',
-            exportType: imported.exportType || 'unified-data',
-            exportedAt: imported.exportedAt || '',
-            year_folders: imported.year_folders,
-            current_year_folder_id: imported.current_year_folder_id,
-            attachment_index: imported.attachment_index || {},
-            config: {}
-        };
-    }
-
-    const hasLegacyData = imported.data_store || imported.base_data || imported.attachments;
-
-    if (!hasLegacyData) {
-        throw new Error('此檔案不是職業安全績效管理系統匯出的資料');
-    }
-
-    const year = getCurrentReportYear();
-    const importedAppData = imported.base_data?.data || deepClone(defaultAppDataTemplate);
-    const folder = {
-        id: `year_${year}_${Date.now()}`,
-        year,
-        name: formatYearFolderName(year),
-        appData: importedAppData,
-        tableDataStore: imported.data_store || {},
-        attachmentsStore: imported.attachments || {}
-    };
-
-    return {
-        version: imported.version || 'performance-system-json-v2',
-        exportType: imported.exportType || 'unified-data',
-        exportedAt: imported.exportedAt || '',
-        year_folders: [folder],
-        current_year_folder_id: folder.id,
-        attachment_index: imported.attachment_index || {},
-        config: {}
-    };
-}
-
-async function isZipBackupFile(file) {
-    const signature = new Uint8Array(await file.slice(0, 4).arrayBuffer());
-    return signature[0] === 0x50 && signature[1] === 0x4b;
-}
-
-async function readPerformanceBackupFile(file) {
-    if (!file) return null;
-
-    if (await isZipBackupFile(file)) {
-        if (typeof JSZip === 'undefined') {
-            throw new Error('ZIP 備份模組尚未載入，請確認網路連線後重新整理頁面');
-        }
-
-        const zip = await JSZip.loadAsync(file);
-        const manifestEntry = zip.file('manifest.json');
-
-        if (!manifestEntry) {
-            throw new Error('ZIP 備份內找不到 manifest.json');
-        }
-
-        const manifestText = await manifestEntry.async('text');
-        const imported = normalizeImportedPerformanceData(
-            JSON.parse(manifestText.replace(/^\uFEFF/, '').trim())
-        );
-
-        return { kind: 'package', imported, zip };
-    }
-
-    const rawText = (await file.text()).replace(/^\uFEFF/, '').trim();
-    if (!rawText) throw new Error('選取的 JSON 檔案是空白檔案');
-
-    return {
-        kind: 'json',
-        imported: normalizeImportedPerformanceData(JSON.parse(rawText)),
-        zip: null
-    };
-}
-
-async function importPackageAttachmentBlobs(zip, imported) {
-    const usedIds = collectUsedAttachmentIds(imported.year_folders);
-
-    for (const id of usedIds) {
-        const metadata = imported.attachment_index?.[id];
-        const path = metadata?.storagePath || `attachments/${id}`;
-        const entry = zip.file(path);
-
-        if (!entry) {
-            throw new Error(`備份內缺少附件：${metadata?.name || id}`);
-        }
-
-        const blob = await entry.async('blob');
-        await putAttachmentBlobRecord(id, blob);
-    }
-}
-
-async function getAttachmentBlob(file) {
-    if (!file) throw new Error('找不到附件資料');
-
-    if (file.blob instanceof Blob) return file.blob;
-    if (file.data) return dataUrlToBlob(file.data);
-
-    const id = file.id || file.attachmentId;
-    if (!id) throw new Error('附件識別碼遺失');
-
-    if (previewAttachmentBlobs.has(id)) {
-        return previewAttachmentBlobs.get(id);
-    }
-
-    if (isPreviewDataMode && previewPackageZip) {
-        const metadata = attachmentIndex[id];
-        const path = metadata?.storagePath || `attachments/${id}`;
-        const entry = previewPackageZip.file(path);
-
-        if (!entry) throw new Error('預覽備份中找不到此附件');
-        const blob = await entry.async('blob');
-        previewAttachmentBlobs.set(id, blob);
-        return blob;
-    }
-
-    const record = await getAttachmentBlobRecord(id);
-    if (!record?.blob) throw new Error('瀏覽器儲存空間中找不到此附件');
-    return record.blob;
-}
-async function loadFromStorage() {
-    try {
-        clearPreviewAttachmentSources();
-
-        const db = await openDB();
-        const transaction = db.transaction(STORE_KEY, 'readonly');
-        const store = transaction.objectStore(STORE_KEY);
-
-        const getRequest = (key) => new Promise((resolve) => {
-            const request = store.get(key);
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => resolve(null);
-        });
-
-        const savedAdminPwd = await getRequest('admin_password');
-        const savedEditorPwd = await getRequest('editor_password');
-        const savedEditorEnabled = await getRequest('editor_enabled');
-        const savedYearFolders = await getRequest('ospms_year_folders');
-        const savedCurrentYearFolderId = await getRequest('ospms_current_year_folder_id');
-        const savedAttachmentIndex = await getRequest('ospms_attachment_index');
-
-        const legacyAdminPwd = localStorage.getItem('ospms_admin_pwd');
-
-        systemPassword = savedAdminPwd || legacyAdminPwd || DEFAULT_ADMIN_PASSWORD;
-        editorPassword = savedEditorPwd || DEFAULT_EDITOR_PASSWORD;
-        editorEnabled = savedEditorEnabled === null || savedEditorEnabled === undefined
-            ? true
-            : Boolean(savedEditorEnabled);
-
-        attachmentIndex = savedAttachmentIndex || {};
-
-        if (Array.isArray(savedYearFolders) && savedYearFolders.length > 0) {
-            yearFolders = savedYearFolders;
-            currentYearFolderId = savedCurrentYearFolderId || yearFolders[0].id;
-        } else {
-            const savedData = await getRequest('ospms_data_store');
-            const savedAttach = await getRequest('ospms_attachments');
-            const savedBaseData = await getRequest('ospms_base_data');
-            const firstFolder = createYearFolder(2026);
-
-            if (savedBaseData && savedBaseData.version === APP_DATA_VERSION && savedBaseData.data) {
-                firstFolder.appData = savedBaseData.data;
+                normalizeAllExecutionMonths();
+initNav();
+renderYearFolders();
+switchTab('plan');
+updateUIState();
+initDragAndDrop();
+            } catch (err) {
+                console.error("Load Error:", err);
+                normalizeAllExecutionMonths();
+initNav();
+renderYearFolders();
+switchTab('plan');
+updateUIState();
+initDragAndDrop();
             }
-
-            firstFolder.tableDataStore = savedData || {};
-            firstFolder.attachmentsStore = savedAttach || {};
-
-            yearFolders = [firstFolder];
-            currentYearFolderId = firstFolder.id;
         }
 
-        db.close();
+        async function persistToStorage() {
+            try {
+                const db = await openDB();
+                const transaction = db.transaction(STORE_KEY, "readwrite");
+                const store = transaction.objectStore(STORE_KEY);
+syncCurrentYearFolderFromGlobals();
 
-        const migrated = await migrateInlineAttachmentsInFolders(
-            yearFolders,
-            attachmentIndex,
-            { writeToIndexedDB: true }
+store.put(yearFolders, 'ospms_year_folders');
+store.put(currentYearFolderId, 'ospms_current_year_folder_id');
+
+// 保留舊格式備份，不影響新年度分頁
+store.put(tableDataStore, 'ospms_data_store');
+store.put(attachmentsStore, 'ospms_attachments');
+store.put({
+    version: APP_DATA_VERSION,
+    data: appData
+}, 'ospms_base_data');
+                return new Promise((resolve) => {
+    transaction.oncomplete = () => {
+        db.close();
+        resolve(true);
+    };
+
+    transaction.onerror = () => {
+        console.error(
+            'Save Transaction Error:',
+            transaction.error
         );
-
-        syncGlobalsFromCurrentYearFolder();
-        normalizeAllExecutionMonths();
-
-        if (!savedAdminPwd) await setConfig('admin_password', systemPassword);
-        if (!savedEditorPwd) await setConfig('editor_password', editorPassword);
-        if (savedEditorEnabled === null || savedEditorEnabled === undefined) {
-            await setConfig('editor_enabled', editorEnabled);
-        }
-
-        if (migrated || !savedAttachmentIndex) {
-            await persistToStorage({ cleanupAttachments: true });
-        } else {
-            await cleanupUnusedAttachmentRecords();
-        }
-
-        initNav();
-        renderYearFolders();
-        switchTab('plan');
-        updateUIState();
-        initDragAndDrop();
-
-    } catch (err) {
-        console.error('Load Error:', err);
-        normalizeAllExecutionMonths();
-        initNav();
-        renderYearFolders();
-        switchTab('plan');
-        updateUIState();
-        initDragAndDrop();
-    }
-}
-
-async function persistToStorage({ cleanupAttachments = false } = {}) {
-    try {
-        syncCurrentYearFolderFromGlobals();
-
-        const db = await openDB();
-        const transaction = db.transaction(STORE_KEY, 'readwrite');
-        const store = transaction.objectStore(STORE_KEY);
-
-        store.put(yearFolders, 'ospms_year_folders');
-        store.put(currentYearFolderId, 'ospms_current_year_folder_id');
-        store.put(attachmentIndex, 'ospms_attachment_index');
-
-        /*
-         * 移除舊格式重複資料。完整資料已存在年度資料夾與附件 Blob 儲存區，
-         * 不再重複保存目前年度的表格、附件與基礎資料。
-         */
-        store.delete('ospms_data_store');
-        store.delete('ospms_attachments');
-        store.delete('ospms_base_data');
-
-        const savedSuccessfully = await new Promise((resolve) => {
-            transaction.oncomplete = () => resolve(true);
-            transaction.onerror = () => {
-                console.error('Save Transaction Error:', transaction.error);
-                resolve(false);
-            };
-            transaction.onabort = () => {
-                console.error('Save Transaction Aborted:', transaction.error);
-                resolve(false);
-            };
-        });
-
         db.close();
+        resolve(false);
+    };
 
-        if (savedSuccessfully && cleanupAttachments) {
-            await cleanupUnusedAttachmentRecords();
+    transaction.onabort = () => {
+        console.error(
+            'Save Transaction Aborted:',
+            transaction.error
+        );
+        db.close();
+        resolve(false);
+    };
+});
+            } catch (err) {
+    console.error('Save Error:', err);
+    return false;
+}
         }
 
-        return savedSuccessfully;
-
-    } catch (err) {
-        console.error('Save Error:', err);
-        return false;
-    }
-}
-
-// --- 功能模組 ---
+        // --- 功能模組 ---
 
 function handleJsonLoadButton() {
     if (canImportData()) {
@@ -3299,31 +2834,8 @@ function handleJsonLoadButton() {
     }
 }
 
-function openBackupFilePicker(inputId) {
-    const input = document.getElementById(inputId);
-
-    if (!input) {
-        alert('找不到資料備份檔案選擇欄位，請重新整理頁面後再試。');
-        return;
-    }
-
-    input.value = '';
-    closeMobileSidebar();
-
-    if (typeof input.showPicker === 'function') {
-        try {
-            input.showPicker();
-            return;
-        } catch (error) {
-            console.warn('showPicker 無法使用，改用 click：', error);
-        }
-    }
-
-    input.click();
-}
-
 function triggerLoadPreviewJSON() {
-    openBackupFilePicker('preview-json-input');
+    document.getElementById('preview-json-input').click();
 }
 
 function triggerImportJSON() {
@@ -3333,7 +2845,7 @@ function triggerImportJSON() {
         return;
     }
 
-    openBackupFilePicker('import-input');
+    document.getElementById('import-input').click();
 }
 
 function buildPerformanceExportData() {
@@ -3342,41 +2854,32 @@ function buildPerformanceExportData() {
         syncCurrentYearFolderFromGlobals();
     }
 
-    const usedIds = collectUsedAttachmentIds();
-    const exportAttachmentIndex = {};
-
-    usedIds.forEach(id => {
-        const metadata = attachmentIndex[id];
-        if (!metadata) return;
-
-        exportAttachmentIndex[id] = {
-            ...metadata,
-            id,
-            storagePath: metadata.storagePath || `attachments/${id}`
-        };
-    });
-
     return {
-        version: 'performance-system-package-v3',
-        exportType: 'unified-data',
+        version: "performance-system-json-v2",
+        exportType: "unified-data",
         exportedAt: new Date().toISOString(),
+
         year_folders: yearFolders,
         current_year_folder_id: currentYearFolderId,
-        attachment_index: exportAttachmentIndex,
+
+        data_store: tableDataStore,
+        attachments: attachmentsStore,
+        base_data: {
+            version: APP_DATA_VERSION,
+            data: appData
+        },
+
+        /*
+         * 統一版 JSON 不匯出：
+         * admin_password
+         * editor_password
+         * editor_enabled
+         */
         config: {}
     };
 }
 
-function getLocalDateText() {
-    const now = new Date();
-    return [
-        now.getFullYear(),
-        String(now.getMonth() + 1).padStart(2, '0'),
-        String(now.getDate()).padStart(2, '0')
-    ].join('-');
-}
-
-async function exportJSON() {
+function exportJSON() {
     if (!canExportReviewData()) {
         alert('請先登入使用者或管理者權限後再匯出資料。');
         openLoginModal();
@@ -3384,133 +2887,104 @@ async function exportJSON() {
     }
 
     if (isPreviewDataMode) {
-        alert('目前為預覽資料模式，請先以使用者或管理者身分正式載入資料後再匯出備份。');
+        alert('目前為預覽資料模式，請先以使用者或管理者身分正式載入資料後再匯出 JSON。');
         return;
     }
 
-    if (typeof JSZip === 'undefined') {
-        alert('ZIP 備份模組尚未載入，請確認網路連線後重新整理頁面。');
-        return;
-    }
+    const exportDate = new Date().toISOString().slice(0, 10);
+    const dataToExport = buildPerformanceExportData();
 
-    const button = document.getElementById('export-json-btn');
-    const originalHtml = button?.innerHTML || '';
+    const blob = new Blob([JSON.stringify(dataToExport, null, 2)], {
+        type: "application/json"
+    });
 
-    try {
-        if (button) {
-            button.disabled = true;
-            button.innerHTML = '<span>備份建立中...</span>';
-        }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
 
-        await cleanupUnusedAttachmentRecords();
+    a.href = url;
+    a.download = `職安績效管理PMS_${exportDate}.json`;
 
-        const manifest = buildPerformanceExportData();
-        const zip = new JSZip();
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 
-        zip.file('manifest.json', JSON.stringify(manifest));
-
-        const usedIds = Array.from(collectUsedAttachmentIds());
-
-        for (const id of usedIds) {
-            const metadata = manifest.attachment_index[id];
-            const record = await getAttachmentBlobRecord(id);
-
-            if (!record?.blob) {
-                throw new Error(`找不到附件：${metadata?.name || id}`);
-            }
-
-            zip.file(
-                metadata.storagePath || `attachments/${id}`,
-                record.blob,
-                { binary: true, compression: 'STORE' }
-            );
-        }
-
-        /*
-         * 附件本身多為 PDF/JPG/PNG，通常已壓縮；使用 STORE 可降低手機 CPU、記憶體與等待時間。
-         */
-        const backupBlob = await zip.generateAsync({
-            type: 'blob',
-            compression: 'STORE',
-            streamFiles: true
-        });
-
-        const url = URL.createObjectURL(backupBlob);
-        const anchor = document.createElement('a');
-        anchor.href = url;
-        anchor.download = `職安績效管理PMS_${getLocalDateText()}.zip`;
-        document.body.appendChild(anchor);
-        anchor.click();
-        anchor.remove();
-        URL.revokeObjectURL(url);
-
-    } catch (error) {
-        console.error('資料備份匯出失敗：', error);
-        alert(`匯出資料失敗：${error?.message || '無法建立備份檔案'}`);
-
-    } finally {
-        if (button) {
-            button.disabled = false;
-            button.innerHTML = originalHtml;
-            lucide.createIcons();
-        }
-    }
+    URL.revokeObjectURL(url);
 }
 
 function applyImportedPerformanceData(imported) {
-    yearFolders = imported.year_folders;
-    attachmentIndex = imported.attachment_index || {};
+    if (Array.isArray(imported.year_folders) && imported.year_folders.length > 0) {
+        yearFolders = imported.year_folders;
 
-    const importedCurrentId = imported.current_year_folder_id;
-    const hasCurrentFolder = yearFolders.some(folder => folder.id === importedCurrentId);
+        const importedCurrentId = imported.current_year_folder_id;
+        const hasCurrentFolder = yearFolders.some(folder => folder.id === importedCurrentId);
 
-    currentYearFolderId = hasCurrentFolder
-        ? importedCurrentId
-        : yearFolders[0].id;
+        currentYearFolderId = hasCurrentFolder ? importedCurrentId : yearFolders[0].id;
+        syncGlobalsFromCurrentYearFolder();
 
-    syncGlobalsFromCurrentYearFolder();
+    } else {
+        tableDataStore = imported.data_store || {};
+        attachmentsStore = imported.attachments || {};
+
+        if (
+            imported.base_data &&
+            imported.base_data.version === APP_DATA_VERSION &&
+            imported.base_data.data
+        ) {
+            appData = imported.base_data.data;
+        }
+
+        const firstFolder = createYearFolder(getCurrentReportYear());
+        firstFolder.appData = appData;
+        firstFolder.tableDataStore = tableDataStore;
+        firstFolder.attachmentsStore = attachmentsStore;
+
+        yearFolders = [firstFolder];
+        currentYearFolderId = firstFolder.id;
+        syncGlobalsFromCurrentYearFolder();
+    }
 }
 
 async function loadPreviewJSON(event) {
-    const input = event.target;
-    const file = input.files?.[0];
+    const file = event.target.files[0];
     if (!file) return;
 
-    try {
-        const result = await readPerformanceBackupFile(file);
-        const imported = result.imported;
+    const reader = new FileReader();
 
-        clearPreviewAttachmentSources();
+    reader.onload = async (e) => {
+        try {
+            const imported = JSON.parse(e.target.result);
 
-        if (result.kind === 'package') {
-            previewPackageZip = result.zip;
-        } else {
-            await migrateInlineAttachmentsInFolders(
-                imported.year_folders,
-                imported.attachment_index,
-                { previewMap: previewAttachmentBlobs }
-            );
+            applyImportedPerformanceData(imported);
+
+            /*
+             * 預覽載入不處理：
+             * admin_password
+             * editor_password
+             * editor_enabled
+             *
+             * 預覽模式只更新目前頁面變數，不寫入 IndexedDB。
+             */
+            isPreviewDataMode = true;
+
+            normalizeAllExecutionMonths();
+
+            event.target.value = '';
+
+            renderYearFolders();
+            switchTab(currentTab, false);
+            updateUIState();
+
+            alert('預覽資料載入成功！');
+
+        } catch (err) {
+            console.error(err);
+            alert("載入失敗：檔案格式錯誤或內容已損毀。");
+        } finally {
+            event.target.value = '';
         }
+    };
 
-        applyImportedPerformanceData(imported);
-        isPreviewDataMode = true;
-
-        normalizeAllExecutionMonths();
-        renderYearFolders();
-        switchTab(currentTab, false);
-        updateUIState();
-        closeMobileSidebar();
-
-        alert('預覽資料載入成功！');
-
-    } catch (error) {
-        console.error('預覽資料載入失敗：', error);
-        clearPreviewAttachmentSources();
-        alert(`載入預覽失敗：${error?.message || '無法讀取備份檔案'}`);
-
-    } finally {
-        input.value = '';
-    }
+    reader.readAsText(file);
 }
 
 async function importJSON(event) {
@@ -3521,80 +2995,58 @@ async function importJSON(event) {
         return;
     }
 
-    const input = event.target;
-    const file = input.files?.[0];
+    const file = event.target.files[0];
     if (!file) return;
 
-    const importLabel = isAdmin ? '匯入資料' : '載入資料';
+    const reader = new FileReader();
 
-    const previousState = {
-        yearFolders,
-        currentYearFolderId,
-        appData,
-        tableDataStore,
-        attachmentsStore,
-        attachmentIndex,
-        isPreviewDataMode
+    reader.onload = async (e) => {
+        try {
+            const imported = JSON.parse(e.target.result);
+
+            const importLabel = isAdmin ? '匯入資料' : '載入資料';
+
+            if (!confirm(`${importLabel}將覆蓋目前所有紀錄，確定要繼續嗎？`)) {
+                return;
+            }
+
+            applyImportedPerformanceData(imported);
+
+            /*
+             * 正式載入 / 匯入不處理：
+             * admin_password
+             * editor_password
+             * editor_enabled
+             *
+             * 密碼與權限設定維持目前瀏覽器原本設定。
+             */
+            isPreviewDataMode = false;
+
+normalizeAllExecutionMonths();
+
+const savedSuccessfully = await persistToStorage();
+
+if (!savedSuccessfully) {
+    throw new Error('匯入資料無法寫入瀏覽器儲存空間');
+}
+
+event.target.value = '';
+
+renderYearFolders();
+switchTab(currentTab, false);
+updateUIState();
+
+alert(`${importLabel}成功！`);
+
+        } catch (err) {
+            console.error(err);
+            alert("匯入失敗：檔案格式錯誤或內容已損毀。");
+        } finally {
+            event.target.value = '';
+        }
     };
 
-    try {
-        const result = await readPerformanceBackupFile(file);
-        const imported = result.imported;
-
-        if (!confirm(`${importLabel}將覆蓋目前所有紀錄，確定要繼續嗎？`)) {
-            return;
-        }
-
-        clearPreviewAttachmentSources();
-
-        if (result.kind === 'package') {
-            await importPackageAttachmentBlobs(result.zip, imported);
-        } else {
-            await migrateInlineAttachmentsInFolders(
-                imported.year_folders,
-                imported.attachment_index,
-                { writeToIndexedDB: true }
-            );
-        }
-
-        applyImportedPerformanceData(imported);
-        isPreviewDataMode = false;
-        normalizeAllExecutionMonths();
-
-        const savedSuccessfully = await persistToStorage({ cleanupAttachments: true });
-
-        if (!savedSuccessfully) {
-            throw new Error('資料無法寫入瀏覽器儲存空間，請確認裝置剩餘容量');
-        }
-
-        renderYearFolders();
-        switchTab(currentTab, false);
-        updateUIState();
-        closeMobileSidebar();
-
-        alert(`${importLabel}成功！`);
-
-    } catch (error) {
-        console.error(`${importLabel}失敗：`, error);
-
-        yearFolders = previousState.yearFolders;
-        currentYearFolderId = previousState.currentYearFolderId;
-        appData = previousState.appData;
-        tableDataStore = previousState.tableDataStore;
-        attachmentsStore = previousState.attachmentsStore;
-        attachmentIndex = previousState.attachmentIndex;
-        isPreviewDataMode = previousState.isPreviewDataMode;
-
-        await cleanupUnusedAttachmentRecords();
-        renderYearFolders();
-        switchTab(currentTab, false);
-        updateUIState();
-
-        alert(`${importLabel}失敗：${error?.message || '無法讀取或儲存備份檔案'}`);
-
-    } finally {
-        input.value = '';
-    }
+    reader.readAsText(file);
 }
 
 function updateJsonActionButtons() {
@@ -3606,10 +3058,10 @@ function updateJsonActionButtons() {
 
 if (isAdmin) {
     exportJsonBtn.innerHTML = '<i data-lucide="file-output" class="w-3 h-3"></i><span>匯出資料</span>';
-    exportJsonBtn.title = '匯出 ZIP 完整備份';
+    exportJsonBtn.title = '匯出系統資料';
 } else if (isEditor) {
     exportJsonBtn.innerHTML = '<i data-lucide="file-output" class="w-3 h-3"></i><span>匯出資料</span>';
-    exportJsonBtn.title = '匯出 ZIP 完整備份';
+    exportJsonBtn.title = '匯出系統資料';
 }
     }
 
@@ -3618,13 +3070,13 @@ if (isAdmin) {
 
         if (isAdmin) {
             importJsonBtn.innerHTML = '<i data-lucide="file-input" class="w-3 h-3"></i><span>匯入資料</span>';
-            importJsonBtn.title = '載入 ZIP 或舊版 JSON 資料';
+            importJsonBtn.title = '載入 JSON 資料';
         } else if (isEditor) {
             importJsonBtn.innerHTML = '<i data-lucide="file-input" class="w-3 h-3"></i><span>載入資料</span>';
-            importJsonBtn.title = '載入 ZIP 或舊版 JSON 資料';
+            importJsonBtn.title = '載入 JSON 資料';
         } else {
             importJsonBtn.innerHTML = '<i data-lucide="file-search" class="w-3 h-3"></i><span>載入預覽</span>';
-            importJsonBtn.title = '載入 ZIP 或舊版 JSON 預覽資料';
+            importJsonBtn.title = '載入 JSON 預覽資料';
         }
     }
 
@@ -5210,7 +4662,7 @@ async function removeYearFolder(event, folderId) {
     }
 
     renderYearFolders();
-    await persistToStorage({ cleanupAttachments: true });
+    await persistToStorage();
 }
 
         function initNav() {
@@ -5440,49 +4892,20 @@ async function moveRow(direction) {
         }
 
         // --- 附件功能 ---
-function getAttachmentRefs(slot) {
-    if (!slot) return [];
 
-    const list = Array.isArray(slot) ? slot : [slot];
-
-    return list.map(item => {
-        if (typeof item === 'string') return item;
-        if (!item || typeof item !== 'object') return null;
-        return item.attachmentId || (item.id && !item.data ? item.id : null);
-    }).filter(Boolean);
-}
-
-function getAttachmentFiles(slot) {
-    if (!slot) return [];
-
-    const list = Array.isArray(slot) ? slot : [slot];
-
-    return list.map(item => {
-        /* 舊版預覽 JSON 尚未遷移時的相容處理。 */
-        if (item && typeof item === 'object' && item.data) {
-            return item;
+        function getAttachmentFiles(slot) {
+            if (!slot) return [];
+            return Array.isArray(slot) ? slot : [slot];
         }
 
-        const id = typeof item === 'string'
-            ? item
-            : item?.attachmentId || item?.id;
-
-        if (!id || !attachmentIndex[id]) return null;
-        return { ...attachmentIndex[id], id, attachmentId: id };
-    }).filter(Boolean);
-}
-
-function ensureAttachmentSlot(row, month) {
-    if (!attachmentsStore[currentTab]) attachmentsStore[currentTab] = {};
-    if (!attachmentsStore[currentTab][row]) attachmentsStore[currentTab][row] = {};
-
-    const refs = getAttachmentRefs(
-        attachmentsStore[currentTab][row][month]
-    );
-
-    attachmentsStore[currentTab][row][month] = refs;
-    return refs;
-}
+        function ensureAttachmentSlot(row, month) {
+            if (!attachmentsStore[currentTab]) attachmentsStore[currentTab] = {};
+            if (!attachmentsStore[currentTab][row]) attachmentsStore[currentTab][row] = {};
+            if (!Array.isArray(attachmentsStore[currentTab][row][month])) {
+                attachmentsStore[currentTab][row][month] = getAttachmentFiles(attachmentsStore[currentTab][row][month]);
+            }
+            return attachmentsStore[currentTab][row][month];
+        }
 
 function formatFileSize(bytes) {
     const size = Number(bytes);
@@ -5620,7 +5043,7 @@ async function clearCurrentMonthAttachments(event) {
     }
 
     saveCurrentTabData();
-    await persistToStorage({ cleanupAttachments: true });
+    await persistToStorage();
     renderTable(currentTab);
     openAttachmentModal(rowIndex, monthIndex);
 }
@@ -5641,7 +5064,7 @@ async function removeAttachmentFile(fileIndex) {
                 if (Object.keys(attachmentsStore[currentTab][activeAttachmentTarget.row]).length === 0) delete attachmentsStore[currentTab][activeAttachmentTarget.row];
             }
             saveCurrentTabData();
-            await persistToStorage({ cleanupAttachments: true });
+            await persistToStorage();
             renderTable(currentTab);
             openAttachmentModal(activeAttachmentTarget.row, activeAttachmentTarget.month);
         }
@@ -5736,24 +5159,6 @@ function closeAttachmentModal() {
 }
         function closeAttachmentModalOutside(event) { closeAttachmentModal(); }
 
-function openAttachmentFilePicker() {
-    const input = document.getElementById('file-input');
-    if (!input) return;
-
-    input.value = '';
-
-    if (typeof input.showPicker === 'function') {
-        try {
-            input.showPicker();
-            return;
-        } catch (error) {
-            console.warn('附件 showPicker 無法使用，改用 click：', error);
-        }
-    }
-
-    input.click();
-}
-
         function initDragAndDrop() {
             const dropZone = document.getElementById('upload-status-box');
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(name => dropZone.addEventListener(name, e => { e.preventDefault(); e.stopPropagation(); }, false));
@@ -5771,7 +5176,7 @@ async function processFiles(files) {
     if (!activeAttachmentTarget || !canEditData()) return;
 
     const validFiles = Array.from(files || []);
-    if (!validFiles.length) return;
+    if (validFiles.length === 0) return;
 
     const allowed = [
         'application/pdf',
@@ -5780,176 +5185,223 @@ async function processFiles(files) {
         'image/jpg'
     ];
 
-    const unsupported = validFiles.find(file => !allowed.includes(file.type));
-    const tooLarge = validFiles.find(file => file.size > 10 * 1024 * 1024);
+    const tooLarge = validFiles.find(
+        file => file.size > 10 * 1024 * 1024
+    );
+
+    const unsupported = validFiles.find(
+        file => !allowed.includes(file.type)
+    );
 
     if (unsupported) {
-        alert(`不支援此格式：${unsupported.name}`);
+        alert('不支援此格式！');
         return;
     }
 
     if (tooLarge) {
-        alert(`檔案太大（單檔限 10MB）：${tooLarge.name}`);
+        alert('檔案太大（單檔限 10MB）');
         return;
     }
 
+    /*
+     * 先固定本次上傳目標。
+     * 即使使用者在儲存期間關閉視窗，
+     * 仍可將附件寫入正確項目與月份。
+     */
     const uploadTarget = {
         row: activeAttachmentTarget.row,
         month: activeAttachmentTarget.month
     };
 
-    const uploadContext = {
-        tab: currentTab,
-        yearFolderId: currentYearFolderId,
-        attachmentsStoreRef: attachmentsStore,
-        scrollState: attachmentTableScrollState || getTableScrollState()
-    };
+const uploadContext = {
+    tab: currentTab,
+    yearFolderId: currentYearFolderId,
+    attachmentsStoreRef: attachmentsStore,
+    scrollState: attachmentTableScrollState || getTableScrollState()
+};    
 
     const uploadZone = document.getElementById('upload-status-box');
     const uploadText = document.getElementById('upload-text-status');
     const fileInput = document.getElementById('file-input');
 
-    const targetStore = uploadContext.attachmentsStoreRef;
-    const targetTab = uploadContext.tab;
-    const targetRow = uploadTarget.row;
-    const targetMonth = uploadTarget.month;
-    const newlyCreatedIds = [];
-    const addedRefs = [];
-
     try {
+        /*
+         * 避免儲存期間重複點擊，造成同一批檔案重複加入。
+         */
         if (uploadZone) {
             uploadZone.style.pointerEvents = 'none';
             uploadZone.setAttribute('aria-busy', 'true');
         }
 
         if (uploadText) {
-            uploadText.textContent = validFiles.length > 1
-                ? `正在處理 ${validFiles.length} 個檔案...`
-                : '正在處理檔案...';
+            uploadText.textContent =
+                validFiles.length > 1
+                    ? `正在處理 ${validFiles.length} 個檔案...`
+                    : '正在處理檔案...';
         }
-
-        if (!targetStore[targetTab]) targetStore[targetTab] = {};
-        if (!targetStore[targetTab][targetRow]) targetStore[targetTab][targetRow] = {};
-
-        const slot = getAttachmentRefs(
-            targetStore[targetTab][targetRow][targetMonth]
-        );
-
-        targetStore[targetTab][targetRow][targetMonth] = slot;
 
         /*
-         * 逐檔處理，避免 Promise.all 同時將多個大檔案載入記憶體。
-         * 附件以 Blob 原樣寫入 IndexedDB；月份欄位只保存附件 ID。
+         * 同時讀取所有檔案並轉成 Base64。
          */
-        for (let index = 0; index < validFiles.length; index++) {
-            const file = validFiles[index];
+        const newFiles = await Promise.all(
+            validFiles.map(file => {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
 
-            if (uploadText) {
-                uploadText.textContent = `正在處理 ${index + 1} / ${validFiles.length}：${file.name}`;
-            }
+                    reader.onload = event => {
+                        resolve({
+                            name: file.name,
+                            type: file.type,
+                            size: file.size,
+                            data: event.target.result
+                        });
+                    };
 
-            const id = await createAttachmentId(file);
+                    reader.onerror = () => {
+                        reject(
+                            new Error(`無法讀取檔案：${file.name}`)
+                        );
+                    };
 
-            if (!attachmentIndex[id]) {
-                await putAttachmentBlobRecord(id, file);
+                    reader.readAsDataURL(file);
+                });
+            })
+        );
 
-                attachmentIndex[id] = {
-                    id,
-                    name: file.name,
-                    type: file.type,
-                    size: file.size,
-                    lastModified: file.lastModified || 0,
-                    createdAt: new Date().toISOString(),
-                    storagePath: `attachments/${id}`
-                };
+const targetStore = uploadContext.attachmentsStoreRef;
+const targetTab = uploadContext.tab;
+const targetRow = uploadTarget.row;
+const targetMonth = uploadTarget.month;
 
-                newlyCreatedIds.push(id);
-            }
+if (!targetStore[targetTab]) {
+    targetStore[targetTab] = {};
+}
 
-            if (!slot.includes(id)) {
-                slot.push(id);
-                addedRefs.push(id);
-            }
+if (!targetStore[targetTab][targetRow]) {
+    targetStore[targetTab][targetRow] = {};
+}
+
+if (!Array.isArray(targetStore[targetTab][targetRow][targetMonth])) {
+    targetStore[targetTab][targetRow][targetMonth] =
+        getAttachmentFiles(
+            targetStore[targetTab][targetRow][targetMonth]
+        );
+}
+
+const slot =
+    targetStore[targetTab][targetRow][targetMonth];
+
+const originalSlotLength = slot.length;
+
+slot.push(...newFiles);
+
+/*
+ * 檔案已完成讀取與轉換，
+ * 接下來寫入瀏覽器 IndexedDB。
+ * 正式儲存完成前，不先顯示在附件清單中。
+ */
+if (uploadText) {
+    uploadText.textContent =
+        '正在儲存附件，完成後即可關閉...';
+}
+
+saveCurrentTabData();
+
+const savedSuccessfully = await persistToStorage();
+
+if (!savedSuccessfully) {
+    /*
+     * 儲存失敗時移除本次剛加入的附件，
+     * 避免失敗資料留在目前記憶體中。
+     */
+    slot.splice(originalSlotLength, newFiles.length);
+
+    if (slot.length === 0) {
+        delete targetStore[targetTab][targetRow][targetMonth];
+
+        if (
+            Object.keys(targetStore[targetTab][targetRow]).length === 0
+        ) {
+            delete targetStore[targetTab][targetRow];
         }
+    }
 
-        if (!addedRefs.length) {
-            alert('所選檔案已存在於此月份，未重複加入。');
-            return;
-        }
+    throw new Error('附件無法寫入瀏覽器儲存空間');
+}
 
-        if (uploadText) {
-            uploadText.textContent = '正在儲存附件，完成後即可關閉...';
-        }
+        /*
+         * 儲存完成後更新報表附件圖示。
+         */
+const stillInSameView =
+    currentTab === uploadContext.tab &&
+    currentYearFolderId === uploadContext.yearFolderId;
 
-        const savedSuccessfully = await persistToStorage();
+if (stillInSameView) {
+    renderTable(currentTab);
+    restoreTableScrollState(uploadContext.scrollState);
+}
 
-        if (!savedSuccessfully) {
-            throw new Error('附件無法寫入瀏覽器儲存空間');
-        }
+/*
+ * 只有 IndexedDB 已確認儲存成功，
+ * 而且附件視窗仍是原本項目與月份時，
+ * 新附件才正式顯示在已上傳檔案清單。
+ */
+const attachmentModal =
+    document.getElementById('attachment-modal');
 
-        const stillInSameView =
-            currentTab === uploadContext.tab &&
-            currentYearFolderId === uploadContext.yearFolderId;
+const modalStillOpen =
+    attachmentModal &&
+    !attachmentModal.classList.contains('hidden');
 
-        if (stillInSameView) {
-            renderTable(currentTab);
-            restoreTableScrollState(uploadContext.scrollState);
-        }
+const targetStillActive =
+    activeAttachmentTarget &&
+    activeAttachmentTarget.row === uploadTarget.row &&
+    activeAttachmentTarget.month === uploadTarget.month;
 
-        const attachmentModal = document.getElementById('attachment-modal');
-        const modalStillOpen = attachmentModal && !attachmentModal.classList.contains('hidden');
-        const targetStillActive =
-            activeAttachmentTarget &&
-            activeAttachmentTarget.row === uploadTarget.row &&
-            activeAttachmentTarget.month === uploadTarget.month;
+if (
+    stillInSameView &&
+    modalStillOpen &&
+    targetStillActive
+) {
+    const savedFiles = getAttachmentFiles(
+        uploadContext.attachmentsStoreRef[
+            uploadContext.tab
+        ]?.[uploadTarget.row]?.[uploadTarget.month]
+    );
 
-        if (stillInSameView && modalStillOpen && targetStillActive) {
-            const savedFiles = getAttachmentFiles(
-                targetStore[targetTab]?.[targetRow]?.[targetMonth]
-            );
-
-            renderAttachmentFileList(savedFiles, false);
-            lucide.createIcons();
-        }
+    renderAttachmentFileList(savedFiles, false);
+    lucide.createIcons();
+}
 
     } catch (error) {
         console.error('Attachment Upload Error:', error);
-
-        const slot = getAttachmentRefs(
-            targetStore[targetTab]?.[targetRow]?.[targetMonth]
-        ).filter(id => !addedRefs.includes(id));
-
-        if (targetStore[targetTab]?.[targetRow]) {
-            if (slot.length) {
-                targetStore[targetTab][targetRow][targetMonth] = slot;
-            } else {
-                delete targetStore[targetTab][targetRow][targetMonth];
-
-                if (!Object.keys(targetStore[targetTab][targetRow]).length) {
-                    delete targetStore[targetTab][targetRow];
-                }
-            }
-        }
-
-        newlyCreatedIds.forEach(id => delete attachmentIndex[id]);
-        await deleteAttachmentBlobRecords(newlyCreatedIds);
-
-        alert(`附件處理失敗：${error?.message || '請重新選擇檔案'}`);
+        alert('附件處理失敗，請重新選擇檔案。');
 
     } finally {
-        if (fileInput) fileInput.value = '';
+        if (fileInput) {
+            fileInput.value = '';
+        }
 
         if (uploadZone) {
             uploadZone.style.pointerEvents = '';
             uploadZone.removeAttribute('aria-busy');
         }
 
-        const attachmentModal = document.getElementById('attachment-modal');
-        const modalStillOpen = attachmentModal && !attachmentModal.classList.contains('hidden');
+const attachmentModal =
+    document.getElementById('attachment-modal');
 
-        if (uploadText && modalStillOpen) {
-            uploadText.textContent = '點擊或拖放檔案至此處上傳';
-        }
+const modalStillOpen =
+    attachmentModal &&
+    !attachmentModal.classList.contains('hidden');
+
+/*
+ * 上傳工作已結束，只要目前附件視窗仍開啟，
+ * 就恢復上傳區的預設文字。
+ */
+if (uploadText && modalStillOpen) {
+    uploadText.textContent =
+        '點擊或拖放檔案至此處上傳';
+}
     }
 }
 
@@ -5957,7 +5409,19 @@ async function processFiles(files) {
         function handleFileUpload(input) { processFiles(input.files); }
 
 function dataUrlToBlobUrl(dataUrl) {
-    return URL.createObjectURL(dataUrlToBlob(dataUrl));
+    const parts = String(dataUrl || '').split(',');
+    const mimeMatch = parts[0].match(/data:(.*?);base64/);
+    const mime = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
+    const binary = atob(parts[1] || '');
+    const length = binary.length;
+    const bytes = new Uint8Array(length);
+
+    for (let i = 0; i < length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+
+    const blob = new Blob([bytes], { type: mime });
+    return URL.createObjectURL(blob);
 }
 
 function dataUrlToUint8Array(dataUrl) {
@@ -6420,7 +5884,7 @@ async function openPdfPreview(file) {
         const pdfjsLib = await ensurePdfJsLoaded();
         if (previewSerial !== filePreviewPdfRenderSerial || filePreviewMode !== 'pdf') return;
 
-        const pdfBytes = new Uint8Array(await file.blob.arrayBuffer());
+        const pdfBytes = dataUrlToUint8Array(file.data);
         const pdf = await pdfjsLib.getDocument({ data: pdfBytes }).promise;
         if (previewSerial !== filePreviewPdfRenderSerial || filePreviewMode !== 'pdf') {
             if (pdf && typeof pdf.destroy === 'function') pdf.destroy();
@@ -6460,7 +5924,7 @@ function openPdfPreviewFallback(file) {
 
     filePreviewMode = 'pdf-frame';
     revokeCurrentPreviewObjectUrl();
-    filePreviewObjectUrl = URL.createObjectURL(file.blob);
+    filePreviewObjectUrl = dataUrlToBlobUrl(file.data);
 
     if (pdfPages) {
         pdfPages.innerHTML = '';
@@ -6518,55 +5982,35 @@ image.onload = () => {
         setFilePreviewLoading(false);
         alert('圖片預覽載入失敗，請確認檔案是否完整。');
     };
-    revokeCurrentPreviewObjectUrl();
-    filePreviewObjectUrl = URL.createObjectURL(file.blob);
-    image.src = filePreviewObjectUrl;
+    image.src = file.data;
 }
 
-async function viewFileDirectly(file) {
+function viewFileDirectly(file) {
     const { modal, title, badge, toolbar } = getFilePreviewElements();
     if (!modal || !file) return;
 
-    try {
-        resetFilePreviewContent();
+    resetFilePreviewContent();
 
-        const blob = await getAttachmentBlob(file);
-        const previewFile = { ...file, blob };
-        const fileName = previewFile.name || '附件預覽';
-        const fileType = String(previewFile.type || blob.type || '').toLowerCase();
+    const fileName = file.name || '附件預覽';
+    const fileType = String(file.type || '').toLowerCase();
 
-        if (title) title.innerText = fileName;
-        if (badge) {
-            badge.innerText = fileType === 'application/pdf'
-                ? 'PDF'
-                : (fileType.includes('png') ? 'PNG' : 'JPG');
-        }
-        if (toolbar) toolbar.classList.remove('hidden');
+    if (title) title.innerText = fileName;
+    if (badge) badge.innerText = fileType === 'application/pdf' ? 'PDF' : (fileType.includes('png') ? 'PNG' : 'JPG');
+    if (toolbar) toolbar.classList.remove('hidden');
 
-        document.body.classList.add('file-preview-open');
-        modal.classList.remove('hidden');
-        ensureFilePreviewGestures();
-        updateFilePreviewZoomLabel();
-        lucide.createIcons();
+    document.body.classList.add('file-preview-open');
+    modal.classList.remove('hidden');
+    ensureFilePreviewGestures();
+    updateFilePreviewZoomLabel();
+    lucide.createIcons();
 
-        if (fileType === 'application/pdf') {
-            await openPdfPreview(previewFile);
-        } else if (
-            fileType === 'image/png' ||
-            fileType === 'image/jpeg' ||
-            fileType === 'image/jpg'
-        ) {
-            openImagePreview(previewFile);
-        } else {
-            setFilePreviewLoading(false);
-            alert('此附件格式不支援預覽。');
-            closeFilePreviewModal();
-        }
-
-    } catch (error) {
-        console.error('附件預覽失敗：', error);
+    if (fileType === 'application/pdf') {
+        openPdfPreview(file);
+    } else if (fileType === 'image/png' || fileType === 'image/jpeg' || fileType === 'image/jpg') {
+        openImagePreview(file);
+    } else {
         setFilePreviewLoading(false);
-        alert(`附件預覽失敗：${error?.message || '找不到附件內容'}`);
+        alert('此附件格式不支援預覽。');
         closeFilePreviewModal();
     }
 }
@@ -6606,7 +6050,7 @@ async function deleteSingleAttachment() {
 const scrollState = getTableScrollState();
 
 saveCurrentTabData();
-await persistToStorage({ cleanupAttachments: true });
+await persistToStorage();
 renderTable(currentTab);
 restoreTableScrollState(scrollState);
 
@@ -6625,41 +6069,37 @@ async function batchApplyToFile() {
         return;
     }
 
-    const refs = getAttachmentRefs(
+    const files = getAttachmentFiles(
         attachmentsStore[currentTab]?.[activeAttachmentTarget.row]?.[activeAttachmentTarget.month]
     );
 
-    if (!refs.length) {
-        alert('請先上傳檔案');
+    if (!files.length) {
+        alert("請先上傳檔案");
         return;
     }
 
-    if (!confirm('確定套用全年度？')) return;
+    if (!confirm("確定套用全年度？")) return;
 
-    if (!attachmentsStore[currentTab]) attachmentsStore[currentTab] = {};
+    if (!attachmentsStore[currentTab]) {
+        attachmentsStore[currentTab] = {};
+    }
+
     if (!attachmentsStore[currentTab][activeAttachmentTarget.row]) {
         attachmentsStore[currentTab][activeAttachmentTarget.row] = {};
     }
 
-    /*
-     * 全年度只複製附件 ID，不複製 Blob 或 Base64 本體。
-     * 同一檔案套用十二個月份仍只占一份容量。
-     */
-    for (let month = 1; month <= 12; month++) {
-        attachmentsStore[currentTab][activeAttachmentTarget.row][month] = [...refs];
+    for (let i = 1; i <= 12; i++) {
+        attachmentsStore[currentTab][activeAttachmentTarget.row][i] = files.map(f => ({ ...f }));
     }
 
-    const scrollState = getTableScrollState();
-    const savedSuccessfully = await persistToStorage({ cleanupAttachments: true });
+const scrollState = getTableScrollState();
 
-    if (!savedSuccessfully) {
-        alert('套用失敗：資料無法寫入瀏覽器儲存空間');
-        return;
-    }
+saveCurrentTabData();
+await persistToStorage();
+renderTable(currentTab);
+restoreTableScrollState(scrollState);
 
-    renderTable(currentTab);
-    restoreTableScrollState(scrollState);
-    alert('套用成功');
+alert("套用成功");
 }
 
 async function batchClearRowAttachments() {
@@ -6681,7 +6121,7 @@ async function batchClearRowAttachments() {
 const scrollState = getTableScrollState();
 
 saveCurrentTabData();
-await persistToStorage({ cleanupAttachments: true });
+await persistToStorage();
 renderTable(currentTab);
 restoreTableScrollState(scrollState);
 
@@ -7196,7 +6636,7 @@ async function deleteRow(idx) {
 
     attachmentsStore[currentTab] = newAttachments;
 
-await persistToStorage({ cleanupAttachments: true });
+await persistToStorage();
 renderTable(currentTab);
 scrollRowNearView(Math.max(0, idx - 1));
 }

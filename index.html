@@ -2466,6 +2466,7 @@ let yearFolders = [];
 let currentYearFolderId = null;
 let isYearFolderPanelOpen = false;
         let activeAttachmentTarget = null; 
+        let attachmentTableScrollState = null;
         let activeSortRowIdx = null; // 當前準備排序的行索引
 let imagePreviewScale = 1;
 let imagePreviewDefaultScale = 1;
@@ -2793,8 +2794,34 @@ store.put({
     version: APP_DATA_VERSION,
     data: appData
 }, 'ospms_base_data');
-                return new Promise((resolve) => { transaction.oncomplete = () => resolve(); });
-            } catch (err) { console.error("Save Error:", err); }
+                return new Promise((resolve) => {
+    transaction.oncomplete = () => {
+        db.close();
+        resolve(true);
+    };
+
+    transaction.onerror = () => {
+        console.error(
+            'Save Transaction Error:',
+            transaction.error
+        );
+        db.close();
+        resolve(false);
+    };
+
+    transaction.onabort = () => {
+        console.error(
+            'Save Transaction Aborted:',
+            transaction.error
+        );
+        db.close();
+        resolve(false);
+    };
+});
+            } catch (err) {
+    console.error('Save Error:', err);
+    return false;
+}
         }
 
         // --- 功能模組 ---
@@ -2995,16 +3022,21 @@ async function importJSON(event) {
              */
             isPreviewDataMode = false;
 
-            normalizeAllExecutionMonths();
-            await persistToStorage();
+normalizeAllExecutionMonths();
 
-            event.target.value = '';
+const savedSuccessfully = await persistToStorage();
 
-            renderYearFolders();
-            switchTab(currentTab, false);
-            updateUIState();
+if (!savedSuccessfully) {
+    throw new Error('匯入資料無法寫入瀏覽器儲存空間');
+}
 
-            alert(`${importLabel}成功！`);
+event.target.value = '';
+
+renderYearFolders();
+switchTab(currentTab, false);
+updateUIState();
+
+alert(`${importLabel}成功！`);
 
         } catch (err) {
             console.error(err);
@@ -5040,6 +5072,12 @@ function handleAttachmentClick(rowIndex, monthIndex) {
 }
 
 function openAttachmentPreviewModal(rowIndex, monthIndex) {
+    const attachmentModal = document.getElementById('attachment-modal');
+
+    if (attachmentModal && attachmentModal.classList.contains('hidden')) {
+        attachmentTableScrollState = getTableScrollState();
+    }
+
     activeAttachmentTarget = { row: rowIndex, month: monthIndex };
 
     const item = appData[currentTab][rowIndex];
@@ -5059,6 +5097,12 @@ if (adminTools) adminTools.classList.add('hidden');
 }
 
 function openAttachmentModal(rowIndex, monthIndex) {
+    const attachmentModal = document.getElementById('attachment-modal');
+
+    if (attachmentModal && attachmentModal.classList.contains('hidden')) {
+        attachmentTableScrollState = getTableScrollState();
+    }
+
     activeAttachmentTarget = { row: rowIndex, month: monthIndex };
 
     const item = appData[currentTab][rowIndex];
@@ -5086,7 +5130,27 @@ if (clearMonthBtn) {
     lucide.createIcons();
 }
 
-        function closeAttachmentModal() { document.getElementById('attachment-modal').classList.add('hidden'); document.getElementById('file-input').value = ''; activeAttachmentTarget = null; }
+function closeAttachmentModal() {
+    const uploadZone =
+        document.getElementById('upload-status-box');
+
+    if (
+        uploadZone?.getAttribute('aria-busy') === 'true'
+    ) {
+        alert('附件仍在處理與儲存中，請待完成後再關閉。');
+        return;
+    }
+
+    document
+        .getElementById('attachment-modal')
+        .classList.add('hidden');
+
+    document.getElementById('file-input').value = '';
+    activeAttachmentTarget = null;
+
+    restoreTableScrollState(attachmentTableScrollState);
+    attachmentTableScrollState = null;
+}
         function closeAttachmentModalOutside(event) { closeAttachmentModal(); }
 
         function initDragAndDrop() {
@@ -5097,7 +5161,7 @@ if (clearMonthBtn) {
             dropZone.addEventListener('drop', e => { const files = Array.from(e.dataTransfer.files || []); if (files.length > 0) processFiles(files); }, false);
         }
 
-function processFiles(files) {
+async function processFiles(files) {
     if (isPreviewDataMode) {
         alert('目前為預覽資料模式，不能上傳或保存附件。請先以使用者或管理者身分正式載入資料後再操作。');
         return;
@@ -5108,44 +5172,268 @@ function processFiles(files) {
     const validFiles = Array.from(files || []);
     if (validFiles.length === 0) return;
 
-    const allowed = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'];
-    const tooLarge = validFiles.find(file => file.size > 10 * 1024 * 1024);
-    const unsupported = validFiles.find(file => !allowed.includes(file.type));
+    const allowed = [
+        'application/pdf',
+        'image/png',
+        'image/jpeg',
+        'image/jpg'
+    ];
+
+    const tooLarge = validFiles.find(
+        file => file.size > 10 * 1024 * 1024
+    );
+
+    const unsupported = validFiles.find(
+        file => !allowed.includes(file.type)
+    );
 
     if (unsupported) {
-        alert("不支援此格式！");
+        alert('不支援此格式！');
         return;
     }
 
     if (tooLarge) {
-        alert("檔案太大 (單檔限 10MB)");
+        alert('檔案太大（單檔限 10MB）');
         return;
     }
 
-    Promise.all(validFiles.map(file => new Promise((resolve) => {
-        const reader = new FileReader();
+    /*
+     * 先固定本次上傳目標。
+     * 即使使用者在儲存期間關閉視窗，
+     * 仍可將附件寫入正確項目與月份。
+     */
+    const uploadTarget = {
+        row: activeAttachmentTarget.row,
+        month: activeAttachmentTarget.month
+    };
 
-        reader.onload = (e) => resolve({
-            name: file.name,
-            type: file.type,
-            size: file.size,
-            data: e.target.result
-        });
+const uploadContext = {
+    tab: currentTab,
+    yearFolderId: currentYearFolderId,
+    attachmentsStoreRef: attachmentsStore,
+    scrollState: attachmentTableScrollState || getTableScrollState()
+};    
 
-        reader.readAsDataURL(file);
-    }))).then(async newFiles => {
-        const slot = ensureAttachmentSlot(
-            activeAttachmentTarget.row,
-            activeAttachmentTarget.month
+    const uploadZone = document.getElementById('upload-status-box');
+    const uploadText = document.getElementById('upload-text-status');
+    const fileInput = document.getElementById('file-input');
+
+    try {
+        /*
+         * 避免儲存期間重複點擊，造成同一批檔案重複加入。
+         */
+        if (uploadZone) {
+            uploadZone.style.pointerEvents = 'none';
+            uploadZone.setAttribute('aria-busy', 'true');
+        }
+
+        if (uploadText) {
+            uploadText.textContent =
+                validFiles.length > 1
+                    ? `正在處理 ${validFiles.length} 個檔案...`
+                    : '正在處理檔案...';
+        }
+
+        /*
+         * 同時讀取所有檔案並轉成 Base64。
+         */
+        const newFiles = await Promise.all(
+            validFiles.map(file => {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+
+                    reader.onload = event => {
+                        resolve({
+                            name: file.name,
+                            type: file.type,
+                            size: file.size,
+                            data: event.target.result
+                        });
+                    };
+
+                    reader.onerror = () => {
+                        reject(
+                            new Error(`無法讀取檔案：${file.name}`)
+                        );
+                    };
+
+                    reader.readAsDataURL(file);
+                });
+            })
         );
 
-        slot.push(...newFiles);
+const targetStore = uploadContext.attachmentsStoreRef;
+const targetTab = uploadContext.tab;
+const targetRow = uploadTarget.row;
+const targetMonth = uploadTarget.month;
 
-        saveCurrentTabData();
-        await persistToStorage();
-        renderTable(currentTab);
-        openAttachmentModal(activeAttachmentTarget.row, activeAttachmentTarget.month);
-    });
+if (!targetStore[targetTab]) {
+    targetStore[targetTab] = {};
+}
+
+if (!targetStore[targetTab][targetRow]) {
+    targetStore[targetTab][targetRow] = {};
+}
+
+if (!Array.isArray(targetStore[targetTab][targetRow][targetMonth])) {
+    targetStore[targetTab][targetRow][targetMonth] =
+        getAttachmentFiles(
+            targetStore[targetTab][targetRow][targetMonth]
+        );
+}
+
+const slot =
+    targetStore[targetTab][targetRow][targetMonth];
+
+const originalSlotLength = slot.length;
+
+slot.push(...newFiles);
+
+        /*
+         * 先更新附件清單，不必等 IndexedDB 儲存完成。
+         */
+        const attachmentModal =
+            document.getElementById('attachment-modal');
+
+const modalStillOpen =
+    attachmentModal &&
+    !attachmentModal.classList.contains('hidden');
+
+const modalMatchesUpload =
+    modalStillOpen &&
+    currentTab === uploadContext.tab &&
+    currentYearFolderId === uploadContext.yearFolderId &&
+    activeAttachmentTarget &&
+    activeAttachmentTarget.row === uploadTarget.row &&
+    activeAttachmentTarget.month === uploadTarget.month;
+
+if (modalMatchesUpload) {
+const currentFiles = getAttachmentFiles(
+    uploadContext.attachmentsStoreRef[
+        uploadContext.tab
+    ]?.[uploadTarget.row]?.[uploadTarget.month]
+);
+
+            renderAttachmentFileList(currentFiles, false);
+
+            if (uploadText) {
+                uploadText.textContent = '附件已加入，正在儲存...';
+            }
+
+            lucide.createIcons();
+        }
+
+        /*
+         * 讓瀏覽器先完成一次畫面更新，
+         * 再執行較耗時的 IndexedDB 儲存。
+         */
+        await new Promise(resolve => {
+            requestAnimationFrame(() => resolve());
+        });
+
+saveCurrentTabData();
+
+const savedSuccessfully = await persistToStorage();
+
+if (!savedSuccessfully) {
+    /*
+     * 儲存失敗時移除本次剛加入的附件，
+     * 避免失敗資料留在目前記憶體中。
+     */
+    slot.splice(originalSlotLength, newFiles.length);
+
+    if (slot.length === 0) {
+        delete targetStore[targetTab][targetRow][targetMonth];
+
+        if (
+            Object.keys(targetStore[targetTab][targetRow]).length === 0
+        ) {
+            delete targetStore[targetTab][targetRow];
+        }
+    }
+
+const attachmentModal =
+    document.getElementById('attachment-modal');
+
+const shouldRefreshFailedUpload =
+    attachmentModal &&
+    !attachmentModal.classList.contains('hidden') &&
+    currentTab === uploadContext.tab &&
+    currentYearFolderId === uploadContext.yearFolderId &&
+    activeAttachmentTarget &&
+    activeAttachmentTarget.row === uploadTarget.row &&
+    activeAttachmentTarget.month === uploadTarget.month;
+
+if (shouldRefreshFailedUpload) {
+    const restoredFiles = getAttachmentFiles(
+        targetStore[targetTab]?.[targetRow]?.[targetMonth]
+    );
+
+    renderAttachmentFileList(restoredFiles, false);
+    lucide.createIcons();
+}
+
+    throw new Error('附件無法寫入瀏覽器儲存空間');
+}
+
+        /*
+         * 儲存完成後更新報表附件圖示。
+         */
+const stillInSameView =
+    currentTab === uploadContext.tab &&
+    currentYearFolderId === uploadContext.yearFolderId;
+
+if (stillInSameView) {
+    renderTable(currentTab);
+    restoreTableScrollState(uploadContext.scrollState);
+}
+
+/*
+ * 只有附件視窗仍開啟、仍是同一個分類與年度，
+ * 而且仍為同一個附件目標時，才重新整理附件管理內容。
+ */
+const targetStillActive =
+            activeAttachmentTarget &&
+            activeAttachmentTarget.row === uploadTarget.row &&
+            activeAttachmentTarget.month === uploadTarget.month;
+
+if (stillInSameView && targetStillActive) {
+    openAttachmentModal(
+        uploadTarget.row,
+        uploadTarget.month
+    );
+}
+
+    } catch (error) {
+        console.error('Attachment Upload Error:', error);
+        alert('附件處理失敗，請重新選擇檔案。');
+
+    } finally {
+        if (fileInput) {
+            fileInput.value = '';
+        }
+
+        if (uploadZone) {
+            uploadZone.style.pointerEvents = '';
+            uploadZone.removeAttribute('aria-busy');
+        }
+
+const attachmentModal =
+    document.getElementById('attachment-modal');
+
+const modalStillOpen =
+    attachmentModal &&
+    !attachmentModal.classList.contains('hidden');
+
+/*
+ * 上傳工作已結束，只要目前附件視窗仍開啟，
+ * 就恢復上傳區的預設文字。
+ */
+if (uploadText && modalStillOpen) {
+    uploadText.textContent =
+        '點擊或拖放檔案至此處上傳';
+}
+    }
 }
 
         function processFile(file) { processFiles([file]); }

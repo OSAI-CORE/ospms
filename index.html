@@ -744,6 +744,66 @@
     margin: 0 auto;
 }
 
+/* JSON 載入 / 匯入處理遮罩：避免重複操作與畫面誤判 */
+.json-transfer-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 160;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, 0.58);
+    backdrop-filter: blur(4px);
+}
+
+.json-transfer-overlay.hidden {
+    display: none;
+}
+
+.json-transfer-card {
+    width: min(320px, 88vw);
+    padding: 20px 18px;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+}
+
+.json-transfer-spinner {
+    width: 30px;
+    height: 30px;
+    border: 3px solid #dbeafe;
+    border-top-color: #2563eb;
+    border-radius: 999px;
+    animation: jsonTransferSpin 0.8s linear infinite;
+}
+
+@keyframes jsonTransferSpin {
+    to { transform: rotate(360deg); }
+}
+
+.json-transfer-title {
+    color: #0f172a;
+    font-size: 15px;
+    font-weight: 900;
+}
+
+.json-transfer-message {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.6;
+}
+
+.mobile-action-label {
+    display: none;
+}
+
         /* 排序選單樣式 */
         .sort-menu {
             position: absolute;
@@ -1507,35 +1567,57 @@ body.file-preview-open {
     }
 
     header {
-        display: grid !important;
-        grid-template-columns: minmax(0, 1fr) auto;
-        align-items: center !important;
-        flex-wrap: nowrap !important;
-        column-gap: 8px;
+        display: block !important;
+        position: relative;
+        padding: 10px 12px !important;
+        min-height: 92px;
     }
 
     .header-title-area {
+        width: 100%;
         min-width: 0;
         align-items: flex-start;
     }
 
+    .header-title-area > .min-w-0 {
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    #current-category-title {
+        padding-right: 4px;
+    }
+
+    #year-input-field {
+        width: 132px !important;
+        height: 32px;
+        padding: 4px 7px !important;
+        font-size: 10px !important;
+    }
+
     #header-action-buttons {
-        margin-left: auto;
+        position: absolute;
+        right: 12px;
+        bottom: 10px;
+        margin: 0;
         display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        justify-content: center;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
         gap: 6px !important;
         flex-wrap: nowrap !important;
     }
 
     #header-action-buttons button {
-        width: 96px;
-        min-height: 34px;
-        padding: 6px 8px !important;
+        width: 58px;
+        min-width: 58px;
+        height: 32px;
+        min-height: 32px;
+        padding: 5px 7px !important;
         font-size: 10px !important;
         justify-content: center;
-        gap: 5px;
+        gap: 4px;
+        border-radius: 999px;
     }
 
     #header-action-buttons button i {
@@ -1544,10 +1626,18 @@ body.file-preview-open {
         flex-shrink: 0;
     }
 
+    #header-action-buttons .desktop-action-label {
+        display: none;
+    }
+
+    #header-action-buttons .mobile-action-label {
+        display: inline;
+    }
+
     #attachment-modal-paperclip {
-        width: 30px !important;
-        height: 30px !important;
-        stroke-width: 2.4;
+        width: 26px !important;
+        height: 26px !important;
+        stroke-width: 2.35;
         flex-shrink: 0;
     }
 
@@ -1564,6 +1654,24 @@ body.file-preview-open {
         font-size: 8px;
     }
 
+}
+
+/* 極窄手機：保留按鈕圖示，避免年度與操作按鈕互相擠壓 */
+@media screen and (max-width: 350px) and (orientation: portrait) {
+    #year-input-field {
+        width: 124px !important;
+        font-size: 9px !important;
+    }
+
+    #header-action-buttons button {
+        width: 38px;
+        min-width: 38px;
+        padding: 5px !important;
+    }
+
+    #header-action-buttons .mobile-action-label {
+        display: none;
+    }
 }
 
 /* 手機橫式：保留左側欄，但縮小 header，避免上方被切掉 */
@@ -2055,6 +2163,18 @@ main > .p-4,
        onchange="importJSON(event)"
        style="position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;">
 
+<div id="json-transfer-overlay"
+     class="json-transfer-overlay hidden no-print"
+     role="status"
+     aria-live="polite"
+     aria-busy="true">
+    <div class="json-transfer-card">
+        <div class="json-transfer-spinner" aria-hidden="true"></div>
+        <div id="json-transfer-title" class="json-transfer-title">正在處理資料</div>
+        <div id="json-transfer-message" class="json-transfer-message">請勿關閉頁面或重複操作。</div>
+    </div>
+</div>
+
     <main class="flex-1 flex flex-col min-w-0">
         <header class="bg-white px-8 py-5 border-b border-slate-200 flex justify-between items-center shrink-0">
  <div class="header-title-area flex items-center gap-3 min-w-0">
@@ -2080,12 +2200,17 @@ main > .p-4,
 <div id="header-action-buttons" class="flex items-center space-x-3 no-print">
 <button id="save-logout-btn"
         onclick="confirmSaveAndLogout()"
+        aria-label="儲存並登出"
+        title="儲存並登出"
         class="hidden flex items-center space-x-2 px-5 py-2.5 bg-green-600 text-white rounded-full text-sm font-bold transition shadow-sm hover:bg-green-700">
     <i data-lucide="save" class="w-4 h-4"></i>
-    <span>儲存並登出</span>
+    <span class="desktop-action-label">儲存並登出</span>
+    <span class="mobile-action-label">儲存</span>
 </button>
-                <button id="print-report-btn" onclick="printCurrentReport()" class="flex items-center space-x-2 px-5 py-2.5 bg-white border border-slate-200 rounded-full text-sm font-bold text-slate-700 transition shadow-sm hover:shadow-md">
-                    <i data-lucide="printer" class="w-4 h-4 text-slate-600"></i><span>列印報告</span>
+                <button id="print-report-btn" onclick="printCurrentReport()" aria-label="列印報告" title="列印報告" class="flex items-center space-x-2 px-5 py-2.5 bg-white border border-slate-200 rounded-full text-sm font-bold text-slate-700 transition shadow-sm hover:shadow-md">
+                    <i data-lucide="printer" class="w-4 h-4 text-slate-600"></i>
+                    <span class="desktop-action-label">列印報告</span>
+                    <span class="mobile-action-label">列印</span>
                 </button>
             </div>
         </header>
@@ -2535,6 +2660,7 @@ let isAdmin = false;
 let isEditor = false;
 let pendingOpenPermissionSettings = false;
 let isLoggingOut = false;
+let isJsonTransferBusy = false;
 
 /* 預覽載入模式：只暫存在目前頁面，不寫入瀏覽器 IndexedDB */
 let isPreviewDataMode = false;
@@ -2753,12 +2879,27 @@ function syncCurrentYearFolderFromGlobals() {
         function openDB() {
             return new Promise((resolve, reject) => {
                 const request = indexedDB.open(DB_NAME, DB_VERSION);
+
                 request.onupgradeneeded = (e) => {
                     const db = e.target.result;
-                    if (!db.objectStoreNames.contains(STORE_KEY)) db.createObjectStore(STORE_KEY);
+                    if (!db.objectStoreNames.contains(STORE_KEY)) {
+                        db.createObjectStore(STORE_KEY);
+                    }
                 };
-                request.onsuccess = (e) => resolve(e.target.result);
-                request.onerror = (e) => reject("DB Open Error");
+
+                request.onsuccess = (e) => {
+                    const db = e.target.result;
+                    db.onversionchange = () => db.close();
+                    resolve(db);
+                };
+
+                request.onerror = () => reject(
+                    request.error || new Error('IndexedDB 無法開啟')
+                );
+
+                request.onblocked = () => reject(
+                    new Error('資料庫被其他分頁占用，請關閉其他系統分頁後再試')
+                );
             });
         }
 
@@ -2797,6 +2938,7 @@ async function setConfig(key, value) {
                 const getRequest = (key) => new Promise((res) => {
                     const req = store.get(key);
                     req.onsuccess = () => res(req.result);
+                    req.onerror = () => res(undefined);
                 });
 const savedAdminPwd = await getRequest('admin_password');
 const savedEditorPwd = await getRequest('editor_password');
@@ -2860,6 +3002,11 @@ initDragAndDrop();
         }
 
         async function persistToStorage() {
+            if (isJsonTransferBusy) {
+                console.warn('資料匯入處理中，略過同時發生的一般儲存。');
+                return false;
+            }
+
             try {
                 const db = await openDB();
                 const transaction = db.transaction(STORE_KEY, "readwrite");
@@ -2935,6 +3082,8 @@ function restoreOfficialStateAfterPreview() {
 }
 
 function handleJsonLoadButton() {
+    if (isJsonTransferBusy) return;
+
     if (canImportData()) {
         triggerImportJSON();
     } else {
@@ -2942,7 +3091,36 @@ function handleJsonLoadButton() {
     }
 }
 
+function setJsonTransferBusy(isBusy, title = '正在處理資料', message = '請勿關閉頁面或重複操作。') {
+    isJsonTransferBusy = Boolean(isBusy);
+
+    const overlay = document.getElementById('json-transfer-overlay');
+    const titleElement = document.getElementById('json-transfer-title');
+    const messageElement = document.getElementById('json-transfer-message');
+    const exportButton = document.getElementById('export-json-btn');
+    const importButton = document.getElementById('import-json-btn');
+
+    if (titleElement) titleElement.textContent = title;
+    if (messageElement) messageElement.textContent = message;
+    if (overlay) overlay.classList.toggle('hidden', !isJsonTransferBusy);
+
+    [exportButton, importButton].forEach(button => {
+        if (!button) return;
+        button.disabled = isJsonTransferBusy;
+        button.style.pointerEvents = isJsonTransferBusy ? 'none' : '';
+        button.style.opacity = isJsonTransferBusy ? '0.6' : '';
+    });
+}
+
+function waitForNextPaint() {
+    return new Promise(resolve => {
+        requestAnimationFrame(() => requestAnimationFrame(resolve));
+    });
+}
+
 function openJsonFilePicker(inputId) {
+    if (isJsonTransferBusy) return;
+
     const input = document.getElementById(inputId);
 
     if (!input) {
@@ -2951,18 +3129,20 @@ function openJsonFilePicker(inputId) {
     }
 
     input.value = '';
-    closeMobileSidebar();
 
-    if (typeof input.showPicker === 'function') {
-        try {
-            input.showPicker();
-            return;
-        } catch (error) {
-            console.warn('showPicker 無法使用，改用 click：', error);
-        }
+    /*
+     * 必須在原始按鈕點擊手勢內直接觸發檔案選擇器。
+     * 手機瀏覽器若先收合側欄或執行 showPicker，可能失去使用者啟用狀態。
+     */
+    try {
+        input.click();
+    } catch (error) {
+        console.error('開啟檔案選擇器失敗：', error);
+        alert('無法開啟檔案選擇器，請重新整理頁面後再試。');
+        return;
     }
 
-    input.click();
+    setTimeout(closeMobileSidebar, 0);
 }
 
 function triggerLoadPreviewJSON() {
@@ -2999,32 +3179,115 @@ function validateImportedPerformanceData(imported) {
     }
 }
 
-async function readSelectedJsonFile(event) {
+function readFileAsTextCompat(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = () => resolve(
+            typeof reader.result === 'string'
+                ? reader.result
+                : ''
+        );
+
+        reader.onerror = () => reject(
+            new Error('手機瀏覽器無法完整讀取此檔案，請確認檔案未損毀後再試')
+        );
+
+        reader.onabort = () => reject(
+            new Error('檔案讀取已被中止')
+        );
+
+        reader.readAsText(file, 'UTF-8');
+    });
+}
+
+async function checkImportStorageCapacity(file) {
+    if (!navigator.storage) return;
+
+    try {
+        if (typeof navigator.storage.persist === 'function') {
+            await navigator.storage.persist();
+        }
+
+        if (typeof navigator.storage.estimate !== 'function') return;
+
+        const estimate = await navigator.storage.estimate();
+        const quota = Number(estimate.quota || 0);
+        const usage = Number(estimate.usage || 0);
+        const freeSpace = Math.max(0, quota - usage);
+
+        /*
+         * IndexedDB 更新時可能同時保留舊值與新值，
+         * 因此預留 JSON 檔案約 1.6 倍及最低 12MB 緩衝。
+         */
+        const requiredSpace = Math.max(
+            12 * 1024 * 1024,
+            Math.ceil(file.size * 1.6)
+        );
+
+        if (quota > 0 && freeSpace < requiredSpace) {
+            const freeMB = (freeSpace / 1024 / 1024).toFixed(1);
+            const requiredMB = (requiredSpace / 1024 / 1024).toFixed(1);
+
+            throw new Error(
+                `手機瀏覽器可用儲存空間不足，目前約剩 ${freeMB}MB，建議至少保留 ${requiredMB}MB 後再匯入`
+            );
+        }
+    } catch (error) {
+        if (error instanceof Error && error.message.includes('儲存空間不足')) {
+            throw error;
+        }
+
+        console.warn('無法取得瀏覽器儲存空間資訊：', error);
+    }
+}
+
+async function readSelectedJsonFile(event, options = {}) {
     const input = event.target;
     const file = input.files?.[0];
 
     if (!file) return null;
 
-    try {
-        const rawText = await file.text();
-        const cleanedText = rawText.replace(/^\uFEFF/, '').trim();
+    /* 已取得 File 物件後立即清空，讓手機可再次選擇同一檔案。 */
+    input.value = '';
 
-        if (!cleanedText) {
-            throw new Error('選取的 JSON 檔案是空白檔案');
-        }
-
-        let imported;
-        try {
-            imported = JSON.parse(cleanedText);
-        } catch (error) {
-            throw new Error('JSON 語法無法解析，檔案可能不完整或不是 JSON 格式');
-        }
-
-        validateImportedPerformanceData(imported);
-        return imported;
-    } finally {
-        input.value = '';
+    if (options.checkStorage) {
+        await checkImportStorageCapacity(file);
     }
+
+    await waitForNextPaint();
+
+    let rawText = await readFileAsTextCompat(file);
+
+    if (!rawText || !/\S/.test(rawText)) {
+        rawText = null;
+        throw new Error('選取的 JSON 檔案是空白檔案');
+    }
+
+    /* 僅在確實存在 BOM 時才切片，避免 trim / replace 複製整份大型 JSON。 */
+    let jsonText = rawText.charCodeAt(0) === 0xFEFF
+        ? rawText.slice(1)
+        : rawText;
+
+    let imported;
+
+    try {
+        imported = JSON.parse(jsonText);
+    } catch (error) {
+        throw new Error('JSON 語法無法解析，檔案可能未完整下載、遭截斷或不是 JSON 格式');
+    } finally {
+        rawText = null;
+        jsonText = null;
+    }
+
+    validateImportedPerformanceData(imported);
+
+    await waitForNextPaint();
+
+    return {
+        imported,
+        file
+    };
 }
 
 function buildPerformanceExportData() {
@@ -3044,6 +3307,8 @@ function buildPerformanceExportData() {
 }
 
 function exportJSON() {
+    if (isJsonTransferBusy) return;
+
     if (!canExportReviewData()) {
         alert('請先登入使用者或管理者權限後再匯出資料。');
         openLoginModal();
@@ -3055,76 +3320,211 @@ function exportJSON() {
         return;
     }
 
-    const exportDate = new Date().toISOString().slice(0, 10);
-    const dataToExport = buildPerformanceExportData();
-    const blob = new Blob([JSON.stringify(dataToExport)], {
-        type: 'application/json'
+    try {
+        setJsonTransferBusy(
+            true,
+            '正在建立備份',
+            '系統正在整理資料，請勿重複操作。'
+        );
+
+        const exportDate = new Date().toISOString().slice(0, 10);
+        const dataToExport = buildPerformanceExportData();
+        const blob = new Blob([JSON.stringify(dataToExport)], {
+            type: 'application/json'
+        });
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `職安績效管理PMS_${exportDate}.json`;
+
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error('匯出資料失敗：', error);
+        alert('匯出資料失敗：資料量可能過大，請先移除不必要附件或改用桌機匯出。');
+    } finally {
+        setJsonTransferBusy(false);
+    }
+}
+
+function prepareImportedPerformanceState(imported) {
+    let importedYearFolders;
+    let importedCurrentYearFolderId;
+
+    if (Array.isArray(imported.year_folders) && imported.year_folders.length > 0) {
+        importedYearFolders = imported.year_folders;
+        importedCurrentYearFolderId = imported.current_year_folder_id;
+    } else {
+        const reportYear = getCurrentReportYear();
+        const importedAppData = imported.base_data?.data
+            ? imported.base_data.data
+            : deepClone(defaultAppDataTemplate);
+
+        const firstFolder = {
+            id: `year_${reportYear}_${Date.now()}`,
+            year: reportYear,
+            name: formatYearFolderName(reportYear),
+            appData: importedAppData,
+            tableDataStore: imported.data_store || {},
+            attachmentsStore: imported.attachments || {}
+        };
+
+        importedYearFolders = [firstFolder];
+        importedCurrentYearFolderId = firstFolder.id;
+    }
+
+    importedYearFolders.forEach((folder, index) => {
+        const normalizedYear = normalizeYearValue(folder.year || folder.name)
+            || (new Date().getFullYear() + index);
+
+        folder.id = folder.id || `year_${normalizedYear}_${Date.now()}_${index}`;
+        folder.year = normalizedYear;
+        folder.name = folder.name || formatYearFolderName(normalizedYear);
+        folder.appData = folder.appData || deepClone(defaultAppDataTemplate);
+        folder.tableDataStore = folder.tableDataStore || {};
+        folder.attachmentsStore = folder.attachmentsStore || {};
     });
 
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `職安績效管理PMS_${exportDate}.json`;
+    const hasCurrentFolder = importedYearFolders.some(
+        folder => folder.id === importedCurrentYearFolderId
+    );
 
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    importedCurrentYearFolderId = hasCurrentFolder
+        ? importedCurrentYearFolderId
+        : importedYearFolders[0].id;
+
+    const currentFolder = importedYearFolders.find(
+        folder => folder.id === importedCurrentYearFolderId
+    ) || importedYearFolders[0];
+
+    const preparedState = {
+        yearFolders: importedYearFolders,
+        currentYearFolderId: importedCurrentYearFolderId,
+        appData: currentFolder.appData,
+        tableDataStore: currentFolder.tableDataStore,
+        attachmentsStore: currentFolder.attachmentsStore
+    };
+
+    /* 僅暫時切換全域參照以沿用既有正規化函式，不複製附件內容。 */
+    const previousGlobals = {
+        appData,
+        tableDataStore,
+        attachmentsStore
+    };
+
+    try {
+        appData = preparedState.appData;
+        tableDataStore = preparedState.tableDataStore;
+        attachmentsStore = preparedState.attachmentsStore;
+        normalizeAllExecutionMonths();
+
+        preparedState.appData = appData;
+        preparedState.tableDataStore = tableDataStore;
+        preparedState.attachmentsStore = attachmentsStore;
+
+        currentFolder.appData = preparedState.appData;
+        currentFolder.tableDataStore = preparedState.tableDataStore;
+        currentFolder.attachmentsStore = preparedState.attachmentsStore;
+    } finally {
+        appData = previousGlobals.appData;
+        tableDataStore = previousGlobals.tableDataStore;
+        attachmentsStore = previousGlobals.attachmentsStore;
+    }
+
+    return preparedState;
+}
+
+function applyPreparedPerformanceState(state) {
+    yearFolders = state.yearFolders;
+    currentYearFolderId = state.currentYearFolderId;
+    appData = state.appData;
+    tableDataStore = state.tableDataStore;
+    attachmentsStore = state.attachmentsStore;
+
+    const currentFolder = getCurrentYearFolder();
+    const yearInput = document.getElementById('year-input-field');
+
+    if (yearInput && currentFolder) {
+        yearInput.value = currentFolder.name;
+    }
 }
 
 function applyImportedPerformanceData(imported) {
-    if (Array.isArray(imported.year_folders) && imported.year_folders.length > 0) {
-        yearFolders = imported.year_folders;
+    const preparedState = prepareImportedPerformanceState(imported);
+    applyPreparedPerformanceState(preparedState);
+    return preparedState;
+}
 
-        const importedCurrentId = imported.current_year_folder_id;
-        const hasCurrentFolder = yearFolders.some(folder => folder.id === importedCurrentId);
+async function persistImportedStateToStorage(state) {
+    let db;
 
-        currentYearFolderId = hasCurrentFolder
-            ? importedCurrentId
-            : yearFolders[0].id;
+    try {
+        db = await openDB();
 
-        syncGlobalsFromCurrentYearFolder();
-        return;
+        return await new Promise(resolve => {
+            const transaction = db.transaction(STORE_KEY, 'readwrite');
+            const store = transaction.objectStore(STORE_KEY);
+
+            store.put(state.yearFolders, 'ospms_year_folders');
+            store.put(state.currentYearFolderId, 'ospms_current_year_folder_id');
+            store.delete('ospms_data_store');
+            store.delete('ospms_attachments');
+            store.delete('ospms_base_data');
+
+            transaction.oncomplete = () => resolve(true);
+
+            transaction.onerror = () => {
+                console.error('Import Transaction Error:', transaction.error);
+                resolve(false);
+            };
+
+            transaction.onabort = () => {
+                console.error('Import Transaction Aborted:', transaction.error);
+                resolve(false);
+            };
+        });
+    } catch (error) {
+        console.error('Import Save Error:', error);
+        return false;
+    } finally {
+        if (db) db.close();
     }
-
-    tableDataStore = imported.data_store || {};
-    attachmentsStore = imported.attachments || {};
-
-    if (imported.base_data?.data) {
-        appData = imported.base_data.data;
-    }
-
-    const firstFolder = createYearFolder(getCurrentReportYear());
-    firstFolder.appData = appData;
-    firstFolder.tableDataStore = tableDataStore;
-    firstFolder.attachmentsStore = attachmentsStore;
-
-    yearFolders = [firstFolder];
-    currentYearFolderId = firstFolder.id;
-    syncGlobalsFromCurrentYearFolder();
 }
 
 async function loadPreviewJSON(event) {
+    if (isJsonTransferBusy) return;
+
     const previousState = {
         yearFolders,
         currentYearFolderId,
         appData,
         tableDataStore,
         attachmentsStore,
-        isPreviewDataMode
+        isPreviewDataMode,
+        previewOriginalState
     };
 
     try {
-        const imported = await readSelectedJsonFile(event);
-        if (!imported) return;
+        setJsonTransferBusy(
+            true,
+            '正在載入預覽',
+            '正在解析資料，完成前請勿關閉頁面。'
+        );
+
+        const result = await readSelectedJsonFile(event);
+        if (!result) return;
 
         if (!isPreviewDataMode) {
             captureOfficialStateBeforePreview();
         }
 
-        applyImportedPerformanceData(imported);
+        const preparedState = prepareImportedPerformanceState(result.imported);
+        applyPreparedPerformanceState(preparedState);
+
         isPreviewDataMode = true;
-        normalizeAllExecutionMonths();
 
         renderYearFolders();
         switchTab(currentTab, false);
@@ -3141,16 +3541,25 @@ async function loadPreviewJSON(event) {
         tableDataStore = previousState.tableDataStore;
         attachmentsStore = previousState.attachmentsStore;
         isPreviewDataMode = previousState.isPreviewDataMode;
+        previewOriginalState = previousState.previewOriginalState;
+
+        renderYearFolders();
+        switchTab(currentTab, false);
+        updateUIState();
 
         const errorMessage = err instanceof Error
             ? err.message
             : '無法讀取 JSON 檔案';
 
         alert(`載入預覽失敗：${errorMessage}`);
+    } finally {
+        setJsonTransferBusy(false);
     }
 }
 
 async function importJSON(event) {
+    if (isJsonTransferBusy) return;
+
     if (!canImportData()) {
         alert('請先登入使用者或管理者權限後再載入資料。');
         event.target.value = '';
@@ -3159,34 +3568,55 @@ async function importJSON(event) {
     }
 
     const importLabel = isAdmin ? '匯入資料' : '載入資料';
-    const previousState = {
-        yearFolders,
-        currentYearFolderId,
-        appData,
-        tableDataStore,
-        attachmentsStore,
-        isPreviewDataMode,
-        previewOriginalState
-    };
+    let importCommitted = false;
 
     try {
-        const imported = await readSelectedJsonFile(event);
-        if (!imported) return;
+        setJsonTransferBusy(
+            true,
+            `正在準備${importLabel}`,
+            '正在讀取與驗證檔案，請勿重複操作。'
+        );
 
-        if (!confirm(`${importLabel}將覆蓋目前所有紀錄，確定要繼續嗎？`)) {
+        const result = await readSelectedJsonFile(event, {
+            checkStorage: true
+        });
+
+        if (!result) return;
+
+        setJsonTransferBusy(false);
+
+        if (!confirm(`${importLabel}將覆蓋目前所有正式紀錄，確定要繼續嗎？`)) {
             return;
         }
 
-        applyImportedPerformanceData(imported);
-        isPreviewDataMode = false;
-        previewOriginalState = null;
-        normalizeAllExecutionMonths();
+        setJsonTransferBusy(
+            true,
+            `正在${importLabel}`,
+            '系統正在寫入瀏覽器儲存空間，請勿離開頁面。'
+        );
 
-        const savedSuccessfully = await persistToStorage();
+        const preparedState = prepareImportedPerformanceState(result.imported);
+
+        /* 清除大型表格 DOM，降低手機在 IndexedDB 結構化複製時的記憶體壓力。 */
+        const tableBody = document.getElementById('table-body');
+        if (tableBody) tableBody.innerHTML = '';
+
+        await waitForNextPaint();
+
+        /*
+         * 先將完整新資料原子寫入 IndexedDB；成功前不修改正式全域資料。
+         * 因此寫入失敗時，原本正式資料與權限狀態完全不受影響。
+         */
+        const savedSuccessfully = await persistImportedStateToStorage(preparedState);
 
         if (!savedSuccessfully) {
-            throw new Error('資料無法寫入瀏覽器儲存空間，可能是附件資料量過大或裝置剩餘空間不足');
+            throw new Error('資料無法寫入瀏覽器儲存空間，可能是附件資料量過大、可用容量不足或手機瀏覽器暫時中止寫入');
         }
+
+        importCommitted = true;
+        applyPreparedPerformanceState(preparedState);
+        isPreviewDataMode = false;
+        previewOriginalState = null;
 
         renderYearFolders();
         switchTab(currentTab, false);
@@ -3197,14 +3627,14 @@ async function importJSON(event) {
     } catch (err) {
         console.error(`${importLabel}失敗：`, err);
 
-        yearFolders = previousState.yearFolders;
-        currentYearFolderId = previousState.currentYearFolderId;
-        appData = previousState.appData;
-        tableDataStore = previousState.tableDataStore;
-        attachmentsStore = previousState.attachmentsStore;
-        isPreviewDataMode = previousState.isPreviewDataMode;
-        previewOriginalState = previousState.previewOriginalState;
+        if (importCommitted) {
+            alert(`${importLabel}資料已成功寫入，但畫面更新時發生異常，系統將重新整理並載入新資料。`);
+            setJsonTransferBusy(false);
+            window.location.reload();
+            return;
+        }
 
+        /* 正式全域資料未在成功前切換，只需重新繪製原本畫面。 */
         renderYearFolders();
         switchTab(currentTab, false);
         updateUIState();
@@ -3214,6 +3644,8 @@ async function importJSON(event) {
             : '無法讀取或儲存 JSON 檔案';
 
         alert(`${importLabel}失敗：${errorMessage}`);
+    } finally {
+        setJsonTransferBusy(false);
     }
 }
 
@@ -3247,6 +3679,13 @@ if (isAdmin) {
             importJsonBtn.title = '載入 JSON 預覽資料';
         }
     }
+
+    [exportJsonBtn, importJsonBtn].forEach(button => {
+        if (!button) return;
+        button.disabled = isJsonTransferBusy;
+        button.style.pointerEvents = isJsonTransferBusy ? 'none' : '';
+        button.style.opacity = isJsonTransferBusy ? '0.6' : '';
+    });
 
     lucide.createIcons();
 }
@@ -7114,6 +7553,12 @@ document.addEventListener('click', function(event) {
     if (!event.target.closest('.execution-months-panel')) {
         closeAllExecutionMonthsMenus();
     }
+});
+
+window.addEventListener('beforeunload', event => {
+    if (!isJsonTransferBusy) return;
+    event.preventDefault();
+    event.returnValue = '';
 });
 
 window.onload = () => { loadFromStorage(); };

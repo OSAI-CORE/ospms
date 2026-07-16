@@ -1967,7 +1967,7 @@ main > .p-4,
 </div>
 
             <button class="w-full bg-blue-600 text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center space-x-2 hover:bg-blue-500 transition" onclick="exportFullReport()">
-                <i data-lucide="file-up" class="w-4 h-4"></i><span>匯出全年度績效報表</span>
+                <i data-lucide="file-up" class="w-4 h-4"></i><span>匯出年度績效報表</span>
             </button>
         </div>
     </aside>
@@ -4411,19 +4411,25 @@ Object.keys(titles).forEach(key => {
 });
 
         wb.Props = {
-            Title: "職業安全績效管理系統全年度績效報表",
+            Title: "職業安全績效管理系統年度績效報表",
             Subject: yearLabel,
             Author: "職業安全績效管理系統 OSPMS",
             CreatedDate: new Date()
         };
 
-        const safeYear = yearLabel.replace(/[\\/:*?"<>|\s]+/g, "_");
+const now = new Date();
 
-        XLSX.writeFile(
-            wb,
-            `OSPMS_${safeYear}_全年度績效報表.xlsx`,
-            { cellStyles: true }
-        );
+const exportFileDate = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, '0'),
+    String(now.getDate()).padStart(2, '0')
+].join('-');
+
+XLSX.writeFile(
+    wb,
+    `職安年度績效報表PMS_${exportFileDate}.xlsx`,
+    { cellStyles: true }
+);
 
     } catch (error) {
         console.error(error);

@@ -417,6 +417,55 @@
 
         .admin-edit-cell { background-color: #fefce8 !important; border: 1px dashed #eab308 !important; color: #475569 !important; }
 
+/* 績效報表編輯／完成檢視雙態按鈕 */
+.performance-edit-toggle-btn {
+    min-width: 92px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 800;
+    white-space: nowrap;
+    transition:
+        background-color 0.18s ease,
+        border-color 0.18s ease,
+        color 0.18s ease;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.performance-edit-toggle-btn.hidden {
+    display: none !important;
+}
+
+/* 尚未進入編輯模式 */
+.performance-edit-toggle-btn.is-view {
+    background: #ffffff;
+    border: 1px solid #bfdbfe;
+    color: #2563eb;
+}
+
+.performance-edit-toggle-btn.is-view:hover {
+    background: #eff6ff;
+    border-color: #93c5fd;
+}
+
+/* 已進入編輯模式：淡琥珀工作狀態 */
+.performance-edit-toggle-btn.is-editing {
+    background: #fffbeb;
+    border: 1px solid #fbbf24;
+    color: #b45309;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.12);
+}
+
+.performance-edit-toggle-btn.is-editing:hover {
+    background: #fef3c7;
+    border-color: #f59e0b;
+    color: #92400e;
+}
+
         .year-input {
             background: #dbeafe;
             color: #1d4ed8;
@@ -1530,8 +1579,8 @@ body.file-preview-open {
         font-size: 8px;
     }
 
-    /* 手機直式表頭：
-       年度靠左，儲存與列印圖示靠右 */
+/* 手機直式表頭：
+   年度靠左，編輯、儲存與列印圖示靠右 */
     header {
         display: block !important;
         padding: 10px 12px 12px !important;
@@ -1564,9 +1613,26 @@ body.file-preview-open {
         box-shadow: 0 4px 10px rgba(15, 23, 42, 0.10);
     }
 
-    #header-action-buttons button span {
-        display: none !important;
-    }
+#performance-edit-toggle-btn {
+    min-width: 38px !important;
+}
+
+#header-action-buttons button span {
+    display: none !important;
+}
+
+#toast {
+    right: 12px !important;
+    bottom: calc(
+        12px + env(safe-area-inset-bottom)
+    ) !important;
+
+    max-width: calc(100vw - 24px);
+
+    padding: 10px 13px !important;
+
+    font-size: 12px !important;
+}
 
     #header-action-buttons button i {
         width: 18px !important;
@@ -2100,21 +2166,38 @@ main > .p-4,
 
 <div id="header-action-buttons"
      class="flex items-center gap-3 no-print">
-<button id="save-logout-btn"
-        onclick="confirmSaveAndLogout()"
-        title="儲存並登出"
-        aria-label="儲存並登出"
-        class="hidden flex items-center space-x-2 px-5 py-2.5 bg-green-600 text-white rounded-full text-sm font-bold transition shadow-sm hover:bg-green-700">
-    <i data-lucide="save" class="w-4 h-4"></i>
-    <span>儲存並登出</span>
-</button>
-                <button onclick="printCurrentReport()"
-        title="列印報告"
-        aria-label="列印報告"
-        class="flex items-center space-x-2 px-5 py-2.5 bg-white border border-slate-200 rounded-full text-sm font-bold text-slate-700 transition shadow-sm hover:shadow-md">
-                    <i data-lucide="printer" class="w-4 h-4 text-slate-600"></i><span>列印報告</span>
-                </button>
-            </div>
+
+    <button id="performance-edit-toggle-btn"
+            type="button"
+            onclick="togglePerformanceEditMode()"
+            title="進入績效報表編輯模式"
+            aria-label="進入績效報表編輯模式"
+            class="hidden performance-edit-toggle-btn is-view">
+        <i data-lucide="square-pen" class="w-4 h-4"></i>
+        <span>編輯</span>
+    </button>
+
+    <button id="save-logout-btn"
+            type="button"
+            onclick="confirmSaveAndLogout()"
+            title="儲存並登出"
+            aria-label="儲存並登出"
+            class="hidden flex items-center space-x-2 px-5 py-2.5 bg-green-600 text-white rounded-full text-sm font-bold transition shadow-sm hover:bg-green-700">
+        <i data-lucide="save" class="w-4 h-4"></i>
+        <span>儲存並登出</span>
+    </button>
+
+    <button type="button"
+            onclick="printCurrentReport()"
+            title="列印報告"
+            aria-label="列印報告"
+            class="flex items-center space-x-2 px-5 py-2.5 bg-white border border-slate-200 rounded-full text-sm font-bold text-slate-700 transition shadow-sm hover:shadow-md">
+        <i data-lucide="printer"
+           class="w-4 h-4 text-slate-600"></i>
+        <span>列印報告</span>
+    </button>
+
+</div>
         </header>
 
         <div class="p-4 flex-1 overflow-hidden flex flex-col">
@@ -2476,6 +2559,15 @@ main > .p-4,
     </div>
 </div>
 
+<div id="toast"
+     class="no-print fixed bottom-6 right-6 translate-y-20 opacity-0 transition-all duration-300 z-[300] bg-white text-slate-900 px-5 py-3 rounded-xl shadow-2xl font-bold flex items-center space-x-3"
+     role="status"
+     aria-live="polite"
+     aria-atomic="true">
+    <span id="toast-icon" class="text-green-500">✓</span>
+    <span id="toast-msg">操作成功</span>
+</div>
+
     <script>
         // 初始數據定義
         let appData = {
@@ -2568,6 +2660,7 @@ let isAdmin = false;
 let isEditor = false;
 let pendingOpenPermissionSettings = false;
 let isLoggingOut = false;
+let isPerformanceEditMode = false;
 
 /* 預覽載入模式：只暫存在目前頁面，不寫入瀏覽器 IndexedDB */
 let isPreviewDataMode = false;
@@ -2619,6 +2712,14 @@ function getCurrentRole() {
 
 function canEditData() {
     return isAdmin || isEditor;
+}
+
+function canEditPerformanceNow() {
+    return (
+        canEditData() &&
+        isPerformanceEditMode &&
+        !isPreviewDataMode
+    );
 }
 
 function canDeleteData() {
@@ -2889,26 +2990,26 @@ initDragAndDrop();
             }
         }
 
-        async function persistToStorage() {
-            try {
-                const db = await openDB();
-                const transaction = db.transaction(STORE_KEY, "readwrite");
-                const store = transaction.objectStore(STORE_KEY);
-syncCurrentYearFolderFromGlobals();
+function writePerformanceDataToStore(store) {
+    syncCurrentYearFolderFromGlobals();
 
-store.put(yearFolders, 'ospms_year_folders');
-store.put(currentYearFolderId, 'ospms_current_year_folder_id');
+    // 正式主資料：完整年度資料夾與目前年度識別碼
+    store.put(
+        yearFolders,
+        'ospms_year_folders'
+    );
 
-// 保留舊格式備份，不影響新年度分頁
-store.put(tableDataStore, 'ospms_data_store');
-store.put(attachmentsStore, 'ospms_attachments');
-store.put({
-    version: APP_DATA_VERSION,
-    data: appData
-}, 'ospms_base_data');
-                return new Promise((resolve) => { transaction.oncomplete = () => resolve(); });
-            } catch (err) { console.error("Save Error:", err); }
-        }
+    store.put(
+        currentYearFolderId,
+        'ospms_current_year_folder_id'
+    );
+
+    // 移除舊格式的重複副本，
+    // 避免表格與附件占用兩份空間
+    store.delete('ospms_data_store');
+    store.delete('ospms_attachments');
+    store.delete('ospms_base_data');
+}
 
 async function persistToStorageConfirmed() {
     const db = await openDB();
@@ -2916,20 +3017,29 @@ async function persistToStorageConfirmed() {
     return new Promise((resolve, reject) => {
         let settled = false;
 
-        const rejectOnce = (error) => {
-            if (settled) return;
-            settled = true;
-
+        const closeDb = () => {
             try {
                 db.close();
             } catch (closeError) {
-                console.warn('IndexedDB 關閉失敗：', closeError);
+                console.warn(
+                    'IndexedDB 關閉失敗：',
+                    closeError
+                );
             }
+        };
+
+        const rejectOnce = (error) => {
+            if (settled) return;
+
+            settled = true;
+            closeDb();
 
             reject(
                 error instanceof Error
                     ? error
-                    : new Error('IndexedDB 儲存失敗')
+                    : new Error(
+                        'IndexedDB 儲存失敗'
+                    )
             );
         };
 
@@ -2940,62 +3050,35 @@ async function persistToStorageConfirmed() {
             );
 
             const store =
-                transaction.objectStore(STORE_KEY);
+                transaction.objectStore(
+                    STORE_KEY
+                );
 
-            syncCurrentYearFolderFromGlobals();
-
-            store.put(
-                yearFolders,
-                'ospms_year_folders'
-            );
-
-            store.put(
-                currentYearFolderId,
-                'ospms_current_year_folder_id'
-            );
-
-            store.put(
-                tableDataStore,
-                'ospms_data_store'
-            );
-
-            store.put(
-                attachmentsStore,
-                'ospms_attachments'
-            );
-
-            store.put({
-                version: APP_DATA_VERSION,
-                data: appData
-            }, 'ospms_base_data');
+            writePerformanceDataToStore(store);
 
             transaction.oncomplete = () => {
                 if (settled) return;
+
                 settled = true;
-
-                try {
-                    db.close();
-                } catch (closeError) {
-                    console.warn(
-                        'IndexedDB 關閉失敗：',
-                        closeError
-                    );
-                }
-
+                closeDb();
                 resolve();
             };
 
             transaction.onerror = () => {
                 rejectOnce(
                     transaction.error ||
-                    new Error('IndexedDB 交易失敗')
+                    new Error(
+                        'IndexedDB 交易失敗'
+                    )
                 );
             };
 
             transaction.onabort = () => {
                 rejectOnce(
                     transaction.error ||
-                    new Error('IndexedDB 交易已中止')
+                    new Error(
+                        'IndexedDB 交易已中止'
+                    )
                 );
             };
 
@@ -3003,6 +3086,17 @@ async function persistToStorageConfirmed() {
             rejectOnce(error);
         }
     });
+}
+
+async function persistToStorage() {
+    try {
+        await persistToStorageConfirmed();
+    } catch (err) {
+        console.error(
+            'Save Error:',
+            err
+        );
+    }
 }        
 
         // --- 功能模組 ---
@@ -3030,25 +3124,31 @@ function triggerImportJSON() {
 }
 
 function buildPerformanceExportData() {
-    if (canEditData() && !isPreviewDataMode) {
+    if (
+        canEditData() &&
+        !isPreviewDataMode
+    ) {
         saveCurrentTabData();
         syncCurrentYearFolderFromGlobals();
     }
 
     return {
-        version: "performance-system-json-v2",
-        exportType: "unified-data",
-        exportedAt: new Date().toISOString(),
+        version:
+            "performance-system-json-v1",
 
-        year_folders: yearFolders,
-        current_year_folder_id: currentYearFolderId,
+        exportType:
+            "unified-data",
 
-        data_store: tableDataStore,
-        attachments: attachmentsStore,
-        base_data: {
-            version: APP_DATA_VERSION,
-            data: appData
-        },
+        exportedAt:
+            new Date().toISOString(),
+
+        // 每個年度資料夾已完整包含：
+        // appData、tableDataStore、attachmentsStore
+        year_folders:
+            yearFolders,
+
+        current_year_folder_id:
+            currentYearFolderId,
 
         /*
          * 統一版 JSON 不匯出：
@@ -3092,6 +3192,182 @@ function exportJSON() {
     URL.revokeObjectURL(url);
 }
 
+function isPlainDataObject(value) {
+    return (
+        value !== null &&
+        typeof value === 'object' &&
+        !Array.isArray(value)
+    );
+}
+
+function hasRequiredPerformanceCategories(data) {
+    return Object.keys(titles).every(
+        key => Array.isArray(data?.[key])
+    );
+}
+
+function validateImportedPerformanceData(
+    imported
+) {
+    if (!isPlainDataObject(imported)) {
+        throw new Error(
+            'JSON 內容不是有效資料物件'
+        );
+    }
+
+    /*
+     * 有版本欄位時，
+     * 必須是績效管理系統 JSON。
+     *
+     * 優化前的 v2 與正式 v1
+     * 都會通過這項檢查。
+     */
+    if (
+        imported.version !== undefined &&
+        !String(imported.version).startsWith(
+            'performance-system-json-'
+        )
+    ) {
+        throw new Error(
+            '此 JSON 不是職安績效管理系統資料'
+        );
+    }
+
+    if (
+        imported.exportType !== undefined &&
+        imported.exportType !==
+            'unified-data'
+    ) {
+        throw new Error(
+            'JSON 類型不是統一資料格式'
+        );
+    }
+
+    const hasYearFolderFormat =
+        Array.isArray(
+            imported.year_folders
+        ) &&
+        imported.year_folders.length > 0;
+
+    /*
+     * 新版年度資料夾格式：
+     * 優化前完整 JSON 與優化後精簡 JSON
+     * 都使用這個結構。
+     */
+    if (hasYearFolderFormat) {
+        const invalidFolder =
+            imported.year_folders.find(
+                folder => {
+                    return (
+                        !isPlainDataObject(
+                            folder
+                        ) ||
+                        typeof folder.id !==
+                            'string' ||
+                        folder.id.trim() ===
+                            '' ||
+                        !isPlainDataObject(
+                            folder.appData
+                        ) ||
+                        !hasRequiredPerformanceCategories(
+                            folder.appData
+                        ) ||
+                        !isPlainDataObject(
+                            folder.tableDataStore
+                        ) ||
+                        !isPlainDataObject(
+                            folder.attachmentsStore
+                        )
+                    );
+                }
+            );
+
+        if (invalidFolder) {
+            throw new Error(
+                '年度資料夾結構不完整'
+            );
+        }
+
+        return true;
+    }
+
+    /*
+     * 保留更早期單年度 JSON：
+     * data_store
+     * attachments
+     * base_data
+     */
+    const hasLegacyFormat =
+        isPlainDataObject(
+            imported.data_store
+        ) &&
+        (
+            imported.attachments ===
+                undefined ||
+            isPlainDataObject(
+                imported.attachments
+            )
+        ) &&
+        isPlainDataObject(
+            imported.base_data
+        ) &&
+        isPlainDataObject(
+            imported.base_data.data
+        ) &&
+        hasRequiredPerformanceCategories(
+            imported.base_data.data
+        );
+
+    if (!hasLegacyFormat) {
+        throw new Error(
+            '此檔案不是有效的職安績效管理系統資料'
+        );
+    }
+
+    return true;
+}
+
+function capturePerformanceState() {
+    return {
+        yearFolders,
+        currentYearFolderId,
+        appData,
+        tableDataStore,
+        attachmentsStore,
+        isPreviewDataMode,
+        isPerformanceEditMode
+    };
+}
+
+function restorePerformanceState(state) {
+    if (!state) return;
+
+    yearFolders =
+        state.yearFolders;
+
+    currentYearFolderId =
+        state.currentYearFolderId;
+
+    appData =
+        state.appData;
+
+    tableDataStore =
+        state.tableDataStore;
+
+    attachmentsStore =
+        state.attachmentsStore;
+
+    isPreviewDataMode =
+        state.isPreviewDataMode;
+
+    isPerformanceEditMode =
+    Boolean(state.isPerformanceEditMode);    
+
+    if (getCurrentYearFolder()) {
+        syncGlobalsFromCurrentYearFolder();
+    }
+}
+
 function applyImportedPerformanceData(imported) {
     if (Array.isArray(imported.year_folders) && imported.year_folders.length > 0) {
         yearFolders = imported.year_folders;
@@ -3126,16 +3402,41 @@ function applyImportedPerformanceData(imported) {
 }
 
 async function loadPreviewJSON(event) {
-    const file = event.target.files[0];
+    const file =
+        event.target.files[0];
+
     if (!file) return;
 
-    const reader = new FileReader();
+    const reader =
+        new FileReader();
 
     reader.onload = async (e) => {
-        try {
-            const imported = JSON.parse(e.target.result);
+        let previousState = null;
 
-            applyImportedPerformanceData(imported);
+        let importedDataApplied =
+            false;
+
+        try {
+            const imported = JSON.parse(
+                e.target.result
+            );
+
+            /*
+             * 先驗證，再套用，
+             * 避免選錯 JSON 後覆蓋目前畫面。
+             */
+            validateImportedPerformanceData(
+                imported
+            );
+
+            previousState =
+                capturePerformanceState();
+
+            applyImportedPerformanceData(
+                imported
+            );
+
+            importedDataApplied = true;
 
             /*
              * 預覽載入不處理：
@@ -3143,26 +3444,68 @@ async function loadPreviewJSON(event) {
              * editor_password
              * editor_enabled
              *
-             * 預覽模式只更新目前頁面變數，不寫入 IndexedDB。
+             * 預覽模式只更新目前頁面變數，
+             * 不寫入 IndexedDB。
              */
-            isPreviewDataMode = true;
+isPreviewDataMode = true;
+isPerformanceEditMode = false;
 
-            normalizeAllExecutionMonths();
-
-            event.target.value = '';
+normalizeAllExecutionMonths();
 
             renderYearFolders();
-            switchTab(currentTab, false);
+
+            switchTab(
+                currentTab,
+                false
+            );
+
             updateUIState();
 
-            alert('預覽資料載入成功！');
+            alert(
+                '預覽資料載入成功！'
+            );
 
         } catch (err) {
+            /*
+             * 如果資料已套用，
+             * 但後續畫面處理發生異常，
+             * 就回復載入前的資料。
+             */
+            if (
+                importedDataApplied &&
+                previousState
+            ) {
+                restorePerformanceState(
+                    previousState
+                );
+
+                renderYearFolders();
+
+                switchTab(
+                    currentTab,
+                    false
+                );
+
+                updateUIState();
+            }
+
             console.error(err);
-            alert("載入失敗：檔案格式錯誤或內容已損毀。");
+
+            alert(
+                '載入失敗：檔案格式錯誤或內容已損毀。'
+            );
+
         } finally {
             event.target.value = '';
         }
+    };
+
+    reader.onerror = () => {
+        event.target.value = '';
+
+        alert(
+            '載入失敗：無法讀取所選檔案。'
+        );
     };
 
     reader.readAsText(file);
@@ -3170,28 +3513,65 @@ async function loadPreviewJSON(event) {
 
 async function importJSON(event) {
     if (!canImportData()) {
-        alert('請先登入使用者或管理者權限後再載入資料。');
+        alert(
+            '請先登入使用者或管理者權限後再載入資料。'
+        );
+
         event.target.value = '';
         openLoginModal();
         return;
     }
 
-    const file = event.target.files[0];
+    const file =
+        event.target.files[0];
+
     if (!file) return;
 
-    const reader = new FileReader();
+    const reader =
+        new FileReader();
 
     reader.onload = async (e) => {
+        let previousState = null;
+
+        let importedDataApplied =
+            false;
+
+        let storageCommitted =
+            false;
+
         try {
-            const imported = JSON.parse(e.target.result);
+            const imported = JSON.parse(
+                e.target.result
+            );
 
-            const importLabel = isAdmin ? '匯入資料' : '載入資料';
+            /*
+             * 覆蓋目前紀錄前，
+             * 先確認是本系統可接受的格式。
+             */
+            validateImportedPerformanceData(
+                imported
+            );
 
-            if (!confirm(`${importLabel}將覆蓋目前所有紀錄，確定要繼續嗎？`)) {
+            const importLabel = isAdmin
+                ? '匯入資料'
+                : '載入資料';
+
+            if (
+                !confirm(
+                    `${importLabel}將覆蓋目前所有紀錄，確定要繼續嗎？`
+                )
+            ) {
                 return;
             }
 
-            applyImportedPerformanceData(imported);
+            previousState =
+                capturePerformanceState();
+
+            applyImportedPerformanceData(
+                imported
+            );
+
+            importedDataApplied = true;
 
             /*
              * 正式載入 / 匯入不處理：
@@ -3199,27 +3579,89 @@ async function importJSON(event) {
              * editor_password
              * editor_enabled
              *
-             * 密碼與權限設定維持目前瀏覽器原本設定。
+             * 密碼與權限設定維持目前
+             * 瀏覽器原本設定。
              */
-            isPreviewDataMode = false;
+isPreviewDataMode = false;
+isPerformanceEditMode = false;
 
-            normalizeAllExecutionMonths();
-            await persistToStorage();
+normalizeAllExecutionMonths();
 
-            event.target.value = '';
+            /*
+             * 必須等 IndexedDB
+             * 交易真正完成，
+             * 才能顯示成功通知。
+             */
+            await persistToStorageConfirmed();
+
+            storageCommitted = true;
 
             renderYearFolders();
-            switchTab(currentTab, false);
+
+            switchTab(
+                currentTab,
+                false
+            );
+
             updateUIState();
 
-            alert(`${importLabel}成功！`);
+            alert(
+                `${importLabel}成功！`
+            );
 
         } catch (err) {
             console.error(err);
-            alert("匯入失敗：檔案格式錯誤或內容已損毀。");
+
+            /*
+             * IndexedDB 已完成，
+             * 只有畫面更新發生例外時，
+             * 提醒重新整理即可。
+             */
+            if (storageCommitted) {
+                alert(
+                    '資料已成功儲存，但畫面更新發生異常，請重新整理頁面。'
+                );
+
+                return;
+            }
+
+            /*
+             * IndexedDB 尚未成功寫入時，
+             * 回復匯入前的記憶體與畫面資料。
+             */
+            if (
+                importedDataApplied &&
+                previousState
+            ) {
+                restorePerformanceState(
+                    previousState
+                );
+
+                renderYearFolders();
+
+                switchTab(
+                    currentTab,
+                    false
+                );
+
+                updateUIState();
+            }
+
+            alert(
+                '匯入失敗：檔案格式錯誤、內容已損毀，或瀏覽器儲存空間不足。'
+            );
+
         } finally {
             event.target.value = '';
         }
+    };
+
+    reader.onerror = () => {
+        event.target.value = '';
+
+        alert(
+            '匯入失敗：無法讀取所選檔案。'
+        );
     };
 
     reader.readAsText(file);
@@ -4909,8 +5351,12 @@ function switchTab(type, shouldSave = true) {
             const saveBtn = document.getElementById('save-logout-btn');
 const permissionSettingsBtn = document.getElementById('permission-settings-btn');
 
-const canWriteInTable = canEditData() && !isPreviewDataMode;
-const canDeleteInTable = canDeleteData() && !isPreviewDataMode;
+const canWriteInTable =
+    canEditPerformanceNow();
+
+const canDeleteInTable =
+    canDeleteData() &&
+    canWriteInTable;
 
 if (canDeleteInTable) {
     headerAction.classList.remove('hidden');
@@ -4918,12 +5364,34 @@ if (canDeleteInTable) {
     headerAction.classList.add('hidden');
 }
 
-if (canEditData() && !isPreviewDataMode) {
-    adminSection.classList.remove('hidden');
-    saveBtn.classList.remove('hidden');
+/*
+ * 新增績效指標只在編輯模式顯示。
+ */
+if (canWriteInTable) {
+    adminSection.classList.remove(
+        'hidden'
+    );
 } else {
-    adminSection.classList.add('hidden');
-    saveBtn.classList.add('hidden');
+    adminSection.classList.add(
+        'hidden'
+    );
+}
+
+/*
+ * 儲存並登出只依登入權限判斷，
+ * 不因檢視模式而隱藏。
+ */
+if (
+    canEditData() &&
+    !isPreviewDataMode
+) {
+    saveBtn.classList.remove(
+        'hidden'
+    );
+} else {
+    saveBtn.classList.add(
+        'hidden'
+    );
 }
 
             appData[type].forEach((item, rowIndex) => {
@@ -5034,6 +5502,14 @@ async function moveRow(direction) {
                 alert('目前為預覽資料模式，不能調整績效指標排序。請先以管理者身分正式載入資料後再操作。');
                 return;
             }
+
+            if (!canEditPerformanceNow()) {
+    alert(
+        '請先點擊「編輯」進入編輯模式。'
+    );
+
+    return;
+}
 
             if (activeSortRowIdx === null) return;
             
@@ -5185,7 +5661,10 @@ function getAttachmentTrashIconHtml() {
 
         row.appendChild(info);
 
-        if (canEditData() && !previewOnly && !isPreviewDataMode) {
+        if (
+    canEditPerformanceNow() &&
+    !previewOnly
+) {
             const removeBtn = document.createElement('button');
             removeBtn.type = 'button';
             removeBtn.className = 'attachment-file-remove';
@@ -5211,7 +5690,12 @@ async function clearCurrentMonthAttachments(event) {
         return;
     }
 
-    if (!activeAttachmentTarget || !canEditData()) return;
+    if (
+    !activeAttachmentTarget ||
+    !canEditPerformanceNow()
+) {
+    return;
+}
     const rowIndex = activeAttachmentTarget.row;
     const monthIndex = activeAttachmentTarget.month;
 
@@ -5248,7 +5732,12 @@ async function removeAttachmentFile(fileIndex) {
         return;
     }
 
-    if (!activeAttachmentTarget || !canEditData()) return;
+    if (
+    !activeAttachmentTarget ||
+    !canEditPerformanceNow()
+) {
+    return;
+}
 
     const rowIndex = activeAttachmentTarget.row;
     const monthIndex = activeAttachmentTarget.month;
@@ -5284,11 +5773,20 @@ async function removeAttachmentFile(fileIndex) {
     openAttachmentModal(rowIndex, monthIndex);
 }
 
-function handleAttachmentClick(rowIndex, monthIndex) {
-    if (canEditData()) {
-        openAttachmentModal(rowIndex, monthIndex);
+function handleAttachmentClick(
+    rowIndex,
+    monthIndex
+) {
+    if (canEditPerformanceNow()) {
+        openAttachmentModal(
+            rowIndex,
+            monthIndex
+        );
     } else {
-        openAttachmentPreviewModal(rowIndex, monthIndex);
+        openAttachmentPreviewModal(
+            rowIndex,
+            monthIndex
+        );
     }
 }
 
@@ -5326,16 +5824,26 @@ function openAttachmentModal(rowIndex, monthIndex) {
 
     const attachmentUploadSection = document.getElementById('attachment-upload-section');
 if (attachmentUploadSection) {
-    attachmentUploadSection.classList.toggle('hidden', !canEditData() || isPreviewDataMode);
+    attachmentUploadSection.classList.toggle(
+    'hidden',
+    !canEditPerformanceNow()
+);
 }
 const adminTools = document.getElementById('attachment-admin-tools');
 if (adminTools) {
-    adminTools.classList.toggle('hidden', !canDeleteData() || isPreviewDataMode);
+    adminTools.classList.toggle(
+    'hidden',
+    !canDeleteData() ||
+    !canEditPerformanceNow()
+);
 }
 
 const clearMonthBtn = document.getElementById('clear-month-attachments-btn');
 if (clearMonthBtn) {
-    clearMonthBtn.classList.toggle('hidden', isPreviewDataMode || !canEditData());
+    clearMonthBtn.classList.toggle(
+    'hidden',
+    !canEditPerformanceNow()
+);
 }
     document.getElementById('attachment-modal').classList.remove('hidden');
 
@@ -5435,12 +5943,12 @@ function processFiles(files) {
         return;
     }
 
-    if (
-        !activeAttachmentTarget ||
-        !canEditData()
-    ) {
-        return;
-    }
+if (
+    !activeAttachmentTarget ||
+    !canEditPerformanceNow()
+) {
+    return;
+}
 
     /*
      * 防止上一批附件尚未完成時，
@@ -6307,7 +6815,12 @@ async function deleteSingleAttachment() {
         return;
     }
 
-    if (!activeAttachmentTarget || !canEditData()) return;
+    if (
+    !activeAttachmentTarget ||
+    !canEditPerformanceNow()
+) {
+    return;
+}
 
     if (!confirm("確定刪除此月份全部附件？")) return;
 
@@ -6335,10 +6848,17 @@ async function batchApplyToFile() {
         return;
     }
 
-    if (!activeAttachmentTarget || !canDeleteData()) {
-        alert('只有管理者可以將附件套用至全年度。');
-        return;
-    }
+if (
+    !activeAttachmentTarget ||
+    !canDeleteData() ||
+    !canEditPerformanceNow()
+) {
+    alert(
+        '只有管理者在編輯模式下可以將附件套用至全年度。'
+    );
+
+    return;
+}
 
     const files = getAttachmentFiles(
         attachmentsStore[currentTab]?.[activeAttachmentTarget.row]?.[activeAttachmentTarget.month]
@@ -6379,7 +6899,11 @@ async function batchClearRowAttachments() {
         return;
     }
 
-    if (!activeAttachmentTarget || !canDeleteData()) {
+    if (
+    !activeAttachmentTarget ||
+    !canDeleteData() ||
+    !canEditPerformanceNow()
+) {
         alert('只有管理者可以清除此指標所有附件。');
         return;
     }
@@ -6475,13 +6999,24 @@ function confirmSaveAndLogout() {
 
     isLoggingOut = true;
 
-    setTimeout(async () => {
-        try {
-            await saveAndLogout();
-        } finally {
-            isLoggingOut = false;
-        }
-    }, 50);
+setTimeout(async () => {
+    try {
+        await saveAndLogout();
+
+    } catch (error) {
+        console.error(
+            '儲存並登出失敗：',
+            error
+        );
+
+        alert(
+            '儲存失敗，因此目前仍保持登入狀態。請確認瀏覽器儲存空間後再試一次。'
+        );
+
+    } finally {
+        isLoggingOut = false;
+    }
+}, 50);
 }
 
 function handleAuthClick() {
@@ -6634,10 +7169,11 @@ async function attemptLogin() {
         await setConfig('editor_password', DEFAULT_EDITOR_PASSWORD);
         await setConfig('editor_enabled', true);
 
-        isAdmin = false;
-        isEditor = false;
+isAdmin = false;
+isEditor = false;
+isPerformanceEditMode = false;
 
-        closeLoginModal();
+closeLoginModal();
         updateUIState();
         renderYearFolders();
         renderTable(currentTab);
@@ -6654,9 +7190,10 @@ if (inputPwd === systemPassword) {
      * 已完成管理者驗證，
      * 將目前載入的預覽資料切換為可編輯工作資料。
      */
-    isPreviewDataMode = false;
+isPreviewDataMode = false;
+isPerformanceEditMode = false;
 
-    renderYearFolders();
+renderYearFolders();
         updateUIState();
         renderTable(currentTab);
 
@@ -6677,16 +7214,17 @@ if (inputPwd === systemPassword) {
 if (editorEnabled && inputPwd === editorPassword) {
     pendingOpenPermissionSettings = false;
 
-    isAdmin = false;
-    isEditor = true;
+isAdmin = false;
+isEditor = true;
 
-    /*
-     * 已完成使用者驗證，
-     * 將目前載入的預覽資料切換為可編輯工作資料。
-     */
-    isPreviewDataMode = false;
+/*
+ * 已完成使用者驗證，
+ * 將目前載入的預覽資料切換為可編輯工作資料。
+ */
+isPreviewDataMode = false;
+isPerformanceEditMode = false;
 
-    closeLoginModal();
+closeLoginModal();
         renderYearFolders();
         updateUIState();
         renderTable(currentTab);
@@ -6779,6 +7317,168 @@ document.getElementById('new-admin-password').value = '';
 document.getElementById('new-editor-password').value = '';
 }
 
+function showToast(msg, type = "success") {
+    const toast =
+        document.getElementById('toast');
+
+    const icon =
+        document.getElementById('toast-icon');
+
+    const message =
+        document.getElementById('toast-msg');
+
+    if (!toast || !icon || !message) {
+        alert(msg);
+        return;
+    }
+
+    message.innerText = msg;
+
+    icon.innerText =
+        type === "success"
+            ? "✓"
+            : "✕";
+
+    icon.className =
+        type === "success"
+            ? "text-green-500"
+            : "text-red-500";
+
+    toast.classList.remove(
+        'translate-y-20',
+        'opacity-0'
+    );
+
+    clearTimeout(
+        window.__ospmsToastTimer
+    );
+
+    window.__ospmsToastTimer =
+        setTimeout(() => {
+            toast.classList.add(
+                'translate-y-20',
+                'opacity-0'
+            );
+        }, 3000);
+}
+
+function applyPerformanceEditModeUI() {
+    const editBtn = document.getElementById(
+        'performance-edit-toggle-btn'
+    );
+
+    if (!editBtn) return;
+
+    const showButton =
+        canEditData() &&
+        !isPreviewDataMode;
+
+    /*
+     * 預覽者、登出狀態及預覽資料模式，
+     * 一律回到檢視模式。
+     */
+    if (!showButton) {
+        isPerformanceEditMode = false;
+    }
+
+    editBtn.classList.toggle(
+        'hidden',
+        !showButton
+    );
+
+    editBtn.classList.toggle(
+        'is-view',
+        !isPerformanceEditMode
+    );
+
+    editBtn.classList.toggle(
+        'is-editing',
+        isPerformanceEditMode
+    );
+
+const iconName =
+    isPerformanceEditMode
+        ? 'circle-check-big'
+        : 'square-pen';
+
+    const label =
+        isPerformanceEditMode
+            ? '完成檢視'
+            : '編輯';
+
+    editBtn.innerHTML = `
+        <i data-lucide="${iconName}"
+           class="w-4 h-4"></i>
+        <span>${label}</span>
+    `;
+
+    editBtn.title = isPerformanceEditMode
+        ? '完成編輯並切換為檢視模式'
+        : '進入績效報表編輯模式';
+
+    editBtn.setAttribute(
+        'aria-label',
+        editBtn.title
+    );
+}
+
+function togglePerformanceEditMode() {
+    if (!canEditData()) {
+        showToast(
+            "請先登入使用者或管理者權限後再進入編輯模式。",
+            "error"
+        );
+
+        openLoginModal();
+        return;
+    }
+
+    if (isPreviewDataMode) {
+        showToast(
+            "目前為預覽資料模式，請先正式載入資料後再進入編輯模式。",
+            "error"
+        );
+
+        return;
+    }
+
+    const scrollState =
+        getTableScrollState();
+
+    /*
+     * 從編輯切換成完成檢視前，
+     * 先將畫面欄位同步回目前年度資料。
+     */
+    if (isPerformanceEditMode) {
+        saveCurrentTabData();
+        syncCurrentYearFolderFromGlobals();
+    }
+
+    isPerformanceEditMode =
+        !isPerformanceEditMode;
+
+    closeAllExecutionMonthsMenus();
+
+    renderTable(currentTab);
+
+    restoreTableScrollState(
+        scrollState
+    );
+
+    applyPerformanceEditModeUI();
+
+    lucide.createIcons();
+
+    /*
+     * 與標準程序系統相同的狀態通知文字。
+     */
+    showToast(
+        isPerformanceEditMode
+            ? "已進入編輯模式"
+            : "已切換為檢視狀態"
+    );
+}
+
 function updateUIState() {
     const icon = document.getElementById('auth-icon');
     const saveBtn = document.getElementById('save-logout-btn');
@@ -6821,19 +7521,21 @@ function updateUIState() {
         permissionSettingsBtn.classList.toggle('flex', canChangePassword());
     }
 
-    updateJsonActionButtons();
-    lucide.createIcons();
+applyPerformanceEditModeUI();
+updateJsonActionButtons();
+lucide.createIcons();
 }
 
 async function saveAndLogout() {
     if (canEditData() && !isPreviewDataMode) {
         saveCurrentTabData();
         syncCurrentYearFolderFromGlobals();
-        await persistToStorage();
+        await persistToStorageConfirmed();
     }
 
     isAdmin = false;
     isEditor = false;
+    isPerformanceEditMode = false;
 
 const scrollState = getTableScrollState();
 
@@ -6853,13 +7555,24 @@ function addNewRow() {
         return;
     }
 
-    if (!canEditData()) {
-        alert('請先登入使用者或管理者權限。');
-        openLoginModal();
-        return;
-    }
+if (!canEditData()) {
+    alert(
+        '請先登入使用者或管理者權限。'
+    );
 
-    saveCurrentTabData();
+    openLoginModal();
+    return;
+}
+
+if (!canEditPerformanceNow()) {
+    alert(
+        '請先點擊「編輯」進入編輯模式。'
+    );
+
+    return;
+}
+
+saveCurrentTabData();
 
     appData[currentTab].push({
         id: (appData[currentTab].length + 1).toString(),
@@ -6879,12 +7592,23 @@ async function deleteRow(idx) {
         return;
     }
 
-    if (!canDeleteData()) {
-        alert('只有管理者可以刪除績效指標項目。');
-        return;
-    }
+if (!canDeleteData()) {
+    alert(
+        '只有管理者可以刪除績效指標項目。'
+    );
 
-    if (!confirm("確定刪除？")) return;
+    return;
+}
+
+if (!canEditPerformanceNow()) {
+    alert(
+        '請先點擊「編輯」進入編輯模式。'
+    );
+
+    return;
+}
+
+if (!confirm("確定刪除？")) return;
 
     // 刪除前先保存目前畫面上的輸入內容。
     saveCurrentTabData();

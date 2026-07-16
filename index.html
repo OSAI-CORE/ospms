@@ -721,6 +721,29 @@
     display: block;
 }
 
+/* 管理者操作欄：與報表其他欄位一致，垃圾桶沿用附件移除按鈕樣式 */
+#main-table th:nth-child(20),
+#main-table td:nth-child(20) {
+    width: 58px;
+}
+
+.admin-action-header {
+    background: #f1f5f9 !important;
+    color: #64748b !important;
+    border-left: 1px solid #e2e8f0 !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.admin-action-cell {
+    background: #f8fafc !important;
+    border-left: 1px solid #e2e8f0 !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.report-row-delete-btn {
+    margin: 0 auto;
+}
+
         /* 排序選單樣式 */
         .sort-menu {
             position: absolute;
@@ -1483,6 +1506,51 @@ body.file-preview-open {
         margin: 0 auto;
     }
 
+    header {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center !important;
+        flex-wrap: nowrap !important;
+        column-gap: 8px;
+    }
+
+    .header-title-area {
+        min-width: 0;
+        align-items: flex-start;
+    }
+
+    #header-action-buttons {
+        margin-left: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: center;
+        gap: 6px !important;
+        flex-wrap: nowrap !important;
+    }
+
+    #header-action-buttons button {
+        width: 96px;
+        min-height: 34px;
+        padding: 6px 8px !important;
+        font-size: 10px !important;
+        justify-content: center;
+        gap: 5px;
+    }
+
+    #header-action-buttons button i {
+        width: 14px !important;
+        height: 14px !important;
+        flex-shrink: 0;
+    }
+
+    #attachment-modal-paperclip {
+        width: 30px !important;
+        height: 30px !important;
+        stroke-width: 2.4;
+        flex-shrink: 0;
+    }
+
     .system-footer-light {
         padding-top: 3px;
         padding-bottom: calc(5px + env(safe-area-inset-bottom));
@@ -1962,8 +2030,6 @@ main > .p-4,
         <span>載入預覽</span>
     </button>
 
-    <input type="file" id="preview-json-input" class="hidden" accept=".json" onchange="loadPreviewJSON(event)">
-    <input type="file" id="import-input" class="hidden" accept=".json" onchange="importJSON(event)">
 </div>
 
             <button class="w-full bg-blue-600 text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center space-x-2 hover:bg-blue-500 transition" onclick="exportFullReport()">
@@ -1976,9 +2042,22 @@ main > .p-4,
      class="mobile-sidebar-backdrop no-print"
      onclick="closeMobileSidebar()"></div>
 
+<!-- JSON 檔案欄位移出手機收合側欄，避免行動瀏覽器觸發不穩 -->
+<input type="file"
+       id="preview-json-input"
+       accept=".json,application/json,text/json"
+       onchange="loadPreviewJSON(event)"
+       style="position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;">
+
+<input type="file"
+       id="import-input"
+       accept=".json,application/json,text/json"
+       onchange="importJSON(event)"
+       style="position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;">
+
     <main class="flex-1 flex flex-col min-w-0">
         <header class="bg-white px-8 py-5 border-b border-slate-200 flex justify-between items-center shrink-0">
- <div class="flex items-center gap-3 min-w-0">
+ <div class="header-title-area flex items-center gap-3 min-w-0">
 <button id="mobile-sidebar-toggle"
         type="button"
         onclick="toggleMobileSidebar()"
@@ -1998,14 +2077,14 @@ main > .p-4,
     </div>
 </div>
 
-<div class="flex items-center space-x-3 no-print">
+<div id="header-action-buttons" class="flex items-center space-x-3 no-print">
 <button id="save-logout-btn"
         onclick="confirmSaveAndLogout()"
         class="hidden flex items-center space-x-2 px-5 py-2.5 bg-green-600 text-white rounded-full text-sm font-bold transition shadow-sm hover:bg-green-700">
     <i data-lucide="save" class="w-4 h-4"></i>
     <span>儲存並登出</span>
 </button>
-                <button onclick="printCurrentReport()" class="flex items-center space-x-2 px-5 py-2.5 bg-white border border-slate-200 rounded-full text-sm font-bold text-slate-700 transition shadow-sm hover:shadow-md">
+                <button id="print-report-btn" onclick="printCurrentReport()" class="flex items-center space-x-2 px-5 py-2.5 bg-white border border-slate-200 rounded-full text-sm font-bold text-slate-700 transition shadow-sm hover:shadow-md">
                     <i data-lucide="printer" class="w-4 h-4 text-slate-600"></i><span>列印報告</span>
                 </button>
             </div>
@@ -2067,7 +2146,7 @@ main > .p-4,
                             <th class="px-1 py-3 text-center border-b border-l bg-blue-50/30 text-blue-600 min-w-[54px]">12月</th>
                             <th class="px-1 py-3 text-center border-b border-l bg-emerald-50 text-emerald-700 min-w-[70px]">完成率</th>
                             <th class="px-1 py-3 text-center border-b border-l bg-emerald-50 text-emerald-700 min-w-[70px]">執行狀態</th>
-                            <th id="admin-header-action" class="hidden px-2 py-4 text-center border-b border-l text-red-500">操作</th>
+                            <th id="admin-header-action" class="admin-action-header hidden px-2 py-4 text-center">操作</th>
                         </tr>
                     </thead>
                     <tbody id="table-body" class="bg-white"></tbody>
@@ -2248,7 +2327,7 @@ main > .p-4,
     <div onclick="event.stopPropagation()" class="attachment-panel">
         <div class="attachment-panel-header">
             <div class="attachment-panel-title">
-<i data-lucide="paperclip" class="w-6 h-6 text-blue-600"></i>
+<i id="attachment-modal-paperclip" data-lucide="paperclip" class="w-6 h-6 text-blue-600"></i>
 <h3 id="attachment-modal-title">附件資料管理</h3>
 <span id="attachment-context-label"></span>
 
@@ -2459,6 +2538,9 @@ let isLoggingOut = false;
 
 /* 預覽載入模式：只暫存在目前頁面，不寫入瀏覽器 IndexedDB */
 let isPreviewDataMode = false;
+
+/* 保存進入預覽前的正式資料參照；不做 deepClone，避免大型附件再次占用記憶體 */
+let previewOriginalState = null;
 
 const defaultAppDataTemplate = JSON.parse(JSON.stringify(appData));
 
@@ -2787,13 +2869,10 @@ syncCurrentYearFolderFromGlobals();
 store.put(yearFolders, 'ospms_year_folders');
 store.put(currentYearFolderId, 'ospms_current_year_folder_id');
 
-// 保留舊格式備份，不影響新年度分頁
-store.put(tableDataStore, 'ospms_data_store');
-store.put(attachmentsStore, 'ospms_attachments');
-store.put({
-    version: APP_DATA_VERSION,
-    data: appData
-}, 'ospms_base_data');
+/* 年度資料夾已包含 appData、tableDataStore、attachmentsStore，移除重複舊資料 */
+store.delete('ospms_data_store');
+store.delete('ospms_attachments');
+store.delete('ospms_base_data');
                 return new Promise((resolve) => {
     transaction.oncomplete = () => {
         db.close();
@@ -2826,6 +2905,35 @@ store.put({
 
         // --- 功能模組 ---
 
+function captureOfficialStateBeforePreview() {
+    if (previewOriginalState) return;
+
+    previewOriginalState = {
+        yearFolders,
+        currentYearFolderId,
+        appData,
+        tableDataStore,
+        attachmentsStore
+    };
+}
+
+function restoreOfficialStateAfterPreview() {
+    if (!isPreviewDataMode) return;
+
+    if (previewOriginalState) {
+        yearFolders = previewOriginalState.yearFolders;
+        currentYearFolderId = previewOriginalState.currentYearFolderId;
+        appData = previewOriginalState.appData;
+        tableDataStore = previewOriginalState.tableDataStore;
+        attachmentsStore = previewOriginalState.attachmentsStore;
+        syncGlobalsFromCurrentYearFolder();
+    }
+
+    previewOriginalState = null;
+    isPreviewDataMode = false;
+    normalizeAllExecutionMonths();
+}
+
 function handleJsonLoadButton() {
     if (canImportData()) {
         triggerImportJSON();
@@ -2834,8 +2942,31 @@ function handleJsonLoadButton() {
     }
 }
 
+function openJsonFilePicker(inputId) {
+    const input = document.getElementById(inputId);
+
+    if (!input) {
+        alert('找不到 JSON 檔案選擇欄位，請重新整理頁面後再試。');
+        return;
+    }
+
+    input.value = '';
+    closeMobileSidebar();
+
+    if (typeof input.showPicker === 'function') {
+        try {
+            input.showPicker();
+            return;
+        } catch (error) {
+            console.warn('showPicker 無法使用，改用 click：', error);
+        }
+    }
+
+    input.click();
+}
+
 function triggerLoadPreviewJSON() {
-    document.getElementById('preview-json-input').click();
+    openJsonFilePicker('preview-json-input');
 }
 
 function triggerImportJSON() {
@@ -2845,7 +2976,55 @@ function triggerImportJSON() {
         return;
     }
 
-    document.getElementById('import-input').click();
+    openJsonFilePicker('import-input');
+}
+
+function validateImportedPerformanceData(imported) {
+    if (!imported || typeof imported !== 'object' || Array.isArray(imported)) {
+        throw new Error('選取的檔案不是有效的 JSON 資料物件');
+    }
+
+    const hasNewFormat =
+        Array.isArray(imported.year_folders) &&
+        imported.year_folders.length > 0;
+
+    const hasLegacyFormat = Boolean(
+        imported.data_store ||
+        imported.base_data ||
+        imported.attachments
+    );
+
+    if (!hasNewFormat && !hasLegacyFormat) {
+        throw new Error('此檔案不是職業安全績效管理系統匯出的 JSON');
+    }
+}
+
+async function readSelectedJsonFile(event) {
+    const input = event.target;
+    const file = input.files?.[0];
+
+    if (!file) return null;
+
+    try {
+        const rawText = await file.text();
+        const cleanedText = rawText.replace(/^\uFEFF/, '').trim();
+
+        if (!cleanedText) {
+            throw new Error('選取的 JSON 檔案是空白檔案');
+        }
+
+        let imported;
+        try {
+            imported = JSON.parse(cleanedText);
+        } catch (error) {
+            throw new Error('JSON 語法無法解析，檔案可能不完整或不是 JSON 格式');
+        }
+
+        validateImportedPerformanceData(imported);
+        return imported;
+    } finally {
+        input.value = '';
+    }
 }
 
 function buildPerformanceExportData() {
@@ -2855,26 +3034,11 @@ function buildPerformanceExportData() {
     }
 
     return {
-        version: "performance-system-json-v2",
-        exportType: "unified-data",
+        version: 'performance-system-json-v2',
+        exportType: 'unified-data',
         exportedAt: new Date().toISOString(),
-
         year_folders: yearFolders,
         current_year_folder_id: currentYearFolderId,
-
-        data_store: tableDataStore,
-        attachments: attachmentsStore,
-        base_data: {
-            version: APP_DATA_VERSION,
-            data: appData
-        },
-
-        /*
-         * 統一版 JSON 不匯出：
-         * admin_password
-         * editor_password
-         * editor_enabled
-         */
         config: {}
     };
 }
@@ -2887,27 +3051,24 @@ function exportJSON() {
     }
 
     if (isPreviewDataMode) {
-        alert('目前為預覽資料模式，請先以使用者或管理者身分正式載入資料後再匯出 JSON。');
+        alert('目前為預覽資料模式，請先正式載入資料後再匯出 JSON。');
         return;
     }
 
     const exportDate = new Date().toISOString().slice(0, 10);
     const dataToExport = buildPerformanceExportData();
-
-    const blob = new Blob([JSON.stringify(dataToExport, null, 2)], {
-        type: "application/json"
+    const blob = new Blob([JSON.stringify(dataToExport)], {
+        type: 'application/json'
     });
 
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-
+    const a = document.createElement('a');
     a.href = url;
     a.download = `職安績效管理PMS_${exportDate}.json`;
 
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-
     URL.revokeObjectURL(url);
 }
 
@@ -2918,73 +3079,75 @@ function applyImportedPerformanceData(imported) {
         const importedCurrentId = imported.current_year_folder_id;
         const hasCurrentFolder = yearFolders.some(folder => folder.id === importedCurrentId);
 
-        currentYearFolderId = hasCurrentFolder ? importedCurrentId : yearFolders[0].id;
+        currentYearFolderId = hasCurrentFolder
+            ? importedCurrentId
+            : yearFolders[0].id;
+
         syncGlobalsFromCurrentYearFolder();
-
-    } else {
-        tableDataStore = imported.data_store || {};
-        attachmentsStore = imported.attachments || {};
-
-        if (
-            imported.base_data &&
-            imported.base_data.version === APP_DATA_VERSION &&
-            imported.base_data.data
-        ) {
-            appData = imported.base_data.data;
-        }
-
-        const firstFolder = createYearFolder(getCurrentReportYear());
-        firstFolder.appData = appData;
-        firstFolder.tableDataStore = tableDataStore;
-        firstFolder.attachmentsStore = attachmentsStore;
-
-        yearFolders = [firstFolder];
-        currentYearFolderId = firstFolder.id;
-        syncGlobalsFromCurrentYearFolder();
+        return;
     }
+
+    tableDataStore = imported.data_store || {};
+    attachmentsStore = imported.attachments || {};
+
+    if (imported.base_data?.data) {
+        appData = imported.base_data.data;
+    }
+
+    const firstFolder = createYearFolder(getCurrentReportYear());
+    firstFolder.appData = appData;
+    firstFolder.tableDataStore = tableDataStore;
+    firstFolder.attachmentsStore = attachmentsStore;
+
+    yearFolders = [firstFolder];
+    currentYearFolderId = firstFolder.id;
+    syncGlobalsFromCurrentYearFolder();
 }
 
 async function loadPreviewJSON(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-
-    reader.onload = async (e) => {
-        try {
-            const imported = JSON.parse(e.target.result);
-
-            applyImportedPerformanceData(imported);
-
-            /*
-             * 預覽載入不處理：
-             * admin_password
-             * editor_password
-             * editor_enabled
-             *
-             * 預覽模式只更新目前頁面變數，不寫入 IndexedDB。
-             */
-            isPreviewDataMode = true;
-
-            normalizeAllExecutionMonths();
-
-            event.target.value = '';
-
-            renderYearFolders();
-            switchTab(currentTab, false);
-            updateUIState();
-
-            alert('預覽資料載入成功！');
-
-        } catch (err) {
-            console.error(err);
-            alert("載入失敗：檔案格式錯誤或內容已損毀。");
-        } finally {
-            event.target.value = '';
-        }
+    const previousState = {
+        yearFolders,
+        currentYearFolderId,
+        appData,
+        tableDataStore,
+        attachmentsStore,
+        isPreviewDataMode
     };
 
-    reader.readAsText(file);
+    try {
+        const imported = await readSelectedJsonFile(event);
+        if (!imported) return;
+
+        if (!isPreviewDataMode) {
+            captureOfficialStateBeforePreview();
+        }
+
+        applyImportedPerformanceData(imported);
+        isPreviewDataMode = true;
+        normalizeAllExecutionMonths();
+
+        renderYearFolders();
+        switchTab(currentTab, false);
+        updateUIState();
+        closeMobileSidebar();
+
+        alert('預覽資料載入成功！');
+    } catch (err) {
+        console.error('載入預覽失敗：', err);
+
+        yearFolders = previousState.yearFolders;
+        currentYearFolderId = previousState.currentYearFolderId;
+        appData = previousState.appData;
+        tableDataStore = previousState.tableDataStore;
+        attachmentsStore = previousState.attachmentsStore;
+        isPreviewDataMode = previousState.isPreviewDataMode;
+
+        const errorMessage = err instanceof Error
+            ? err.message
+            : '無法讀取 JSON 檔案';
+
+        alert(`載入預覽失敗：${errorMessage}`);
+    }
 }
 
 async function importJSON(event) {
@@ -2995,58 +3158,63 @@ async function importJSON(event) {
         return;
     }
 
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-
-    reader.onload = async (e) => {
-        try {
-            const imported = JSON.parse(e.target.result);
-
-            const importLabel = isAdmin ? '匯入資料' : '載入資料';
-
-            if (!confirm(`${importLabel}將覆蓋目前所有紀錄，確定要繼續嗎？`)) {
-                return;
-            }
-
-            applyImportedPerformanceData(imported);
-
-            /*
-             * 正式載入 / 匯入不處理：
-             * admin_password
-             * editor_password
-             * editor_enabled
-             *
-             * 密碼與權限設定維持目前瀏覽器原本設定。
-             */
-            isPreviewDataMode = false;
-
-normalizeAllExecutionMonths();
-
-const savedSuccessfully = await persistToStorage();
-
-if (!savedSuccessfully) {
-    throw new Error('匯入資料無法寫入瀏覽器儲存空間');
-}
-
-event.target.value = '';
-
-renderYearFolders();
-switchTab(currentTab, false);
-updateUIState();
-
-alert(`${importLabel}成功！`);
-
-        } catch (err) {
-            console.error(err);
-            alert("匯入失敗：檔案格式錯誤或內容已損毀。");
-        } finally {
-            event.target.value = '';
-        }
+    const importLabel = isAdmin ? '匯入資料' : '載入資料';
+    const previousState = {
+        yearFolders,
+        currentYearFolderId,
+        appData,
+        tableDataStore,
+        attachmentsStore,
+        isPreviewDataMode,
+        previewOriginalState
     };
 
-    reader.readAsText(file);
+    try {
+        const imported = await readSelectedJsonFile(event);
+        if (!imported) return;
+
+        if (!confirm(`${importLabel}將覆蓋目前所有紀錄，確定要繼續嗎？`)) {
+            return;
+        }
+
+        applyImportedPerformanceData(imported);
+        isPreviewDataMode = false;
+        previewOriginalState = null;
+        normalizeAllExecutionMonths();
+
+        const savedSuccessfully = await persistToStorage();
+
+        if (!savedSuccessfully) {
+            throw new Error('資料無法寫入瀏覽器儲存空間，可能是附件資料量過大或裝置剩餘空間不足');
+        }
+
+        renderYearFolders();
+        switchTab(currentTab, false);
+        updateUIState();
+        closeMobileSidebar();
+
+        alert(`${importLabel}成功！`);
+    } catch (err) {
+        console.error(`${importLabel}失敗：`, err);
+
+        yearFolders = previousState.yearFolders;
+        currentYearFolderId = previousState.currentYearFolderId;
+        appData = previousState.appData;
+        tableDataStore = previousState.tableDataStore;
+        attachmentsStore = previousState.attachmentsStore;
+        isPreviewDataMode = previousState.isPreviewDataMode;
+        previewOriginalState = previousState.previewOriginalState;
+
+        renderYearFolders();
+        switchTab(currentTab, false);
+        updateUIState();
+
+        const errorMessage = err instanceof Error
+            ? err.message
+            : '無法讀取或儲存 JSON 檔案';
+
+        alert(`${importLabel}失敗：${errorMessage}`);
+    }
 }
 
 function updateJsonActionButtons() {
@@ -4807,8 +4975,13 @@ if (canEditData() && !isPreviewDataMode) {
                     <td class="px-1 py-1.5 border-l border-b bg-white group-hover:bg-slate-50/50 text-center">
                         <span class="completion-summary-cell ${executionClass}">${rowStat.statusLabel}</span>
                     </td>
-                    <td class="${canDeleteInTable ? '' : 'hidden'} px-2 py-2 border-l border-b text-center">
-                        <button onclick="deleteRow(${rowIndex})" class="text-red-400 hover:text-red-600 transition"><i data-lucide="trash-2" class="w-4 h-4 mx-auto"></i></button>
+                    <td class="admin-action-cell ${canDeleteInTable ? '' : 'hidden'} px-2 py-2 text-center">
+                        <button type="button"
+                                onclick="deleteRow(${rowIndex})"
+                                class="attachment-file-remove report-row-delete-btn"
+                                title="刪除此績效指標">
+                            ${getAttachmentTrashIconHtml()}
+                        </button>
                     </td>
                 `;
                 tbody.appendChild(row);
@@ -6379,6 +6552,7 @@ async function attemptLogin() {
         isAdmin = true;
         isEditor = true;
 
+        restoreOfficialStateAfterPreview();
         renderYearFolders();
         updateUIState();
         renderTable(currentTab);
@@ -6403,6 +6577,7 @@ async function attemptLogin() {
         isAdmin = false;
         isEditor = true;
 
+        restoreOfficialStateAfterPreview();
         closeLoginModal();
         renderYearFolders();
         updateUIState();
@@ -6530,7 +6705,7 @@ function updateUIState() {
     }
 
     if (saveBtn) {
-        saveBtn.classList.toggle('hidden', !canEditData());
+        saveBtn.classList.toggle('hidden', !canEditData() || isPreviewDataMode);
     }
 
     if (permissionSettingsBtn) {

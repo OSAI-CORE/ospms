@@ -5289,47 +5289,15 @@ const originalSlotLength = slot.length;
 
 slot.push(...newFiles);
 
-        /*
-         * 先更新附件清單，不必等 IndexedDB 儲存完成。
-         */
-        const attachmentModal =
-            document.getElementById('attachment-modal');
-
-const modalStillOpen =
-    attachmentModal &&
-    !attachmentModal.classList.contains('hidden');
-
-const modalMatchesUpload =
-    modalStillOpen &&
-    currentTab === uploadContext.tab &&
-    currentYearFolderId === uploadContext.yearFolderId &&
-    activeAttachmentTarget &&
-    activeAttachmentTarget.row === uploadTarget.row &&
-    activeAttachmentTarget.month === uploadTarget.month;
-
-if (modalMatchesUpload) {
-const currentFiles = getAttachmentFiles(
-    uploadContext.attachmentsStoreRef[
-        uploadContext.tab
-    ]?.[uploadTarget.row]?.[uploadTarget.month]
-);
-
-            renderAttachmentFileList(currentFiles, false);
-
-            if (uploadText) {
-                uploadText.textContent = '附件已加入，正在儲存...';
-            }
-
-            lucide.createIcons();
-        }
-
-        /*
-         * 讓瀏覽器先完成一次畫面更新，
-         * 再執行較耗時的 IndexedDB 儲存。
-         */
-        await new Promise(resolve => {
-            requestAnimationFrame(() => resolve());
-        });
+/*
+ * 檔案已完成讀取與轉換，
+ * 接下來寫入瀏覽器 IndexedDB。
+ * 正式儲存完成前，不先顯示在附件清單中。
+ */
+if (uploadText) {
+    uploadText.textContent =
+        '正在儲存附件，完成後即可關閉...';
+}
 
 saveCurrentTabData();
 
@@ -5352,27 +5320,6 @@ if (!savedSuccessfully) {
         }
     }
 
-const attachmentModal =
-    document.getElementById('attachment-modal');
-
-const shouldRefreshFailedUpload =
-    attachmentModal &&
-    !attachmentModal.classList.contains('hidden') &&
-    currentTab === uploadContext.tab &&
-    currentYearFolderId === uploadContext.yearFolderId &&
-    activeAttachmentTarget &&
-    activeAttachmentTarget.row === uploadTarget.row &&
-    activeAttachmentTarget.month === uploadTarget.month;
-
-if (shouldRefreshFailedUpload) {
-    const restoredFiles = getAttachmentFiles(
-        targetStore[targetTab]?.[targetRow]?.[targetMonth]
-    );
-
-    renderAttachmentFileList(restoredFiles, false);
-    lucide.createIcons();
-}
-
     throw new Error('附件無法寫入瀏覽器儲存空間');
 }
 
@@ -5389,19 +5336,35 @@ if (stillInSameView) {
 }
 
 /*
- * 只有附件視窗仍開啟、仍是同一個分類與年度，
- * 而且仍為同一個附件目標時，才重新整理附件管理內容。
+ * 只有 IndexedDB 已確認儲存成功，
+ * 而且附件視窗仍是原本項目與月份時，
+ * 新附件才正式顯示在已上傳檔案清單。
  */
-const targetStillActive =
-            activeAttachmentTarget &&
-            activeAttachmentTarget.row === uploadTarget.row &&
-            activeAttachmentTarget.month === uploadTarget.month;
+const attachmentModal =
+    document.getElementById('attachment-modal');
 
-if (stillInSameView && targetStillActive) {
-    openAttachmentModal(
-        uploadTarget.row,
-        uploadTarget.month
+const modalStillOpen =
+    attachmentModal &&
+    !attachmentModal.classList.contains('hidden');
+
+const targetStillActive =
+    activeAttachmentTarget &&
+    activeAttachmentTarget.row === uploadTarget.row &&
+    activeAttachmentTarget.month === uploadTarget.month;
+
+if (
+    stillInSameView &&
+    modalStillOpen &&
+    targetStillActive
+) {
+    const savedFiles = getAttachmentFiles(
+        uploadContext.attachmentsStoreRef[
+            uploadContext.tab
+        ]?.[uploadTarget.row]?.[uploadTarget.month]
     );
+
+    renderAttachmentFileList(savedFiles, false);
+    lucide.createIcons();
 }
 
     } catch (error) {

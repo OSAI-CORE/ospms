@@ -1214,7 +1214,12 @@
     background-position: 0 0, 0 13px, 13px -13px, -13px 0;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
-    touch-action: manipulation;
+    /*
+ * 保留單指水平與垂直拖曳，
+ * 禁止瀏覽器原生 pinch zoom，
+ * 雙指縮放完全由附件預覽程式接管。
+ */
+touch-action: pan-x pan-y;
 }
 
 #file-preview-stage {
@@ -1399,6 +1404,24 @@ body.file-preview-open {
     width: 22px;
     height: 22px;
     stroke-width: 2.8px;
+}
+
+/*
+ * 手機附件預覽開啟時，暫停繪製後方大型報表。
+ * 資料仍保留，不會清除。
+ */
+body.file-preview-open > .sidebar,
+body.file-preview-open > main,
+body.file-preview-open > #mobile-sidebar-backdrop {
+    visibility: hidden;
+}
+
+body.file-preview-open > #file-preview-modal {
+    visibility: visible;
+}
+
+.pdf-preview-page-shell {
+    will-change: auto;
 }
 
 /* 手機共用設定：直式與橫式都套用 */
@@ -6343,8 +6366,30 @@ function getFilePreviewScaleLimits() {
 }
 
 function setFilePreviewScale(nextScale) {
-    filePreviewScale =
-        clampPreviewScale(nextScale);
+    const limits =
+        getFilePreviewScaleLimits();
+
+    const clampedScale =
+        clampPreviewScale(
+            nextScale,
+            limits.min,
+            limits.max
+        );
+
+    /*
+     * 已到達最大或最小倍率時，
+     * 不再重複改寫圖片與 PDF 尺寸。
+     */
+    if (
+        Math.abs(
+            clampedScale - filePreviewScale
+        ) < 0.0001
+    ) {
+        updateFilePreviewZoomLabel();
+        return;
+    }
+
+    filePreviewScale = clampedScale;
 
     if (filePreviewMode === 'image') {
         applyPreviewImageScale();

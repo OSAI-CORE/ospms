@@ -417,6 +417,55 @@
 
         .admin-edit-cell { background-color: #fefce8 !important; border: 1px dashed #eab308 !important; color: #475569 !important; }
 
+/* 績效報表編輯／完成檢視雙態按鈕 */
+.performance-edit-toggle-btn {
+    min-width: 92px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 800;
+    white-space: nowrap;
+    transition:
+        background-color 0.18s ease,
+        border-color 0.18s ease,
+        color 0.18s ease;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.performance-edit-toggle-btn.hidden {
+    display: none !important;
+}
+
+/* 尚未進入編輯模式 */
+.performance-edit-toggle-btn.is-view {
+    background: #ffffff;
+    border: 1px solid #bfdbfe;
+    color: #2563eb;
+}
+
+.performance-edit-toggle-btn.is-view:hover {
+    background: #eff6ff;
+    border-color: #93c5fd;
+}
+
+/* 已進入編輯模式 */
+.performance-edit-toggle-btn.is-editing {
+    background: #fffbeb;
+    border: 1px solid #fbbf24;
+    color: #b45309;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.12);
+}
+
+.performance-edit-toggle-btn.is-editing:hover {
+    background: #fef3c7;
+    border-color: #f59e0b;
+    color: #92400e;
+}
+
         .year-input {
             background: #dbeafe;
             color: #1d4ed8;
@@ -1530,8 +1579,8 @@ body.file-preview-open {
         font-size: 8px;
     }
 
-    /* 手機直式表頭：
-       年度靠左，儲存與列印圖示靠右 */
+/* 手機直式表頭：
+   年度靠左，編輯、儲存與列印圖示靠右 */
     header {
         display: block !important;
         padding: 10px 12px 12px !important;
@@ -1564,6 +1613,10 @@ body.file-preview-open {
         box-shadow: 0 4px 10px rgba(15, 23, 42, 0.10);
     }
 
+    #performance-edit-toggle-btn {
+    min-width: 38px !important;
+}
+
     #header-action-buttons button span {
         display: none !important;
     }
@@ -1578,6 +1631,19 @@ body.file-preview-open {
         width: 150px;
     }
 
+    #toast {
+    right: 12px !important;
+    bottom: calc(
+        12px + env(safe-area-inset-bottom)
+    ) !important;
+
+    max-width: calc(100vw - 24px);
+
+    padding: 10px 13px !important;
+
+    font-size: 12px !important;
+}
+
 }
 
 @media screen and (max-width: 360px) and (orientation: portrait) {
@@ -1591,6 +1657,10 @@ body.file-preview-open {
         height: 34px;
         min-width: 34px;
     }
+
+    #performance-edit-toggle-btn {
+    min-width: 34px !important;
+}
 
     #header-action-buttons button i {
         width: 16px !important;
@@ -2100,21 +2170,38 @@ main > .p-4,
 
 <div id="header-action-buttons"
      class="flex items-center gap-3 no-print">
+
+    <button id="performance-edit-toggle-btn"
+            type="button"
+            onclick="togglePerformanceEditMode()"
+            title="進入績效報表編輯模式"
+            aria-label="進入績效報表編輯模式"
+            class="hidden performance-edit-toggle-btn is-view">
+        <i data-lucide="square-pen" class="w-4 h-4"></i>
+        <span>編輯</span>
+    </button>
+
 <button id="save-logout-btn"
-        onclick="confirmSaveAndLogout()"
-        title="儲存並登出"
-        aria-label="儲存並登出"
-        class="hidden flex items-center space-x-2 px-5 py-2.5 bg-green-600 text-white rounded-full text-sm font-bold transition shadow-sm hover:bg-green-700">
+        type="button"
+        onclick="savePerformanceData()"
+        title="儲存資料"
+        aria-label="儲存資料"
+        class="hidden flex items-center space-x-2 px-5 py-2.5 bg-emerald-600 text-white rounded-full text-sm font-bold transition-colors shadow-sm hover:bg-emerald-700">
     <i data-lucide="save" class="w-4 h-4"></i>
-    <span>儲存並登出</span>
+    <span>儲存</span>
 </button>
-                <button onclick="printCurrentReport()"
-        title="列印報告"
-        aria-label="列印報告"
-        class="flex items-center space-x-2 px-5 py-2.5 bg-white border border-slate-200 rounded-full text-sm font-bold text-slate-700 transition shadow-sm hover:shadow-md">
-                    <i data-lucide="printer" class="w-4 h-4 text-slate-600"></i><span>列印報告</span>
-                </button>
-            </div>
+
+    <button type="button"
+            onclick="printCurrentReport()"
+            title="列印報告"
+            aria-label="列印報告"
+            class="flex items-center space-x-2 px-5 py-2.5 bg-white border border-slate-200 rounded-full text-sm font-bold text-slate-700 transition-colors shadow-sm hover:bg-slate-50 hover:border-slate-300">
+        <i data-lucide="printer"
+           class="w-4 h-4 text-slate-600"></i>
+        <span>列印</span>
+    </button>
+
+</div>
         </header>
 
         <div class="p-4 flex-1 overflow-hidden flex flex-col">
@@ -2476,6 +2563,15 @@ main > .p-4,
     </div>
 </div>
 
+<div id="toast"
+     class="no-print fixed bottom-6 right-6 translate-y-20 opacity-0 transition-all duration-300 z-[300] bg-white text-slate-900 px-5 py-3 rounded-xl shadow-2xl font-bold flex items-center space-x-3"
+     role="status"
+     aria-live="polite"
+     aria-atomic="true">
+    <span id="toast-icon" class="text-green-500">✓</span>
+    <span id="toast-msg">操作成功</span>
+</div>
+
     <script>
         // 初始數據定義
         let appData = {
@@ -2568,6 +2664,7 @@ let isAdmin = false;
 let isEditor = false;
 let pendingOpenPermissionSettings = false;
 let isLoggingOut = false;
+let isPerformanceEditMode = false;
 
 /* 預覽載入模式：只暫存在目前頁面，不寫入瀏覽器 IndexedDB */
 let isPreviewDataMode = false;
@@ -2619,6 +2716,14 @@ function getCurrentRole() {
 
 function canEditData() {
     return isAdmin || isEditor;
+}
+
+function canEditPerformanceNow() {
+    return (
+        canEditData() &&
+        isPerformanceEditMode &&
+        !isPreviewDataMode
+    );
 }
 
 function canDeleteData() {
@@ -3145,9 +3250,10 @@ async function loadPreviewJSON(event) {
              *
              * 預覽模式只更新目前頁面變數，不寫入 IndexedDB。
              */
-            isPreviewDataMode = true;
+isPreviewDataMode = true;
+isPerformanceEditMode = false;
 
-            normalizeAllExecutionMonths();
+normalizeAllExecutionMonths();
 
             event.target.value = '';
 
@@ -3201,9 +3307,10 @@ async function importJSON(event) {
              *
              * 密碼與權限設定維持目前瀏覽器原本設定。
              */
-            isPreviewDataMode = false;
+isPreviewDataMode = false;
+isPerformanceEditMode = false;
 
-            normalizeAllExecutionMonths();
+normalizeAllExecutionMonths();
             await persistToStorage();
 
             event.target.value = '';
@@ -4909,8 +5016,12 @@ function switchTab(type, shouldSave = true) {
             const saveBtn = document.getElementById('save-logout-btn');
 const permissionSettingsBtn = document.getElementById('permission-settings-btn');
 
-const canWriteInTable = canEditData() && !isPreviewDataMode;
-const canDeleteInTable = canDeleteData() && !isPreviewDataMode;
+const canWriteInTable =
+    canEditPerformanceNow();
+
+const canDeleteInTable =
+    canDeleteData() &&
+    canWriteInTable;
 
 if (canDeleteInTable) {
     headerAction.classList.remove('hidden');
@@ -4918,12 +5029,31 @@ if (canDeleteInTable) {
     headerAction.classList.add('hidden');
 }
 
-if (canEditData() && !isPreviewDataMode) {
-    adminSection.classList.remove('hidden');
-    saveBtn.classList.remove('hidden');
+if (canWriteInTable) {
+    adminSection.classList.remove(
+        'hidden'
+    );
 } else {
-    adminSection.classList.add('hidden');
-    saveBtn.classList.add('hidden');
+    adminSection.classList.add(
+        'hidden'
+    );
+}
+
+/*
+ * 儲存按鈕只依登入權限顯示，
+ * 完成檢視後仍保持顯示。
+ */
+if (
+    canEditData() &&
+    !isPreviewDataMode
+) {
+    saveBtn.classList.remove(
+        'hidden'
+    );
+} else {
+    saveBtn.classList.add(
+        'hidden'
+    );
 }
 
             appData[type].forEach((item, rowIndex) => {
@@ -5036,6 +5166,15 @@ async function moveRow(direction) {
             }
 
             if (activeSortRowIdx === null) return;
+
+            if (!canEditPerformanceNow()) {
+    showToast(
+        '請先點擊「編輯」進入編輯模式。',
+        'error'
+    );
+
+    return;
+}
             
             // 排序前先儲存目前的輸入值到 Store
             saveCurrentTabData();
@@ -5185,7 +5324,10 @@ function getAttachmentTrashIconHtml() {
 
         row.appendChild(info);
 
-        if (canEditData() && !previewOnly && !isPreviewDataMode) {
+       if (
+    canEditPerformanceNow() &&
+    !previewOnly
+) {
             const removeBtn = document.createElement('button');
             removeBtn.type = 'button';
             removeBtn.className = 'attachment-file-remove';
@@ -5211,7 +5353,12 @@ async function clearCurrentMonthAttachments(event) {
         return;
     }
 
-    if (!activeAttachmentTarget || !canEditData()) return;
+    if (
+    !activeAttachmentTarget ||
+    !canEditPerformanceNow()
+) {
+    return;
+}
     const rowIndex = activeAttachmentTarget.row;
     const monthIndex = activeAttachmentTarget.month;
 
@@ -5248,7 +5395,12 @@ async function removeAttachmentFile(fileIndex) {
         return;
     }
 
-    if (!activeAttachmentTarget || !canEditData()) return;
+    if (
+    !activeAttachmentTarget ||
+    !canEditPerformanceNow()
+) {
+    return;
+}
 
     const rowIndex = activeAttachmentTarget.row;
     const monthIndex = activeAttachmentTarget.month;
@@ -5284,11 +5436,20 @@ async function removeAttachmentFile(fileIndex) {
     openAttachmentModal(rowIndex, monthIndex);
 }
 
-function handleAttachmentClick(rowIndex, monthIndex) {
-    if (canEditData()) {
-        openAttachmentModal(rowIndex, monthIndex);
+function handleAttachmentClick(
+    rowIndex,
+    monthIndex
+) {
+    if (canEditPerformanceNow()) {
+        openAttachmentModal(
+            rowIndex,
+            monthIndex
+        );
     } else {
-        openAttachmentPreviewModal(rowIndex, monthIndex);
+        openAttachmentPreviewModal(
+            rowIndex,
+            monthIndex
+        );
     }
 }
 
@@ -5326,16 +5487,26 @@ function openAttachmentModal(rowIndex, monthIndex) {
 
     const attachmentUploadSection = document.getElementById('attachment-upload-section');
 if (attachmentUploadSection) {
-    attachmentUploadSection.classList.toggle('hidden', !canEditData() || isPreviewDataMode);
+    attachmentUploadSection.classList.toggle(
+    'hidden',
+    !canEditPerformanceNow()
+);
 }
 const adminTools = document.getElementById('attachment-admin-tools');
 if (adminTools) {
-    adminTools.classList.toggle('hidden', !canDeleteData() || isPreviewDataMode);
+    adminTools.classList.toggle(
+    'hidden',
+    !canDeleteData() ||
+    !canEditPerformanceNow()
+);
 }
 
 const clearMonthBtn = document.getElementById('clear-month-attachments-btn');
 if (clearMonthBtn) {
-    clearMonthBtn.classList.toggle('hidden', isPreviewDataMode || !canEditData());
+    clearMonthBtn.classList.toggle(
+    'hidden',
+    !canEditPerformanceNow()
+);
 }
     document.getElementById('attachment-modal').classList.remove('hidden');
 
@@ -5420,11 +5591,14 @@ function resetAttachmentUploadStatus() {
 }
 
 function getAttachmentProcessingLabel(files) {
-    const firstName = files[0]?.name || '附件';
+    const fileCount =
+        Array.isArray(files)
+            ? files.length
+            : 0;
 
-    return files.length > 1
-        ? `正在處理 ${firstName} 等 ${files.length} 個檔案...`
-        : `正在處理 ${firstName}...`;
+    return fileCount > 1
+        ? `正在上傳 ${fileCount} 個附件，請稍候...`
+        : '正在上傳附件，請稍候...';
 }
 
 function processFiles(files) {
@@ -5435,12 +5609,12 @@ function processFiles(files) {
         return;
     }
 
-    if (
-        !activeAttachmentTarget ||
-        !canEditData()
-    ) {
-        return;
-    }
+if (
+    !activeAttachmentTarget ||
+    !canEditPerformanceNow()
+) {
+    return;
+}
 
     /*
      * 防止上一批附件尚未完成時，
@@ -5552,11 +5726,6 @@ function processFiles(files) {
          */
         slot.push(...newFiles);
 
-        setAttachmentUploadStatus(
-            '附件處理完成，正在儲存...',
-            true
-        );
-
         saveCurrentTabData();
 
         /*
@@ -5600,10 +5769,10 @@ function processFiles(files) {
             lucide.createIcons();
         }
 
-        setAttachmentUploadStatus(
-            '附件上傳完成',
-            true
-        );
+setAttachmentUploadStatus(
+    '附件上傳成功',
+    true
+);
 
         /*
          * 短暫顯示完成狀態後，
@@ -6307,7 +6476,12 @@ async function deleteSingleAttachment() {
         return;
     }
 
-    if (!activeAttachmentTarget || !canEditData()) return;
+    if (
+    !activeAttachmentTarget ||
+    !canEditPerformanceNow()
+) {
+    return;
+}
 
     if (!confirm("確定刪除此月份全部附件？")) return;
 
@@ -6335,10 +6509,17 @@ async function batchApplyToFile() {
         return;
     }
 
-    if (!activeAttachmentTarget || !canDeleteData()) {
-        alert('只有管理者可以將附件套用至全年度。');
-        return;
-    }
+if (
+    !activeAttachmentTarget ||
+    !canDeleteData() ||
+    !canEditPerformanceNow()
+) {
+    alert(
+        '只有管理者在編輯模式下可以將附件套用至全年度。'
+    );
+
+    return;
+}
 
     const files = getAttachmentFiles(
         attachmentsStore[currentTab]?.[activeAttachmentTarget.row]?.[activeAttachmentTarget.month]
@@ -6379,10 +6560,17 @@ async function batchClearRowAttachments() {
         return;
     }
 
-    if (!activeAttachmentTarget || !canDeleteData()) {
-        alert('只有管理者可以清除此指標所有附件。');
-        return;
-    }
+if (
+    !activeAttachmentTarget ||
+    !canDeleteData() ||
+    !canEditPerformanceNow()
+) {
+    alert(
+        '只有管理者在編輯模式下可以清除此指標所有附件。'
+    );
+
+    return;
+}
 
     if (!confirm("確定清除全年度？")) return;
 
@@ -6468,16 +6656,112 @@ function scrollRowNearView(rowIndex) {
     });
 }
 
+async function savePerformanceData() {
+    if (!canEditData()) {
+        showToast(
+            '請先登入使用者或管理者權限後再儲存資料。',
+            'error'
+        );
+
+        openLoginModal();
+        return;
+    }
+
+    if (isPreviewDataMode) {
+        showToast(
+            '目前為預覽資料模式，不能儲存正式資料。',
+            'error'
+        );
+
+        return;
+    }
+
+    const saveBtn =
+        document.getElementById(
+            'save-logout-btn'
+        );
+
+    /*
+     * 避免連續點擊造成重複儲存。
+     */
+    if (saveBtn?.disabled) return;
+
+    try {
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.classList.add(
+                'opacity-70',
+                'cursor-wait'
+            );
+        }
+
+        /*
+         * 先將目前畫面欄位同步至記憶體，
+         * 再正式寫入 IndexedDB。
+         */
+        saveCurrentTabData();
+        syncCurrentYearFolderFromGlobals();
+
+        await persistToStorageConfirmed();
+
+        showToast(
+            '資料已儲存，可繼續編輯'
+        );
+
+    } catch (error) {
+        console.error(
+            '資料儲存失敗：',
+            error
+        );
+
+        showToast(
+            '儲存失敗，請確認瀏覽器儲存空間後再試一次。',
+            'error'
+        );
+
+    } finally {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.classList.remove(
+                'opacity-70',
+                'cursor-wait'
+            );
+        }
+    }
+}
+
 function confirmSaveAndLogout() {
     if (isLoggingOut) return;
 
-    if (!confirm("是否儲存並登出系統？")) return;
+    if (
+        !confirm(
+            '是否儲存目前資料並登出系統？'
+        )
+    ) {
+        return;
+    }
 
     isLoggingOut = true;
 
     setTimeout(async () => {
         try {
             await saveAndLogout();
+
+            showToast(
+                '資料已儲存並登出系統'
+            );
+
+        } catch (error) {
+            console.error(
+                '儲存並登出失敗：',
+                error
+            );
+
+            showToast(
+                '儲存失敗，因此目前仍保持登入狀態。',
+                'error'
+            );
+
         } finally {
             isLoggingOut = false;
         }
@@ -6634,10 +6918,11 @@ async function attemptLogin() {
         await setConfig('editor_password', DEFAULT_EDITOR_PASSWORD);
         await setConfig('editor_enabled', true);
 
-        isAdmin = false;
-        isEditor = false;
+isAdmin = false;
+isEditor = false;
+isPerformanceEditMode = false;
 
-        closeLoginModal();
+closeLoginModal();
         updateUIState();
         renderYearFolders();
         renderTable(currentTab);
@@ -6654,9 +6939,10 @@ if (inputPwd === systemPassword) {
      * 已完成管理者驗證，
      * 將目前載入的預覽資料切換為可編輯工作資料。
      */
-    isPreviewDataMode = false;
+isPreviewDataMode = false;
+isPerformanceEditMode = false;
 
-    renderYearFolders();
+renderYearFolders();
         updateUIState();
         renderTable(currentTab);
 
@@ -6684,9 +6970,10 @@ if (editorEnabled && inputPwd === editorPassword) {
      * 已完成使用者驗證，
      * 將目前載入的預覽資料切換為可編輯工作資料。
      */
-    isPreviewDataMode = false;
+isPreviewDataMode = false;
+isPerformanceEditMode = false;
 
-    closeLoginModal();
+closeLoginModal();
         renderYearFolders();
         updateUIState();
         renderTable(currentTab);
@@ -6779,6 +7066,163 @@ document.getElementById('new-admin-password').value = '';
 document.getElementById('new-editor-password').value = '';
 }
 
+function showToast(msg, type = "success") {
+    const toast =
+        document.getElementById('toast');
+
+    const icon =
+        document.getElementById('toast-icon');
+
+    const message =
+        document.getElementById('toast-msg');
+
+    if (!toast || !icon || !message) {
+        alert(msg);
+        return;
+    }
+
+    message.innerText = msg;
+
+    icon.innerText =
+        type === "success"
+            ? "✓"
+            : "✕";
+
+    icon.className =
+        type === "success"
+            ? "text-green-500"
+            : "text-red-500";
+
+    toast.classList.remove(
+        'translate-y-20',
+        'opacity-0'
+    );
+
+    clearTimeout(
+        window.__ospmsToastTimer
+    );
+
+    window.__ospmsToastTimer =
+        setTimeout(() => {
+            toast.classList.add(
+                'translate-y-20',
+                'opacity-0'
+            );
+        }, 3000);
+}
+
+function applyPerformanceEditModeUI() {
+    const editBtn =
+        document.getElementById(
+            'performance-edit-toggle-btn'
+        );
+
+    if (!editBtn) return;
+
+    const showButton =
+        canEditData() &&
+        !isPreviewDataMode;
+
+    if (!showButton) {
+        isPerformanceEditMode = false;
+    }
+
+    editBtn.classList.toggle(
+        'hidden',
+        !showButton
+    );
+
+    editBtn.classList.toggle(
+        'is-view',
+        !isPerformanceEditMode
+    );
+
+    editBtn.classList.toggle(
+        'is-editing',
+        isPerformanceEditMode
+    );
+
+    const iconName =
+        isPerformanceEditMode
+            ? 'circle-check-big'
+            : 'square-pen';
+
+    const label =
+        isPerformanceEditMode
+            ? '檢視'
+            : '編輯';
+
+    editBtn.innerHTML = `
+        <i data-lucide="${iconName}"
+           class="w-4 h-4"></i>
+        <span>${label}</span>
+    `;
+
+    editBtn.title =
+        isPerformanceEditMode
+            ? '結束編輯並切換為檢視模式'
+            : '進入績效報表編輯模式';
+
+    editBtn.setAttribute(
+        'aria-label',
+        editBtn.title
+    );
+}
+
+function togglePerformanceEditMode() {
+    if (!canEditData()) {
+        showToast(
+            '請先登入使用者或管理者權限後再進入編輯模式。',
+            'error'
+        );
+
+        openLoginModal();
+        return;
+    }
+
+    if (isPreviewDataMode) {
+        showToast(
+            '目前為預覽資料模式，請先正式載入資料後再進入編輯模式。',
+            'error'
+        );
+
+        return;
+    }
+
+    const scrollState =
+        getTableScrollState();
+
+    /*
+     * 從編輯切換至完成檢視前，
+     * 先將畫面內容同步回記憶體。
+     */
+    if (isPerformanceEditMode) {
+        saveCurrentTabData();
+        syncCurrentYearFolderFromGlobals();
+    }
+
+    isPerformanceEditMode =
+        !isPerformanceEditMode;
+
+    closeAllExecutionMonthsMenus();
+
+    renderTable(currentTab);
+
+    restoreTableScrollState(
+        scrollState
+    );
+
+    applyPerformanceEditModeUI();
+
+    lucide.createIcons();
+
+    showToast(
+        isPerformanceEditMode
+            ? '已進入編輯模式'
+            : '已切換為檢視模式'
+    );
+}
+
 function updateUIState() {
     const icon = document.getElementById('auth-icon');
     const saveBtn = document.getElementById('save-logout-btn');
@@ -6821,19 +7265,21 @@ function updateUIState() {
         permissionSettingsBtn.classList.toggle('flex', canChangePassword());
     }
 
-    updateJsonActionButtons();
-    lucide.createIcons();
+applyPerformanceEditModeUI();
+updateJsonActionButtons();
+lucide.createIcons();
 }
 
 async function saveAndLogout() {
     if (canEditData() && !isPreviewDataMode) {
         saveCurrentTabData();
         syncCurrentYearFolderFromGlobals();
-        await persistToStorage();
+        await persistToStorageConfirmed();
     }
 
-    isAdmin = false;
-    isEditor = false;
+isAdmin = false;
+isEditor = false;
+isPerformanceEditMode = false;
 
 const scrollState = getTableScrollState();
 
@@ -6859,6 +7305,15 @@ function addNewRow() {
         return;
     }
 
+    if (!canEditPerformanceNow()) {
+    showToast(
+        '請先點擊「編輯」進入編輯模式。',
+        'error'
+    );
+
+    return;
+}
+
     saveCurrentTabData();
 
     appData[currentTab].push({
@@ -6879,12 +7334,22 @@ async function deleteRow(idx) {
         return;
     }
 
-    if (!canDeleteData()) {
-        alert('只有管理者可以刪除績效指標項目。');
-        return;
-    }
+if (!canDeleteData()) {
+    alert(
+        '只有管理者可以刪除績效指標項目。'
+    );
+    return;
+}
 
-    if (!confirm("確定刪除？")) return;
+if (!canEditPerformanceNow()) {
+    showToast(
+        '請先點擊「編輯」進入編輯模式。',
+        'error'
+    );
+    return;
+}
+
+if (!confirm("確定刪除？")) return;
 
     // 刪除前先保存目前畫面上的輸入內容。
     saveCurrentTabData();

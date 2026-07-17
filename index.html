@@ -1406,10 +1406,11 @@ body.file-preview-open {
     html,
     body {
         width: 100%;
-        height: 100dvh;
-        min-height: 100dvh;
+        height: 100svh !important;
+        min-height: 100svh !important;
         overflow: hidden;
         overscroll-behavior: none;
+        box-sizing: border-box;
     }
 
     body {
@@ -1420,22 +1421,31 @@ body.file-preview-open {
     }
 
     main {
-        height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        flex: 1 1 auto;
+        height: auto !important;
         min-height: 0;
         overflow: hidden;
     }
 
-    header {
-        flex-shrink: 0;
-        padding: 12px 12px !important;
-        gap: 10px;
-        align-items: flex-start !important;
-        flex-wrap: wrap;
-        background: rgba(255, 255, 255, 0.96) !important;
-        backdrop-filter: blur(10px);
-        position: relative;
-        z-index: 50;
-    }
+header {
+    flex-shrink: 0;
+    padding: 12px 12px !important;
+    gap: 10px;
+    align-items: flex-start !important;
+    flex-wrap: wrap;
+    background: rgba(255, 255, 255, 0.96) !important;
+    backdrop-filter: blur(10px);
+
+    position: relative;
+    z-index: 70;
+
+    /*
+     * 建立獨立的顯示層，
+     * 避免表格捲動區或其他合成圖層蓋住 header。
+     */
+    isolation: isolate;
+    transform: translateZ(0);
+}
 
     #current-category-title {
         font-size: 16px !important;
@@ -1474,17 +1484,21 @@ body.file-preview-open {
         overflow: hidden;
     }
 
-    .table-container {
-        width: 100%;
-        max-width: 100%;
-        flex: 1 1 auto;
-        height: auto !important;
-        min-height: 0;
-        margin: 0 auto;
-        border-radius: 12px;
-        overflow: auto;
-        -webkit-overflow-scrolling: touch;
-    }
+.table-container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 100%;
+    flex: 1 1 auto;
+    height: auto !important;
+    min-height: 0;
+    margin: 0 auto;
+    border-radius: 12px;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-x pan-y;
+}
 
     #main-table {
         min-width: 1442px;
@@ -1532,7 +1546,11 @@ body.file-preview-open {
         top: env(safe-area-inset-top);
         left: 0;
         width: min(82vw, 320px);
-        height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        height: calc(
+    100svh -
+    env(safe-area-inset-top) -
+    env(safe-area-inset-bottom)
+);
         z-index: 90;
         transform: translateX(-100%);
         transition: transform 0.25s ease;
@@ -1543,23 +1561,36 @@ body.file-preview-open {
         transform: translateX(0);
     }
 
-    .mobile-sidebar-backdrop {
-        position: fixed;
-        inset: 0;
-        z-index: 80;
-        background: rgba(15, 23, 42, 0.48);
-        backdrop-filter: blur(2px);
-    }
+.mobile-sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    background: rgba(15, 23, 42, 0.48);
+    backdrop-filter: blur(2px);
 
-    body.mobile-sidebar-open .mobile-sidebar-backdrop {
-        display: block;
-    }
+    /*
+     * 側欄尚未開啟時，
+     * 遮罩不得攔截任何點擊。
+     */
+    pointer-events: none;
+}
 
-    .mobile-sidebar-toggle {
-        display: inline-flex !important;
-        width: 46px;
-        height: 46px;
-    }
+body.mobile-sidebar-open .mobile-sidebar-backdrop {
+    display: block;
+    pointer-events: auto;
+}
+
+.mobile-sidebar-toggle {
+    position: relative;
+    z-index: 75;
+
+    display: inline-flex !important;
+    width: 46px;
+    height: 46px;
+
+    pointer-events: auto;
+    touch-action: manipulation;
+}
 
     main {
         width: 100vw !important;
@@ -1672,7 +1703,11 @@ body.file-preview-open {
 /* 手機橫式：保留左側欄，但縮小 header，避免上方被切掉 */
 @media screen and (max-width: 900px) and (orientation: landscape) {
     .sidebar {
-        height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+                height: calc(
+            100svh -
+            env(safe-area-inset-top) -
+            env(safe-area-inset-bottom)
+        );
     }
 
     body {
@@ -3340,7 +3375,9 @@ normalizeAllExecutionMonths();
             switchTab(currentTab, false);
             updateUIState();
 
-            alert('預覽資料載入成功！');
+            showToast(
+    '預覽資料載入成功！'
+);
 
         } catch (err) {
             console.error(err);
@@ -8015,16 +8052,21 @@ document.addEventListener('keydown', function(event) {
     }
 });        
 
+let mobileViewportResizeTimer = null;
+
+function stabilizeMobileViewportLayout() {
+    document.body.style.removeProperty(
+        'height'
+    );
+
+    if (!isMobilePortraitView()) {
+        closeMobileSidebar();
+    }
+}
+
 window.addEventListener(
     'resize',
     function() {
-        /*
-         * 手機附件預覽期間，雙指縮放可能觸發
-         * viewport resize。
-         *
-         * 此時不可改寫 body 高度，避免整頁重排、
-         * 白畫面或手機瀏覽器重新載入。
-         */
         if (
             document.body.classList.contains(
                 'file-preview-open'
@@ -8033,24 +8075,36 @@ window.addEventListener(
             return;
         }
 
-        if (!isMobilePortraitView()) {
-            closeMobileSidebar();
-        }
-
-        requestAnimationFrame(
-            function() {
-                document.body.style.height =
-                    window.innerHeight + 'px';
-
-                setTimeout(
-                    function() {
-                        document.body.style.height =
-                            '';
-                    },
-                    80
-                );
-            }
+        clearTimeout(
+            mobileViewportResizeTimer
         );
+
+        mobileViewportResizeTimer =
+            setTimeout(
+                stabilizeMobileViewportLayout,
+                120
+            );
+    },
+    {
+        passive: true
+    }
+);
+
+window.addEventListener(
+    'orientationchange',
+    function() {
+        clearTimeout(
+            mobileViewportResizeTimer
+        );
+
+        mobileViewportResizeTimer =
+            setTimeout(
+                stabilizeMobileViewportLayout,
+                180
+            );
+    },
+    {
+        passive: true
     }
 );
 

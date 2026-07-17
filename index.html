@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; overflow: hidden; }
@@ -1213,7 +1214,7 @@
     background-position: 0 0, 0 13px, 13px -13px, -13px 0;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
-    touch-action: pan-x pan-y;
+    touch-action: manipulation;
 }
 
 #file-preview-stage {
@@ -3285,6 +3286,28 @@ function applyImportedPerformanceData(imported) {
     }
 }
 
+function releaseImportedPerformancePayload(
+    imported
+) {
+    if (
+        !imported ||
+        !Array.isArray(
+            imported.year_folders
+        )
+    ) {
+        return;
+    }
+
+    /*
+     * 新版資料已由 year_folders 接管。
+     * 清除舊格式相容副本的暫時參照，
+     * 降低手機記憶體壓力。
+     */
+    imported.attachments = null;
+    imported.data_store = null;
+    imported.base_data = null;
+}
+
 async function loadPreviewJSON(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -3296,6 +3319,7 @@ async function loadPreviewJSON(event) {
             const imported = JSON.parse(e.target.result);
 
             applyImportedPerformanceData(imported);
+releaseImportedPerformancePayload(imported);
 
             /*
              * 預覽載入不處理：
@@ -3411,6 +3435,7 @@ async function importJSON(event) {
             }
 
             applyImportedPerformanceData(imported);
+releaseImportedPerformancePayload(imported);
 
             /*
              * 正式載入 / 匯入不處理：
@@ -6318,22 +6343,22 @@ function getFilePreviewScaleLimits() {
 }
 
 function setFilePreviewScale(nextScale) {
-    const limits =
-        getFilePreviewScaleLimits();
-
     filePreviewScale =
-        clampPreviewScale(
-            nextScale,
-            limits.min,
-            limits.max
-        );
+        clampPreviewScale(nextScale);
 
     if (filePreviewMode === 'image') {
         applyPreviewImageScale();
-    } else if (filePreviewMode === 'pdf') {
+
+    } else if (
+        filePreviewMode === 'pdf'
+    ) {
         schedulePreviewPdfScaleApply();
-    } else if (filePreviewMode === 'pdf-frame') {
+
+    } else if (
+        filePreviewMode === 'pdf-frame'
+    ) {
         applyPreviewFrameScale();
+
     } else {
         updateFilePreviewZoomLabel();
     }
@@ -6376,43 +6401,16 @@ function resetPreviewImageZoom() {
 }
 
 function ensureFilePreviewGestures() {
-    if (filePreviewGesturesReady) {
-        return;
-    }
+    if (filePreviewGesturesReady) return;
 
     const { body } =
         getFilePreviewElements();
 
-    if (!body) {
-        return;
-    }
+    if (!body) return;
 
-    /*
-     * 阻止 iPhone Safari 使用瀏覽器原生頁面縮放，
-     * 改由系統自己的附件縮放邏輯接管。
-     */
-    [
-        'gesturestart',
-        'gesturechange',
-        'gestureend'
-    ].forEach(eventName => {
-        body.addEventListener(
-            eventName,
-            event => {
-                event.preventDefault();
-            },
-            {
-                passive: false
-            }
-        );
-    });
-
-    /*
-     * 桌機 Ctrl / Command + 滾輪縮放。
-     */
     body.addEventListener(
         'wheel',
-        event => {
+        function(event) {
             if (
                 !event.ctrlKey &&
                 !event.metaKey
@@ -6433,19 +6431,14 @@ function ensureFilePreviewGestures() {
         }
     );
 
-    /*
-     * 手機雙指縮放開始。
-     */
     body.addEventListener(
         'touchstart',
-        event => {
+        function(event) {
             if (
                 event.touches.length !== 2
             ) {
                 return;
             }
-
-            event.preventDefault();
 
             filePreviewTouchDistance =
                 getTouchDistance(
@@ -6456,16 +6449,13 @@ function ensureFilePreviewGestures() {
                 filePreviewScale;
         },
         {
-            passive: false
+            passive: true
         }
     );
 
-    /*
-     * 手機雙指縮放進行中。
-     */
     body.addEventListener(
         'touchmove',
-        event => {
+        function(event) {
             if (
                 event.touches.length !== 2 ||
                 !filePreviewTouchDistance
@@ -6494,30 +6484,18 @@ function ensureFilePreviewGestures() {
         }
     );
 
-    const resetTouchZoom = event => {
-        if (
-            event.touches.length < 2
-        ) {
-            filePreviewTouchDistance = null;
-
-            filePreviewTouchScale =
-                filePreviewScale;
-        }
-    };
-
     body.addEventListener(
         'touchend',
-        resetTouchZoom,
-        {
-            passive: true
-        }
-    );
+        function(event) {
+            if (
+                event.touches.length < 2
+            ) {
+                filePreviewTouchDistance =
+                    null;
 
-    body.addEventListener(
-        'touchcancel',
-        resetTouchZoom,
-        {
-            passive: true
+                filePreviewTouchScale =
+                    filePreviewScale;
+            }
         }
     );
 
@@ -6569,26 +6547,13 @@ async function renderPdfPreviewPages() {
     const renderSerial = ++filePreviewPdfRenderSerial;
     const pdf = filePreviewPdfDocument;
     const scale = filePreviewScale;
-    const isMobileRender =
-    window.matchMedia(
-        '(max-width: 900px)'
-    ).matches;
-
-/*
- * 手機固定以 1 倍像素密度建立 PDF Canvas。
- * 後續放大只調整 Canvas 顯示尺寸，
- * 不會每次縮放都重新建立大型 Canvas。
- */
-const outputScale =
-    isMobileRender
-        ? 1
-        : Math.min(
-            Math.max(
-                window.devicePixelRatio || 1,
-                1.5
-            ),
-            2.5
-        );
+const outputScale = Math.min(
+    Math.max(
+        window.devicePixelRatio || 1,
+        1.5
+    ),
+    2.5
+);
 
     pdfPages.innerHTML = '';
     pdfPages.style.gap = '';
@@ -8050,18 +8015,44 @@ document.addEventListener('keydown', function(event) {
     }
 });        
 
-window.addEventListener('resize', function() {
-    if (!isMobilePortraitView()) {
-        closeMobileSidebar();
-    }
+window.addEventListener(
+    'resize',
+    function() {
+        /*
+         * 手機附件預覽期間，雙指縮放可能觸發
+         * viewport resize。
+         *
+         * 此時不可改寫 body 高度，避免整頁重排、
+         * 白畫面或手機瀏覽器重新載入。
+         */
+        if (
+            document.body.classList.contains(
+                'file-preview-open'
+            )
+        ) {
+            return;
+        }
 
-    requestAnimationFrame(function() {
-        document.body.style.height = window.innerHeight + 'px';
-        setTimeout(function() {
-            document.body.style.height = '';
-        }, 80);
-    });
-});
+        if (!isMobilePortraitView()) {
+            closeMobileSidebar();
+        }
+
+        requestAnimationFrame(
+            function() {
+                document.body.style.height =
+                    window.innerHeight + 'px';
+
+                setTimeout(
+                    function() {
+                        document.body.style.height =
+                            '';
+                    },
+                    80
+                );
+            }
+        );
+    }
+);
 
         
 document.addEventListener('click', function(event) {

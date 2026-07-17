@@ -2121,19 +2121,40 @@ main > .p-4,
     <button id="export-json-btn"
             onclick="exportJSON()"
             class="hidden bg-slate-700 text-slate-200 py-2 rounded-lg text-[11px] font-bold flex items-center justify-center space-x-1 hover:bg-slate-600 transition">
-        <i data-lucide="file-output" class="w-3 h-3"></i>
+        <i data-lucide="file-output"
+           class="w-3 h-3"></i>
         <span>匯出資料</span>
     </button>
 
     <button id="import-json-btn"
             onclick="handleJsonLoadButton()"
             class="bg-slate-700 text-slate-200 py-2 rounded-lg text-[11px] font-bold flex items-center justify-center space-x-1 hover:bg-slate-600 transition">
-        <i data-lucide="file-search" class="w-3 h-3"></i>
+        <i data-lucide="file-search"
+           class="w-3 h-3"></i>
         <span>載入預覽</span>
     </button>
 
-    <input type="file" id="preview-json-input" class="hidden" accept=".json" onchange="loadPreviewJSON(event)">
-    <input type="file" id="import-input" class="hidden" accept=".json" onchange="importJSON(event)">
+    <button id="exit-preview-btn"
+            type="button"
+            onclick="confirmExitPreview()"
+            disabled
+            class="bg-slate-700 text-slate-200 py-2 rounded-lg text-[11px] font-bold flex items-center justify-center space-x-1 hover:bg-slate-600 transition disabled:bg-slate-800 disabled:text-slate-600 disabled:cursor-default disabled:hover:bg-slate-800">
+        <i data-lucide="eye-off"
+           class="w-3 h-3"></i>
+        <span>退出預覽</span>
+    </button>
+
+    <input type="file"
+           id="preview-json-input"
+           class="hidden"
+           accept=".json"
+           onchange="loadPreviewJSON(event)">
+
+    <input type="file"
+           id="import-input"
+           class="hidden"
+           accept=".json"
+           onchange="importJSON(event)">
 </div>
 
             <button class="w-full bg-blue-600 text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center space-x-2 hover:bg-blue-500 transition" onclick="exportFullReport()">
@@ -3308,6 +3329,64 @@ normalizeAllExecutionMonths();
     reader.readAsText(file);
 }
 
+function clearPreviewDataAndRestoreTemplate() {
+    /*
+     * 只清除目前頁面中的外部預覽資料，
+     * 不刪除或覆蓋 IndexedDB 內既有正式資料。
+     */
+    const cleanYear =
+        new Date().getFullYear();
+
+    const cleanFolder =
+        createYearFolder(cleanYear);
+
+    yearFolders = [
+        cleanFolder
+    ];
+
+    currentYearFolderId =
+        cleanFolder.id;
+
+    syncGlobalsFromCurrentYearFolder();
+
+    isPreviewDataMode = false;
+    isPerformanceEditMode = false;
+
+    closeFilePreviewModal();
+    closeAttachmentModal();
+
+    normalizeAllExecutionMonths();
+
+    renderYearFolders();
+
+    switchTab(
+        currentTab,
+        false
+    );
+
+    updateUIState();
+}
+
+function confirmExitPreview() {
+    if (!isPreviewDataMode) {
+        return;
+    }
+
+    if (
+        !confirm(
+            '確定退出預覽？目前預覽資料將被清除。'
+        )
+    ) {
+        return;
+    }
+
+    clearPreviewDataAndRestoreTemplate();
+
+    showToast(
+        '已退出預覽'
+    );
+}
+
 async function importJSON(event) {
     if (!canImportData()) {
         alert('請先登入使用者或管理者權限後再載入資料。');
@@ -3367,33 +3446,90 @@ normalizeAllExecutionMonths();
 }
 
 function updateJsonActionButtons() {
-    const exportJsonBtn = document.getElementById('export-json-btn');
-    const importJsonBtn = document.getElementById('import-json-btn');
+    const exitPreviewBtn =
+        document.getElementById(
+            'exit-preview-btn'
+        );
+
+    const exportJsonBtn =
+        document.getElementById(
+            'export-json-btn'
+        );
+
+    const importJsonBtn =
+        document.getElementById(
+            'import-json-btn'
+        );
+
+    if (exitPreviewBtn) {
+        const isViewer =
+            !canEditData();
+
+        /*
+         * 只有預覽者顯示退出預覽。
+         * 管理者與使用者改顯示匯出資料。
+         */
+        exitPreviewBtn.classList.toggle(
+            'hidden',
+            !isViewer
+        );
+
+        /*
+         * 尚未載入預覽時：
+         * 按鈕暗色且無法點擊。
+         *
+         * 載入預覽後：
+         * 按鈕恢復可用。
+         */
+        exitPreviewBtn.disabled =
+            !isPreviewDataMode;
+
+        exitPreviewBtn.title =
+            isPreviewDataMode
+                ? '退出目前預覽資料'
+                : '尚未載入預覽資料';
+    }
 
     if (exportJsonBtn) {
-        exportJsonBtn.classList.toggle('hidden', !canExportReviewData());
+        exportJsonBtn.classList.toggle(
+            'hidden',
+            !canExportReviewData()
+        );
 
-if (isAdmin) {
-    exportJsonBtn.innerHTML = '<i data-lucide="file-output" class="w-3 h-3"></i><span>匯出資料</span>';
-    exportJsonBtn.title = '匯出系統資料';
-} else if (isEditor) {
-    exportJsonBtn.innerHTML = '<i data-lucide="file-output" class="w-3 h-3"></i><span>匯出資料</span>';
-    exportJsonBtn.title = '匯出系統資料';
-}
+        if (isAdmin || isEditor) {
+            exportJsonBtn.innerHTML =
+                '<i data-lucide="file-output" class="w-3 h-3"></i><span>匯出資料</span>';
+
+            exportJsonBtn.title =
+                '匯出系統資料';
+        }
     }
 
     if (importJsonBtn) {
-        importJsonBtn.classList.remove('hidden');
+        importJsonBtn.classList.remove(
+            'hidden'
+        );
 
         if (isAdmin) {
-            importJsonBtn.innerHTML = '<i data-lucide="file-input" class="w-3 h-3"></i><span>匯入資料</span>';
-            importJsonBtn.title = '載入 JSON 資料';
+            importJsonBtn.innerHTML =
+                '<i data-lucide="file-input" class="w-3 h-3"></i><span>匯入資料</span>';
+
+            importJsonBtn.title =
+                '載入 JSON 資料';
+
         } else if (isEditor) {
-            importJsonBtn.innerHTML = '<i data-lucide="file-input" class="w-3 h-3"></i><span>載入資料</span>';
-            importJsonBtn.title = '載入 JSON 資料';
+            importJsonBtn.innerHTML =
+                '<i data-lucide="file-input" class="w-3 h-3"></i><span>載入資料</span>';
+
+            importJsonBtn.title =
+                '載入 JSON 資料';
+
         } else {
-            importJsonBtn.innerHTML = '<i data-lucide="file-search" class="w-3 h-3"></i><span>載入預覽</span>';
-            importJsonBtn.title = '載入 JSON 預覽資料';
+            importJsonBtn.innerHTML =
+                '<i data-lucide="file-search" class="w-3 h-3"></i><span>載入預覽</span>';
+
+            importJsonBtn.title =
+                '載入 JSON 預覽資料';
         }
     }
 
@@ -6167,8 +6303,8 @@ function getFilePreviewScaleLimits() {
     }
 
     /*
-     * 手機最多約為適合畫面的 2.5 倍，
-     * 並限制絕對比例不超過 2。
+     * 手機最小縮至適合畫面的 50%。
+     * 手機最大放至適合畫面的 200%。
      */
     return {
         min: Math.max(
@@ -6176,13 +6312,8 @@ function getFilePreviewScaleLimits() {
             baseScale * 0.5
         ),
 
-        max: Math.max(
-            baseScale,
-            Math.min(
-                2,
-                baseScale * 2.5
-            )
-        )
+        max:
+            baseScale * 2
     };
 }
 
@@ -6245,52 +6376,150 @@ function resetPreviewImageZoom() {
 }
 
 function ensureFilePreviewGestures() {
-    if (filePreviewGesturesReady) return;
-    const { body } = getFilePreviewElements();
-    if (!body) return;
+    if (filePreviewGesturesReady) {
+        return;
+    }
 
+    const { body } =
+        getFilePreviewElements();
+
+    if (!body) {
+        return;
+    }
+
+    /*
+     * 阻止 iPhone Safari 使用瀏覽器原生頁面縮放，
+     * 改由系統自己的附件縮放邏輯接管。
+     */
     [
-    'gesturestart',
-    'gesturechange',
-    'gestureend'
-].forEach(eventName => {
+        'gesturestart',
+        'gesturechange',
+        'gestureend'
+    ].forEach(eventName => {
+        body.addEventListener(
+            eventName,
+            event => {
+                event.preventDefault();
+            },
+            {
+                passive: false
+            }
+        );
+    });
+
+    /*
+     * 桌機 Ctrl / Command + 滾輪縮放。
+     */
     body.addEventListener(
-        eventName,
+        'wheel',
         event => {
+            if (
+                !event.ctrlKey &&
+                !event.metaKey
+            ) {
+                return;
+            }
+
             event.preventDefault();
+
+            zoomFilePreviewBy(
+                event.deltaY < 0
+                    ? 0.12
+                    : -0.12
+            );
         },
         {
             passive: false
         }
     );
-});
 
-    body.addEventListener('wheel', function(event) {
-        if (!event.ctrlKey && !event.metaKey) return;
-        event.preventDefault();
-        zoomFilePreviewBy(event.deltaY < 0 ? 0.12 : -0.12);
-    }, { passive: false });
+    /*
+     * 手機雙指縮放開始。
+     */
+    body.addEventListener(
+        'touchstart',
+        event => {
+            if (
+                event.touches.length !== 2
+            ) {
+                return;
+            }
 
-    body.addEventListener('touchstart', function(event) {
-        if (event.touches.length !== 2) return;
-        filePreviewTouchDistance = getTouchDistance(event.touches);
-        filePreviewTouchScale = filePreviewScale;
-    }, { passive: true });
+            event.preventDefault();
 
-    body.addEventListener('touchmove', function(event) {
-        if (event.touches.length !== 2 || !filePreviewTouchDistance) return;
-        event.preventDefault();
-        const currentDistance = getTouchDistance(event.touches);
-        const ratio = currentDistance / filePreviewTouchDistance;
-        setFilePreviewScale(filePreviewTouchScale * ratio);
-    }, { passive: false });
+            filePreviewTouchDistance =
+                getTouchDistance(
+                    event.touches
+                );
 
-    body.addEventListener('touchend', function(event) {
-        if (event.touches.length < 2) {
-            filePreviewTouchDistance = null;
-            filePreviewTouchScale = filePreviewScale;
+            filePreviewTouchScale =
+                filePreviewScale;
+        },
+        {
+            passive: false
         }
-    });
+    );
+
+    /*
+     * 手機雙指縮放進行中。
+     */
+    body.addEventListener(
+        'touchmove',
+        event => {
+            if (
+                event.touches.length !== 2 ||
+                !filePreviewTouchDistance
+            ) {
+                return;
+            }
+
+            event.preventDefault();
+
+            const currentDistance =
+                getTouchDistance(
+                    event.touches
+                );
+
+            const ratio =
+                currentDistance /
+                filePreviewTouchDistance;
+
+            setFilePreviewScale(
+                filePreviewTouchScale *
+                ratio
+            );
+        },
+        {
+            passive: false
+        }
+    );
+
+    const resetTouchZoom = event => {
+        if (
+            event.touches.length < 2
+        ) {
+            filePreviewTouchDistance = null;
+
+            filePreviewTouchScale =
+                filePreviewScale;
+        }
+    };
+
+    body.addEventListener(
+        'touchend',
+        resetTouchZoom,
+        {
+            passive: true
+        }
+    );
+
+    body.addEventListener(
+        'touchcancel',
+        resetTouchZoom,
+        {
+            passive: true
+        }
+    );
 
     filePreviewGesturesReady = true;
 }
@@ -6340,7 +6569,26 @@ async function renderPdfPreviewPages() {
     const renderSerial = ++filePreviewPdfRenderSerial;
     const pdf = filePreviewPdfDocument;
     const scale = filePreviewScale;
-    const outputScale = Math.min(Math.max(window.devicePixelRatio || 1, 1.5), 2.5);
+    const isMobileRender =
+    window.matchMedia(
+        '(max-width: 900px)'
+    ).matches;
+
+/*
+ * 手機固定以 1 倍像素密度建立 PDF Canvas。
+ * 後續放大只調整 Canvas 顯示尺寸，
+ * 不會每次縮放都重新建立大型 Canvas。
+ */
+const outputScale =
+    isMobileRender
+        ? 1
+        : Math.min(
+            Math.max(
+                window.devicePixelRatio || 1,
+                1.5
+            ),
+            2.5
+        );
 
     pdfPages.innerHTML = '';
     pdfPages.style.gap = '';
@@ -6402,18 +6650,18 @@ async function renderPdfPreviewPages() {
 }
 
 async function openPdfPreview(file) {
-
-const isMobilePdfPreview =
-    window.matchMedia(
-        '(max-width: 900px)'
-    ).matches;
-
-if (isMobilePdfPreview) {
-    openPdfPreviewFallback(file);
-    return;
-}
-
-    const { body, frame, image, pdfPages, toolbar } = getFilePreviewElements();
+    /*
+     * 桌機與手機都使用 PDF.js 預覽。
+     * 手機會在 PDF Canvas 建立時降低像素密度，
+     * 以避免大量記憶體占用。
+     */
+    const {
+        body,
+        frame,
+        image,
+        pdfPages,
+        toolbar
+    } = getFilePreviewElements();
 
     filePreviewMode = 'pdf';
     const previewSerial = filePreviewPdfRenderSerial;
@@ -6888,6 +7136,18 @@ function handleAuthClick() {
         return;
     }
 
+    if (isPreviewDataMode) {
+        if (
+            !confirm(
+                '登入前將先退出預覽並清除目前預覽資料，是否繼續？'
+            )
+        ) {
+            return;
+        }
+
+        clearPreviewDataAndRestoreTemplate();
+    }
+
     openLoginModal();
 }
 
@@ -7046,32 +7306,17 @@ closeLoginModal();
     }
 
 if (inputPwd === systemPassword) {
-isAdmin = true;
-isEditor = true;
+    isAdmin = true;
+    isEditor = true;
+    isPerformanceEditMode = false;
 
-/*
- * 若目前畫面是載入預覽的資料，
- * 登入管理者後將其切換為可編輯工作資料。
- *
- * 此時只切換畫面狀態，
- * 不會自動寫入 IndexedDB。
- * 只有點擊上方「儲存」才會正式保存。
- */
-const wasPreviewMode =
-    isPreviewDataMode;
+    renderYearFolders();
+    updateUIState();
+    renderTable(currentTab);
 
-isPreviewDataMode = false;
-isPerformanceEditMode = false;
-
-renderYearFolders();
-updateUIState();
-renderTable(currentTab);
-
-showToast(
-    wasPreviewMode
-        ? '已切換為管理者模式，預覽資料現在可編輯；尚未儲存。'
-        : '已進入管理者模式'
-);
+    showToast(
+        '已進入管理者模式'
+    );
 
 if (pendingOpenPermissionSettings) {
             pendingOpenPermissionSettings = false;
@@ -7087,35 +7332,25 @@ if (pendingOpenPermissionSettings) {
         return;
     }
 
-if (editorEnabled && inputPwd === editorPassword) {
+if (
+    editorEnabled &&
+    inputPwd === editorPassword
+) {
     pendingOpenPermissionSettings = false;
 
-isAdmin = false;
-isEditor = true;
+    isAdmin = false;
+    isEditor = true;
+    isPerformanceEditMode = false;
 
-/*
- * 若目前畫面是載入預覽的資料，
- * 登入使用者後將其切換為可編輯工作資料。
- *
- * 此時不會自動寫入 IndexedDB，
- * 只有點擊上方「儲存」才會正式保存。
- */
-const wasPreviewMode =
-    isPreviewDataMode;
+    closeLoginModal();
 
-isPreviewDataMode = false;
-isPerformanceEditMode = false;
+    renderYearFolders();
+    updateUIState();
+    renderTable(currentTab);
 
-closeLoginModal();
-renderYearFolders();
-updateUIState();
-renderTable(currentTab);
-
-showToast(
-    wasPreviewMode
-        ? '已切換為使用者模式，預覽資料現在可編輯；尚未儲存。'
-        : '已進入使用者模式'
-);
+    showToast(
+        '已進入使用者模式'
+    );
 setTimeout(function() {
             window.dispatchEvent(new Event('resize'));
         }, 100);
@@ -7835,7 +8070,92 @@ document.addEventListener('click', function(event) {
     }
 });
 
-window.onload = () => { loadFromStorage(); };
+function removeButtonTitleTooltips(
+    root = document
+) {
+    /*
+     * 只移除按鈕的原生 title 提示，
+     * 不影響 aria-label 無障礙說明。
+     */
+    if (
+        root instanceof Element &&
+        root.matches('button[title]')
+    ) {
+        root.removeAttribute('title');
+    }
+
+    if (root.querySelectorAll) {
+        root
+            .querySelectorAll(
+                'button[title]'
+            )
+            .forEach(button => {
+                button.removeAttribute(
+                    'title'
+                );
+            });
+    }
+}
+
+const buttonTitleObserver =
+    new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+            /*
+             * JavaScript 動態設定 title 時，
+             * 立即移除。
+             */
+            if (
+                mutation.type ===
+                    'attributes' &&
+                mutation.attributeName ===
+                    'title' &&
+                mutation.target instanceof
+                    HTMLButtonElement
+            ) {
+                mutation.target.removeAttribute(
+                    'title'
+                );
+            }
+
+            /*
+             * 表格、年度資料夾或附件清單
+             * 新增按鈕時同步移除 title。
+             */
+            mutation.addedNodes.forEach(
+                node => {
+                    if (
+                        node.nodeType ===
+                        Node.ELEMENT_NODE
+                    ) {
+                        removeButtonTitleTooltips(
+                            node
+                        );
+                    }
+                }
+            );
+        });
+    });
+
+function initButtonTitleRemoval() {
+    removeButtonTitleTooltips();
+
+    buttonTitleObserver.observe(
+        document.body,
+        {
+            subtree: true,
+            childList: true,
+            attributes: true,
+            attributeFilter: [
+                'title'
+            ]
+        }
+    );
+}
+
+window.onload = () => {
+    initButtonTitleRemoval();
+    loadFromStorage();
+};
     </script>
 </body>
 </html>

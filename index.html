@@ -1213,7 +1213,7 @@
     background-position: 0 0, 0 13px, 13px -13px, -13px 0;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
-    touch-action: manipulation;
+    touch-action: pan-x pan-y;
 }
 
 #file-preview-stage {
@@ -2994,26 +2994,69 @@ initDragAndDrop();
             }
         }
 
-        async function persistToStorage() {
-            try {
-                const db = await openDB();
-                const transaction = db.transaction(STORE_KEY, "readwrite");
-                const store = transaction.objectStore(STORE_KEY);
-syncCurrentYearFolderFromGlobals();
+function isMobileStorageEnvironment() {
+    return window.matchMedia(
+        '(max-width: 900px)'
+    ).matches;
+}
 
-store.put(yearFolders, 'ospms_year_folders');
-store.put(currentYearFolderId, 'ospms_current_year_folder_id');
+function writePerformanceDataToStore(store) {
+    syncCurrentYearFolderFromGlobals();
 
-// 保留舊格式備份，不影響新年度分頁
-store.put(tableDataStore, 'ospms_data_store');
-store.put(attachmentsStore, 'ospms_attachments');
-store.put({
-    version: APP_DATA_VERSION,
-    data: appData
-}, 'ospms_base_data');
-                return new Promise((resolve) => { transaction.oncomplete = () => resolve(); });
-            } catch (err) { console.error("Save Error:", err); }
-        }
+    /*
+     * 正式主資料：
+     * yearFolders 已包含所有年度表格與附件。
+     */
+    store.put(
+        yearFolders,
+        'ospms_year_folders'
+    );
+
+    store.put(
+        currentYearFolderId,
+        'ospms_current_year_folder_id'
+    );
+
+    /*
+     * 保留較小的舊格式相容副本。
+     */
+    store.put(
+        tableDataStore,
+        'ospms_data_store'
+    );
+
+    store.put({
+        version: APP_DATA_VERSION,
+        data: appData
+    }, 'ospms_base_data');
+
+    /*
+     * 手機不重複保存目前年度附件副本，
+     * 避免 Base64 附件造成儲存空間與記憶體壓力。
+     */
+    if (isMobileStorageEnvironment()) {
+        store.delete(
+            'ospms_attachments'
+        );
+    } else {
+        store.put(
+            attachmentsStore,
+            'ospms_attachments'
+        );
+    }
+}
+
+async function persistToStorage() {
+    try {
+        await persistToStorageConfirmed();
+
+    } catch (err) {
+        console.error(
+            'Save Error:',
+            err
+        );
+    }
+}
 
 async function persistToStorageConfirmed() {
     const db = await openDB();
@@ -3027,52 +3070,38 @@ async function persistToStorageConfirmed() {
 
             try {
                 db.close();
+
             } catch (closeError) {
-                console.warn('IndexedDB 關閉失敗：', closeError);
+                console.warn(
+                    'IndexedDB 關閉失敗：',
+                    closeError
+                );
             }
 
             reject(
                 error instanceof Error
                     ? error
-                    : new Error('IndexedDB 儲存失敗')
+                    : new Error(
+                        'IndexedDB 儲存失敗'
+                    )
             );
         };
 
         try {
-            const transaction = db.transaction(
-                STORE_KEY,
-                'readwrite'
-            );
+            const transaction =
+                db.transaction(
+                    STORE_KEY,
+                    'readwrite'
+                );
 
             const store =
-                transaction.objectStore(STORE_KEY);
+                transaction.objectStore(
+                    STORE_KEY
+                );
 
-            syncCurrentYearFolderFromGlobals();
-
-            store.put(
-                yearFolders,
-                'ospms_year_folders'
+            writePerformanceDataToStore(
+                store
             );
-
-            store.put(
-                currentYearFolderId,
-                'ospms_current_year_folder_id'
-            );
-
-            store.put(
-                tableDataStore,
-                'ospms_data_store'
-            );
-
-            store.put(
-                attachmentsStore,
-                'ospms_attachments'
-            );
-
-            store.put({
-                version: APP_DATA_VERSION,
-                data: appData
-            }, 'ospms_base_data');
 
             transaction.oncomplete = () => {
                 if (settled) return;
@@ -3080,6 +3109,7 @@ async function persistToStorageConfirmed() {
 
                 try {
                     db.close();
+
                 } catch (closeError) {
                     console.warn(
                         'IndexedDB 關閉失敗：',
@@ -3093,14 +3123,18 @@ async function persistToStorageConfirmed() {
             transaction.onerror = () => {
                 rejectOnce(
                     transaction.error ||
-                    new Error('IndexedDB 交易失敗')
+                    new Error(
+                        'IndexedDB 交易失敗'
+                    )
                 );
             };
 
             transaction.onabort = () => {
                 rejectOnce(
                     transaction.error ||
-                    new Error('IndexedDB 交易已中止')
+                    new Error(
+                        'IndexedDB 交易已中止'
+                    )
                 );
             };
 
@@ -3108,7 +3142,7 @@ async function persistToStorageConfirmed() {
             rejectOnce(error);
         }
     });
-}        
+}       
 
         // --- 功能模組 ---
 
@@ -6116,8 +6150,52 @@ function schedulePreviewPdfScaleApply() {
     });
 }
 
+function getFilePreviewScaleLimits() {
+    const baseScale =
+        filePreviewDefaultScale || 1;
+
+    const isMobile =
+        window.matchMedia(
+            '(max-width: 900px)'
+        ).matches;
+
+    if (!isMobile) {
+        return {
+            min: 0.25,
+            max: 4
+        };
+    }
+
+    /*
+     * 手機最多約為適合畫面的 2.5 倍，
+     * 並限制絕對比例不超過 2。
+     */
+    return {
+        min: Math.max(
+            0.05,
+            baseScale * 0.5
+        ),
+
+        max: Math.max(
+            baseScale,
+            Math.min(
+                2,
+                baseScale * 2.5
+            )
+        )
+    };
+}
+
 function setFilePreviewScale(nextScale) {
-    filePreviewScale = clampPreviewScale(nextScale);
+    const limits =
+        getFilePreviewScaleLimits();
+
+    filePreviewScale =
+        clampPreviewScale(
+            nextScale,
+            limits.min,
+            limits.max
+        );
 
     if (filePreviewMode === 'image') {
         applyPreviewImageScale();
@@ -6170,6 +6248,22 @@ function ensureFilePreviewGestures() {
     if (filePreviewGesturesReady) return;
     const { body } = getFilePreviewElements();
     if (!body) return;
+
+    [
+    'gesturestart',
+    'gesturechange',
+    'gestureend'
+].forEach(eventName => {
+    body.addEventListener(
+        eventName,
+        event => {
+            event.preventDefault();
+        },
+        {
+            passive: false
+        }
+    );
+});
 
     body.addEventListener('wheel', function(event) {
         if (!event.ctrlKey && !event.metaKey) return;
@@ -6308,6 +6402,17 @@ async function renderPdfPreviewPages() {
 }
 
 async function openPdfPreview(file) {
+
+const isMobilePdfPreview =
+    window.matchMedia(
+        '(max-width: 900px)'
+    ).matches;
+
+if (isMobilePdfPreview) {
+    openPdfPreviewFallback(file);
+    return;
+}
+
     const { body, frame, image, pdfPages, toolbar } = getFilePreviewElements();
 
     filePreviewMode = 'pdf';
@@ -6705,7 +6810,7 @@ async function savePerformanceData() {
         await persistToStorageConfirmed();
 
         showToast(
-            '資料已儲存，可繼續編輯'
+            '資料已儲存。'
         );
 
     } catch (error) {
@@ -6730,35 +6835,44 @@ async function savePerformanceData() {
     }
 }
 
-function confirmSaveAndLogout() {
+function confirmLogout() {
     if (isLoggingOut) return;
 
-    if (
-        !confirm(
-            '是否儲存目前資料並登出系統？'
-        )
-    ) {
+    if (isAttachmentUploadBusy) {
+        showToast(
+            '附件正在上傳，請待完成後再登出。',
+            'error'
+        );
+
         return;
     }
 
+if (
+    !confirm(
+        '確定登出系統？未儲存的變更將不會保留。'
+    )
+) {
+    return;
+}
+
     isLoggingOut = true;
 
-    setTimeout(async () => {
+    setTimeout(() => {
         try {
-            await saveAndLogout();
+            logoutSystem();
 
             showToast(
-                '資料已儲存並登出系統'
+                '已登出系統'
             );
 
         } catch (error) {
             console.error(
-                '儲存並登出失敗：',
+                '登出失敗：',
                 error
             );
 
             showToast(
-                '儲存失敗，因此目前仍保持登入狀態。',
+                '登出失敗，請重新操作。',
                 'error'
             );
 
@@ -6770,7 +6884,7 @@ function confirmSaveAndLogout() {
 
 function handleAuthClick() {
     if (canEditData()) {
-        confirmSaveAndLogout();
+        confirmLogout();
         return;
     }
 
@@ -6932,21 +7046,34 @@ closeLoginModal();
     }
 
 if (inputPwd === systemPassword) {
-    isAdmin = true;
-    isEditor = true;
+isAdmin = true;
+isEditor = true;
 
-    /*
-     * 已完成管理者驗證，
-     * 將目前載入的預覽資料切換為可編輯工作資料。
-     */
+/*
+ * 若目前畫面是載入預覽的資料，
+ * 登入管理者後將其切換為可編輯工作資料。
+ *
+ * 此時只切換畫面狀態，
+ * 不會自動寫入 IndexedDB。
+ * 只有點擊上方「儲存」才會正式保存。
+ */
+const wasPreviewMode =
+    isPreviewDataMode;
+
 isPreviewDataMode = false;
 isPerformanceEditMode = false;
 
 renderYearFolders();
-        updateUIState();
-        renderTable(currentTab);
+updateUIState();
+renderTable(currentTab);
 
-        if (pendingOpenPermissionSettings) {
+showToast(
+    wasPreviewMode
+        ? '已切換為管理者模式，預覽資料現在可編輯；尚未儲存。'
+        : '已進入管理者模式'
+);
+
+if (pendingOpenPermissionSettings) {
             pendingOpenPermissionSettings = false;
             togglePasswordView(true);
         } else {
@@ -6963,22 +7090,33 @@ renderYearFolders();
 if (editorEnabled && inputPwd === editorPassword) {
     pendingOpenPermissionSettings = false;
 
-    isAdmin = false;
-    isEditor = true;
+isAdmin = false;
+isEditor = true;
 
-    /*
-     * 已完成使用者驗證，
-     * 將目前載入的預覽資料切換為可編輯工作資料。
-     */
+/*
+ * 若目前畫面是載入預覽的資料，
+ * 登入使用者後將其切換為可編輯工作資料。
+ *
+ * 此時不會自動寫入 IndexedDB，
+ * 只有點擊上方「儲存」才會正式保存。
+ */
+const wasPreviewMode =
+    isPreviewDataMode;
+
 isPreviewDataMode = false;
 isPerformanceEditMode = false;
 
 closeLoginModal();
-        renderYearFolders();
-        updateUIState();
-        renderTable(currentTab);
+renderYearFolders();
+updateUIState();
+renderTable(currentTab);
 
-        setTimeout(function() {
+showToast(
+    wasPreviewMode
+        ? '已切換為使用者模式，預覽資料現在可編輯；尚未儲存。'
+        : '已進入使用者模式'
+);
+setTimeout(function() {
             window.dispatchEvent(new Event('resize'));
         }, 100);
 
@@ -7270,27 +7408,35 @@ updateJsonActionButtons();
 lucide.createIcons();
 }
 
-async function saveAndLogout() {
-    if (canEditData() && !isPreviewDataMode) {
-        saveCurrentTabData();
-        syncCurrentYearFolderFromGlobals();
-        await persistToStorageConfirmed();
-    }
+function logoutSystem() {
+    /*
+     * 登出只關閉權限，不執行 IndexedDB 寫入。
+     * 正式儲存統一由上方「儲存」按鈕負責。
+     */
+    isAdmin = false;
+    isEditor = false;
+    isPerformanceEditMode = false;
 
-isAdmin = false;
-isEditor = false;
-isPerformanceEditMode = false;
+    const scrollState =
+        getTableScrollState();
 
-const scrollState = getTableScrollState();
+    closeMobileSidebar();
+    closeAttachmentModal();
+    closeFilePreviewModal();
 
-renderYearFolders();
-updateUIState();
-renderTable(currentTab);
-restoreTableScrollState(scrollState);
+    renderYearFolders();
+    updateUIState();
+    renderTable(currentTab);
 
-setTimeout(function() {
-    window.dispatchEvent(new Event('resize'));
-}, 100);
+    restoreTableScrollState(
+        scrollState
+    );
+
+    setTimeout(() => {
+        window.dispatchEvent(
+            new Event('resize')
+        );
+    }, 100);
 }
 
 function addNewRow() {

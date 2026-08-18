@@ -2504,10 +2504,17 @@ main > .p-4,
                                autocomplete="new-password">
                     </div>
 
-                    <label class="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 cursor-pointer">
-                        <input type="checkbox" id="editor-enabled-checkbox" class="w-4 h-4 accent-indigo-600">
-                        <span class="text-sm font-bold text-slate-700">啟用使用者共用權限</span>
-                    </label>
+<label class="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+    <input
+        type="checkbox"
+        id="editor-enabled-checkbox"
+        class="w-4 h-4 accent-indigo-600"
+        disabled
+    >
+    <span class="text-sm font-bold text-slate-700">
+        啟用使用者共用權限
+    </span>
+</label>
 
                     <p class="text-[11px] text-slate-400 leading-snug">
                         使用者權限可編輯、上傳附件、儲存、載入與匯出資料；刪除與權限設定仍限管理者。
@@ -2789,11 +2796,13 @@ const APP_DATA_VERSION = "completion-2026-06-month-popup-confirm";
 
 const DEFAULT_ADMIN_PASSWORD = "SamCore@1068";
 const DEFAULT_EDITOR_PASSWORD = "TeamUser001";
+const DEFAULT_EDITOR_ENABLED = true;
+
 const MASTER_RECOVERY_CODE = "SAM-SUN-CORE-RECOVERY";
 
 let systemPassword = DEFAULT_ADMIN_PASSWORD;
 let editorPassword = DEFAULT_EDITOR_PASSWORD;
-let editorEnabled = true;
+let editorEnabled = DEFAULT_EDITOR_ENABLED;
 
 function getCurrentRole() {
     if (isAdmin) return 'admin';
@@ -3009,7 +3018,74 @@ async function setConfig(key, value) {
         transaction.oncomplete = () => resolve();
         transaction.onerror = () => reject(transaction.error);
     });
-}        
+}
+
+/*
+ * 績效工作資料只存在目前頁面記憶體。
+ * 以下資料不得永久留在 IndexedDB。
+ *
+ * 注意：
+ * admin_password
+ * editor_password
+ * editor_enabled
+ * 不在此清單，因此權限與密碼設定仍會保留。
+ */
+const PERFORMANCE_DATA_STORAGE_KEYS = [
+    'ospms_year_folders',
+    'ospms_current_year_folder_id',
+    'ospms_data_store',
+    'ospms_attachments',
+    'ospms_base_data',
+
+    /*
+     * 清除舊版本可能殘留的本機權限設定。
+     * 正式權限統一由 GitHub HTML 控制。
+     */
+    'admin_password',
+    'editor_password',
+    'editor_enabled'
+];
+
+async function clearPersistedPerformanceData() {
+    const db = await openDB();
+
+    return new Promise((resolve, reject) => {
+        const transaction =
+            db.transaction(
+                STORE_KEY,
+                'readwrite'
+            );
+
+        const store =
+            transaction.objectStore(
+                STORE_KEY
+            );
+
+        PERFORMANCE_DATA_STORAGE_KEYS
+            .forEach(key => {
+                store.delete(key);
+            });
+
+        transaction.oncomplete = () => {
+            db.close();
+            resolve();
+        };
+
+        transaction.onerror = () => {
+            db.close();
+            reject(
+                transaction.error
+            );
+        };
+
+        transaction.onabort = () => {
+            db.close();
+            reject(
+                transaction.error
+            );
+        };
+    });
+}
 
         async function loadFromStorage() {
             try {
@@ -3020,49 +3096,45 @@ async function setConfig(key, value) {
                     const req = store.get(key);
                     req.onsuccess = () => res(req.result);
                 });
-const savedAdminPwd = await getRequest('admin_password');
-const savedEditorPwd = await getRequest('editor_password');
-const savedEditorEnabled = await getRequest('editor_enabled');
-
-// 舊版管理員密碼 localStorage 遷移：若舊系統曾修改過密碼，優先保留舊密碼
-const legacyAdminPwd = localStorage.getItem('ospms_admin_pwd');
-
-systemPassword = savedAdminPwd || legacyAdminPwd || DEFAULT_ADMIN_PASSWORD;
-editorPassword = savedEditorPwd || DEFAULT_EDITOR_PASSWORD;
-editorEnabled = savedEditorEnabled === null || savedEditorEnabled === undefined
-    ? true
-    : Boolean(savedEditorEnabled);
-
-if (!savedAdminPwd) await setConfig('admin_password', systemPassword);
-if (!savedEditorPwd) await setConfig('editor_password', editorPassword);
-if (savedEditorEnabled === null || savedEditorEnabled === undefined) {
-    await setConfig('editor_enabled', editorEnabled);
+/*
+ * 權限設定統一以目前 GitHub HTML 發布版本為準。
+ * 不讀取瀏覽器舊有的本機權限設定。
+ */
+systemPassword = DEFAULT_ADMIN_PASSWORD;
+editorPassword = DEFAULT_EDITOR_PASSWORD;
+editorEnabled = DEFAULT_EDITOR_ENABLED;
+/*
+ * 績效資料採工作階段暫存模式。
+ *
+ * 每次重新開啟系統：
+ * 1. 清除舊版本可能殘留的績效資料。
+ * 2. 不從 IndexedDB 恢復績效紀錄。
+ * 3. 建立乾淨的本年度工作資料。
+ *
+ * 密碼與權限設定仍維持原本 IndexedDB 設定。
+ */
+try {
+    db.close();
+} catch (closeError) {
+    console.warn(
+        'IndexedDB 關閉失敗：',
+        closeError
+    );
 }
-                const savedYearFolders = await getRequest('ospms_year_folders');
-const savedCurrentYearFolderId = await getRequest('ospms_current_year_folder_id');
 
-if (Array.isArray(savedYearFolders) && savedYearFolders.length > 0) {
-    yearFolders = savedYearFolders;
-    currentYearFolderId = savedCurrentYearFolderId || yearFolders[0].id;
-    syncGlobalsFromCurrentYearFolder();
-} else {
-    const savedData = await getRequest('ospms_data_store');
-    const savedAttach = await getRequest('ospms_attachments');
-    const savedBaseData = await getRequest('ospms_base_data');
+await clearPersistedPerformanceData();
 
-    const firstFolder = createYearFolder(2026);
+const firstFolder =
+    createYearFolder(2026);
 
-    if (savedBaseData && savedBaseData.version === APP_DATA_VERSION && savedBaseData.data) {
-        firstFolder.appData = savedBaseData.data;
-    }
+yearFolders = [
+    firstFolder
+];
 
-    firstFolder.tableDataStore = savedData || {};
-    firstFolder.attachmentsStore = savedAttach || {};
+currentYearFolderId =
+    firstFolder.id;
 
-    yearFolders = [firstFolder];
-    currentYearFolderId = firstFolder.id;
-    syncGlobalsFromCurrentYearFolder();
-}
+syncGlobalsFromCurrentYearFolder();
 
                 normalizeAllExecutionMonths();
 initNav();
@@ -3088,49 +3160,23 @@ function isMobileStorageEnvironment() {
 }
 
 function writePerformanceDataToStore(store) {
+    /*
+     * 先把目前畫面資料同步至頁面記憶體，
+     * 讓切換分類、年度、附件及匯出 JSON
+     * 仍可正常使用。
+     */
     syncCurrentYearFolderFromGlobals();
 
     /*
-     * 正式主資料：
-     * yearFolders 已包含所有年度表格與附件。
+     * 績效資料不寫入 IndexedDB。
+     *
+     * 每次原本需要「儲存」的動作，
+     * 反而確認瀏覽器內沒有留下工作資料。
      */
-    store.put(
-        yearFolders,
-        'ospms_year_folders'
-    );
-
-    store.put(
-        currentYearFolderId,
-        'ospms_current_year_folder_id'
-    );
-
-    /*
-     * 保留較小的舊格式相容副本。
-     */
-    store.put(
-        tableDataStore,
-        'ospms_data_store'
-    );
-
-    store.put({
-        version: APP_DATA_VERSION,
-        data: appData
-    }, 'ospms_base_data');
-
-    /*
-     * 手機不重複保存目前年度附件副本，
-     * 避免 Base64 附件造成儲存空間與記憶體壓力。
-     */
-    if (isMobileStorageEnvironment()) {
-        store.delete(
-            'ospms_attachments'
-        );
-    } else {
-        store.put(
-            attachmentsStore,
-            'ospms_attachments'
-        );
-    }
+    PERFORMANCE_DATA_STORAGE_KEYS
+        .forEach(key => {
+            store.delete(key);
+        });
 }
 
 async function persistToStorage() {
@@ -7080,10 +7126,12 @@ async function savePerformanceData() {
             );
         }
 
-        /*
-         * 先將目前畫面欄位同步至記憶體，
-         * 再正式寫入 IndexedDB。
-         */
+/*
+ * 將目前畫面資料同步至本次工作階段記憶體。
+ *
+ * 績效資料不永久寫入 IndexedDB；
+ * 關閉、重新整理或登出後即清除。
+ */
         saveCurrentTabData();
         syncCurrentYearFolderFromGlobals();
 
@@ -7295,7 +7343,9 @@ function togglePasswordView(showSettings) {
         document.getElementById('old-password').value = '';
         document.getElementById('new-admin-password').value = '';
         document.getElementById('new-editor-password').value = '';
-        document.getElementById('editor-enabled-checkbox').checked = editorEnabled;
+        document.getElementById(
+    'editor-enabled-checkbox'
+).checked = DEFAULT_EDITOR_ENABLED;
 
         loginView.classList.add('hidden');
         changeView.classList.remove('hidden');
@@ -7316,13 +7366,9 @@ async function attemptLogin() {
     }
 
     if (inputPwd === MASTER_RECOVERY_CODE) {
-        systemPassword = DEFAULT_ADMIN_PASSWORD;
-        editorPassword = DEFAULT_EDITOR_PASSWORD;
-        editorEnabled = true;
-
-        await setConfig('admin_password', DEFAULT_ADMIN_PASSWORD);
-        await setConfig('editor_password', DEFAULT_EDITOR_PASSWORD);
-        await setConfig('editor_enabled', true);
+systemPassword = DEFAULT_ADMIN_PASSWORD;
+editorPassword = DEFAULT_EDITOR_PASSWORD;
+editorEnabled = DEFAULT_EDITOR_ENABLED;
 
 isAdmin = false;
 isEditor = false;
@@ -7423,7 +7469,6 @@ async function handleChangePassword() {
     const oldPwd = document.getElementById('old-password').value;
     const newAdminPwd = document.getElementById('new-admin-password').value.trim();
     const newEditorPwd = document.getElementById('new-editor-password').value.trim();
-    const editorEnabledNext = document.getElementById('editor-enabled-checkbox').checked;
     const err = document.getElementById('pwd-change-error');
 
     err.classList.add('hidden');
@@ -7451,17 +7496,18 @@ async function handleChangePassword() {
             return;
         }
 
-        systemPassword = newAdminPwd;
-        await setConfig('admin_password', systemPassword);
+systemPassword = newAdminPwd;
     }
 
     if (newEditorPwd) {
-        editorPassword = newEditorPwd;
-        await setConfig('editor_password', editorPassword);
+editorPassword = newEditorPwd;
     }
 
-    editorEnabled = editorEnabledNext;
-    await setConfig('editor_enabled', editorEnabled);
+/*
+ * 使用者共用權限由 GitHub HTML 的
+ * DEFAULT_EDITOR_ENABLED 統一控制。
+ */
+editorEnabled = DEFAULT_EDITOR_ENABLED;
 
 alert("權限與密碼設定已更新成功！");
 closeLoginModal();
@@ -7676,28 +7722,30 @@ lucide.createIcons();
 }
 
 function logoutSystem() {
-    /*
-     * 登出只關閉權限，不執行 IndexedDB 寫入。
-     * 正式儲存統一由上方「儲存」按鈕負責。
-     */
     isAdmin = false;
     isEditor = false;
     isPerformanceEditMode = false;
 
-    const scrollState =
-        getTableScrollState();
+/*
+ * 登出後立即恢復 GitHub HTML 正式權限設定。
+ * 本次工作階段若曾暫時修改密碼，不予保留。
+ */
+systemPassword = DEFAULT_ADMIN_PASSWORD;
+editorPassword = DEFAULT_EDITOR_PASSWORD;
+editorEnabled = DEFAULT_EDITOR_ENABLED;
 
     closeMobileSidebar();
-    closeAttachmentModal();
-    closeFilePreviewModal();
 
-    renderYearFolders();
-    updateUIState();
-    renderTable(currentTab);
-
-    restoreTableScrollState(
-        scrollState
-    );
+    /*
+     * 登出後清除本次工作階段的所有績效資料，
+     * 回復乾淨的系統範本。
+     *
+     * 此函式不會清除：
+     * 管理者密碼
+     * 使用者密碼
+     * 使用者權限設定
+     */
+    clearPreviewDataAndRestoreTemplate();
 
     setTimeout(() => {
         window.dispatchEvent(

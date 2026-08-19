@@ -2770,6 +2770,95 @@ let currentYearFolderId = null;
 let isYearFolderPanelOpen = false;
 let activeAttachmentTarget = null;
 let isAttachmentUploadBusy = false;
+
+
+/* =========================================================
+   工作階段防呆狀態
+========================================================= */
+
+/*
+ * 目前績效資料已有人工修改，
+ * 但尚未按下綠色「儲存」。
+ *
+ * 包含：
+ * - 指標名稱／內容
+ * - 時程
+ * - 執行月份
+ * - 1～12 月完成狀態
+ * - 新增／刪除／排序項目
+ * - 年度資料夾
+ * - 附件新增／刪除／批次處理
+ */
+let performanceDirty = false;
+
+
+/*
+ * 已完成「儲存」，
+ * 但最新工作階段尚未匯出 JSON。
+ */
+let sessionNeedsExport = false;
+
+
+function hasUnsavedPerformanceChanges() {
+    return performanceDirty;
+}
+
+
+function hasPendingSessionChanges() {
+    return (
+        performanceDirty ||
+        sessionNeedsExport ||
+        isAttachmentUploadBusy
+    );
+}
+
+
+function markPerformanceDirty() {
+    if (
+        canEditData() &&
+        !isPreviewDataMode
+    ) {
+        performanceDirty = true;
+    }
+}
+
+
+function markSessionNeedsExport() {
+    if (
+        canEditData() &&
+        !isPreviewDataMode
+    ) {
+        sessionNeedsExport = true;
+    }
+}
+
+
+function clearWorkProtectionState() {
+    performanceDirty = false;
+    sessionNeedsExport = false;
+}
+
+
+/*
+ * F5、關閉分頁、關閉瀏覽器、
+ * 離開目前網站時的最後防呆。
+ */
+window.addEventListener(
+    'beforeunload',
+    event => {
+
+        if (
+            !hasPendingSessionChanges()
+        ) {
+            return;
+        }
+
+        event.preventDefault();
+        event.returnValue = '';
+    }
+);
+
+
 let activeSortRowIdx = null;
 let imagePreviewScale = 1;
 let imagePreviewDefaultScale = 1;
@@ -2970,15 +3059,29 @@ function syncGlobalsFromCurrentYearFolder() {
 }
 
 function syncCurrentYearFolderFromGlobals() {
-    const folder = getCurrentYearFolder();
-    if (!folder) return;
+    const folder =
+        getCurrentYearFolder();
 
-    folder.appData = appData;
-    folder.tableDataStore = tableDataStore;
-    folder.attachmentsStore = attachmentsStore;
+    if (!folder) {
+        return;
+    }
 
-    const yearInput = document.getElementById('year-input-field');
-    if (yearInput) folder.name = yearInput.value || folder.name;
+    /*
+     * 这里只同步目前年度的績效正式資料。
+     *
+     * 年度 year / name
+     * 必須只能由年度管理功能修改，
+     * 不可從畫面上的年度輸入框
+     * 無條件寫回。
+     */
+    folder.appData =
+        appData;
+
+    folder.tableDataStore =
+        tableDataStore;
+
+    folder.attachmentsStore =
+        attachmentsStore;
 }
 
         function openDB() {
@@ -3344,6 +3447,25 @@ function exportJSON() {
         return;
     }
 
+if (isAttachmentUploadBusy) {
+    alert(
+        '附件正在上傳，請待完成後再匯出 JSON。'
+    );
+
+    return;
+}
+
+if (
+    hasUnsavedPerformanceChanges()
+) {
+    alert(
+        '目前仍有尚未儲存的績效修改。\n\n' +
+        '請先按下綠色「儲存」後再匯出 JSON。'
+    );
+
+    return;
+}    
+
     const exportDate = new Date().toISOString().slice(0, 10);
     const dataToExport = buildPerformanceExportData();
 
@@ -3357,11 +3479,24 @@ function exportJSON() {
     a.href = url;
     a.download = `職安績效管理PMS_${exportDate}.json`;
 
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+document.body.appendChild(
+    a
+);
 
-    URL.revokeObjectURL(url);
+a.click();
+
+document.body.removeChild(
+    a
+);
+
+/*
+ * 最新工作階段已完成 JSON 匯出。
+ */
+sessionNeedsExport = false;
+
+URL.revokeObjectURL(
+    url
+);
 }
 
 function applyImportedPerformanceData(imported) {
@@ -3443,6 +3578,8 @@ releaseImportedPerformancePayload(imported);
 isPreviewDataMode = true;
 isPerformanceEditMode = false;
 
+clearWorkProtectionState();
+
 normalizeAllExecutionMonths();
 
             event.target.value = '';
@@ -3486,10 +3623,17 @@ function clearPreviewDataAndRestoreTemplate() {
 
     syncGlobalsFromCurrentYearFolder();
 
-    isPreviewDataMode = false;
-    isPerformanceEditMode = false;
+isPreviewDataMode = false;
+isPerformanceEditMode = false;
 
-    closeFilePreviewModal();
+/*
+ * 預覽退出、登入前清預覽、
+ * 以及登出重建乾淨範本時，
+ * 一併重設防呆狀態。
+ */
+clearWorkProtectionState();
+
+closeFilePreviewModal();
     closeAttachmentModal();
 
     normalizeAllExecutionMonths();
@@ -3543,9 +3687,22 @@ async function importJSON(event) {
 
             const importLabel = isAdmin ? '匯入資料' : '載入資料';
 
-            if (!confirm(`${importLabel}將覆蓋目前所有紀錄，確定要繼續嗎？`)) {
-                return;
-            }
+const pendingWorkWarning =
+    hasPendingSessionChanges()
+        ? (
+            '\n\n目前有尚未儲存或尚未匯出的工作成果，' +
+            '繼續後將被覆蓋。'
+        )
+        : '';
+
+if (
+    !confirm(
+        `${importLabel}將覆蓋目前所有紀錄，確定要繼續嗎？` +
+        pendingWorkWarning
+    )
+) {
+    return;
+}
 
             applyImportedPerformanceData(imported);
 releaseImportedPerformancePayload(imported);
@@ -3560,6 +3717,12 @@ releaseImportedPerformancePayload(imported);
              */
 isPreviewDataMode = false;
 isPerformanceEditMode = false;
+
+/*
+ * 剛載入的 JSON 本身已經是一份
+ * 正式存在的外部資料。
+ */
+clearWorkProtectionState();
 
 normalizeAllExecutionMonths();
             await persistToStorage();
@@ -5128,6 +5291,21 @@ lucide.createIcons();
 }
 
 async function switchYearFolder(folderId) {
+
+    /*
+     * 附件仍在讀取／上傳時，
+     * 不允許切換年度，
+     * 避免附件完成後落到錯誤的年度資料夾。
+     */
+    if (isAttachmentUploadBusy) {
+        showToast(
+            '附件正在上傳，請待完成後再切換年度。',
+            'error'
+        );
+
+        return;
+    }
+
     if (folderId === currentYearFolderId) {
         renderYearFolders();
         return;
@@ -5151,6 +5329,21 @@ async function switchYearFolder(folderId) {
 }
 
 async function addYearFolder() {
+
+    /*
+     * 附件仍在讀取／上傳時，
+     * 不允許建立並切換到新年度，
+     * 避免附件完成後寫入錯誤年度。
+     */
+    if (isAttachmentUploadBusy) {
+        showToast(
+            '附件正在上傳，請待完成後再新增年度。',
+            'error'
+        );
+
+        return;
+    }
+
     if (isPreviewDataMode) {
         alert('目前為預覽資料模式，不能新增年度資料夾。請先以使用者或管理者身分正式載入資料後再操作。');
         return;
@@ -5179,9 +5372,14 @@ if (!year) return;
 
     const sourceFolder = getCarryForwardSourceFolder(numericYear);
     const folder = createYearFolder(numericYear, sourceFolder);
-    yearFolders.push(folder);
+yearFolders.push(
+    folder
+);
 
-    currentYearFolderId = folder.id;
+markPerformanceDirty();
+
+currentYearFolderId =
+    folder.id;
     syncGlobalsFromCurrentYearFolder();
 
     normalizeAllExecutionMonths();
@@ -5214,14 +5412,31 @@ async function renameYearFolder(event, folderId) {
         return;
     }
 
+/*
+ * 年度完全沒變就不算修改。
+ */
+if (
+    Number(folder.year) ===
+    numericYear
+) {
+    return;
+}    
+
     const duplicated = yearFolders.some(item => item.id !== folderId && Number(item.year) === numericYear);
     if (duplicated) {
         alert(`${formatYearFolderName(numericYear)} 已存在`);
         return;
     }
 
-    folder.year = numericYear;
-    folder.name = formatYearFolderName(numericYear);
+folder.year =
+    numericYear;
+
+folder.name =
+    formatYearFolderName(
+        numericYear
+    );
+
+markPerformanceDirty();
 
     if (folder.id === currentYearFolderId) {
         const yearInput = document.getElementById('year-input-field');
@@ -5234,6 +5449,21 @@ async function renameYearFolder(event, folderId) {
 
 async function removeYearFolder(event, folderId) {
     event.stopPropagation();
+
+    /*
+     * 附件仍在讀取／上傳時，
+     * 不允許刪除年度，
+     * 避免目前年度被移除後
+     * 附件寫入其他年度。
+     */
+    if (isAttachmentUploadBusy) {
+        showToast(
+            '附件正在上傳，請待完成後再刪除年度。',
+            'error'
+        );
+
+        return;
+    }
 
     if (isPreviewDataMode) {
         alert('目前為預覽資料模式，不能刪除年度資料夾。請先以管理者身分正式載入資料後再操作。');
@@ -5253,6 +5483,8 @@ async function removeYearFolder(event, folderId) {
     if (!confirm(`確定移除「${folder.name}」？此年度的填報資料與附件都會移除。`)) return;
 
     yearFolders = yearFolders.filter(item => item.id !== folderId);
+
+markPerformanceDirty();    
 
     if (currentYearFolderId === folderId) {
         currentYearFolderId = yearFolders[0].id;
@@ -5279,7 +5511,29 @@ async function removeYearFolder(event, folderId) {
         }
 
 function switchTab(type, shouldSave = true) {
-    if (shouldSave && canEditData() && !isPreviewDataMode) saveCurrentTabData();
+
+    /*
+     * 附件仍在讀取／上傳時，
+     * 不允許切換績效分類，
+     * 避免附件完成後落到錯誤的分類。
+     */
+    if (isAttachmentUploadBusy) {
+        showToast(
+            '附件正在上傳，請待完成後再切換分類。',
+            'error'
+        );
+
+        return;
+    }
+
+    if (
+        shouldSave &&
+        canEditData() &&
+        !isPreviewDataMode
+    ) {
+        saveCurrentTabData();
+    }
+
     currentTab = type;
     document.querySelectorAll('#nav-tabs > button').forEach(btn => {
         btn.classList.remove('text-white', 'bg-slate-800', 'border-blue-500');
@@ -5407,8 +5661,20 @@ if (
                     ? `<button onclick="toggleSortMenu(event, ${rowIndex})" class="w-full h-full bg-yellow-50 hover:bg-yellow-200 transition-colors font-bold text-slate-700 py-2 rounded border border-yellow-200">${item.id}</button>` 
                     : item.id;
 
-                const nameHTML = canWriteInTable ? `<textarea class="admin-name-input w-full text-[11px] leading-tight admin-edit-cell rounded p-1 h-12" oninput="autoResize(this)">${item.name}</textarea>` : `<div class="text-[11px] font-bold leading-tight text-slate-600">${item.name}</div>`;
-                const contentHTML = canWriteInTable ? `<textarea class="admin-content-input w-full text-[10px] leading-normal admin-edit-cell rounded p-1 h-12" oninput="autoResize(this)">${item.content}</textarea>` : `<div class="text-[10px] text-slate-600 leading-normal">${item.content}</div>`;
+                const nameHTML =
+    canWriteInTable
+        ? `<textarea
+               class="admin-name-input w-full text-[11px] leading-tight admin-edit-cell rounded p-1 h-12"
+               oninput="autoResize(this); markPerformanceDirty()"
+           >${item.name}</textarea>`
+        : `<div class="text-[11px] font-bold leading-tight text-slate-600">${item.name}</div>`;
+                const contentHTML =
+    canWriteInTable
+        ? `<textarea
+               class="admin-content-input w-full text-[10px] leading-normal admin-edit-cell rounded p-1 h-12"
+               oninput="autoResize(this); markPerformanceDirty()"
+           >${item.content}</textarea>`
+        : `<div class="text-[10px] text-slate-600 leading-normal">${item.content}</div>`;
 
                 row.innerHTML = `
                     <td class="px-1 py-1 text-[10px] sticky-col-num border-b">${idContent}</td>
@@ -5520,8 +5786,11 @@ async function moveRow(direction) {
             }
 
             // 更新排序標記並持久化
-            activeSortRowIdx = null;
-            await persistToStorage();
+activeSortRowIdx = null;
+
+markPerformanceDirty();
+
+await persistToStorage();
             
             // 重新渲染畫面
             renderTable(currentTab);
@@ -5688,6 +5957,12 @@ async function clearCurrentMonthAttachments(event) {
 
 const scrollState = getTableScrollState();
 
+/*
+ * 清除該月份所有附件，
+ * 屬於正式績效資料修改。
+ */
+markPerformanceDirty();
+
 saveCurrentTabData();
 await persistToStorage();
 
@@ -5734,6 +6009,8 @@ async function removeAttachmentFile(fileIndex) {
             delete attachmentsStore[currentTab][rowIndex];
         }
     }
+
+markPerformanceDirty();
 
     saveCurrentTabData();
     await persistToStorage();
@@ -6039,12 +6316,17 @@ if (
         /*
          * 必須等 IndexedDB 確認交易完成。
          */
-        await persistToStorageConfirmed();
+await persistToStorageConfirmed();
 
-        /*
-         * 到這裡才代表附件真正儲存成功。
-         */
-        renderTable(currentTab);
+/*
+ * 到這裡才代表附件真正加入成功。
+ */
+markPerformanceDirty();
+
+/*
+ * 到這裡才代表附件真正儲存成功。
+ */
+renderTable(currentTab);
         restoreTableScrollState(scrollState);
 
         const attachmentModal =
@@ -6925,6 +7207,8 @@ async function deleteSingleAttachment() {
 
 const scrollState = getTableScrollState();
 
+markPerformanceDirty();
+
 saveCurrentTabData();
 await persistToStorage();
 renderTable(currentTab);
@@ -6975,6 +7259,8 @@ if (
         attachmentsStore[currentTab][activeAttachmentTarget.row][i] = files.map(f => ({ ...f }));
     }
 
+markPerformanceDirty();    
+
 const scrollState = getTableScrollState();
 
 saveCurrentTabData();
@@ -7007,6 +7293,8 @@ if (
 
     if (attachmentsStore[currentTab]?.[activeAttachmentTarget.row]) {
         delete attachmentsStore[currentTab][activeAttachmentTarget.row];
+
+markPerformanceDirty();        
 
 const scrollState = getTableScrollState();
 
@@ -7098,19 +7386,38 @@ async function savePerformanceData() {
         return;
     }
 
-    if (isPreviewDataMode) {
-        showToast(
-            '目前為預覽資料模式，不能儲存正式資料。',
-            'error'
-        );
+if (isPreviewDataMode) {
+    showToast(
+        '目前為預覽資料模式，不能儲存正式資料。',
+        'error'
+    );
 
-        return;
-    }
+    return;
+}
 
-    const saveBtn =
+/*
+ * 附件還在處理時，
+ * 不允許先完成本次儲存。
+ */
+if (isAttachmentUploadBusy) {
+    showToast(
+        '附件正在上傳，請待完成後再儲存資料。',
+        'error'
+    );
+
+    return;
+}
+
+const saveBtn =
         document.getElementById(
             'save-logout-btn'
         );
+
+/*
+ * 記住儲存前是否真的有修改。
+ */
+const hadChanges =
+    performanceDirty;        
 
     /*
      * 避免連續點擊造成重複儲存。
@@ -7135,11 +7442,38 @@ async function savePerformanceData() {
         saveCurrentTabData();
         syncCurrentYearFolderFromGlobals();
 
-        await persistToStorageConfirmed();
+await persistToStorageConfirmed();
 
-        showToast(
-            '資料已儲存'
-        );
+/*
+ * 真的有修改時，
+ * 儲存完成後才轉成「尚未匯出 JSON」。
+ */
+if (hadChanges) {
+    sessionNeedsExport = true;
+}
+
+/*
+ * 本次人工修改已完成段落確認。
+ */
+performanceDirty = false;
+
+if (hadChanges) {
+    showToast(
+        '資料已儲存至目前工作階段，請記得匯出最新 JSON。'
+    );
+
+} else if (
+    sessionNeedsExport
+) {
+    showToast(
+        '目前沒有新的績效修改，但既有工作成果仍尚未匯出 JSON。'
+    );
+
+} else {
+    showToast(
+        '目前沒有新的績效修改。'
+    );
+}
 
     } catch (error) {
         console.error(
@@ -7175,9 +7509,22 @@ function confirmLogout() {
         return;
     }
 
+const logoutMessage =
+    hasPendingSessionChanges()
+        ? (
+            '確定登出系統？\n\n' +
+            '目前仍有尚未儲存或尚未匯出 JSON 的工作成果，' +
+            '登出後本次工作階段資料將清除。\n\n' +
+            '請確認已先完成儲存並匯出最新 JSON。'
+        )
+        : (
+            '確定登出系統？\n\n' +
+            '目前沒有尚未儲存或尚未匯出的工作變更。'
+        );
+
 if (
     !confirm(
-        '確定登出系統？未儲存的變更將不會保留。'
+        logoutMessage
     )
 ) {
     return;
@@ -7675,9 +8022,25 @@ function togglePerformanceEditMode() {
 }
 
 function updateUIState() {
-    const icon = document.getElementById('auth-icon');
-    const saveBtn = document.getElementById('save-logout-btn');
-    const permissionSettingsBtn = document.getElementById('permission-settings-btn');
+    const icon =
+        document.getElementById(
+            'auth-icon'
+        );
+
+    const saveBtn =
+        document.getElementById(
+            'save-logout-btn'
+        );
+
+    const permissionSettingsBtn =
+        document.getElementById(
+            'permission-settings-btn'
+        );
+
+    const yearInput =
+        document.getElementById(
+            'year-input-field'
+        );
 
     if (icon) {
         icon.classList.remove(
@@ -7711,10 +8074,43 @@ function updateUIState() {
         saveBtn.classList.toggle('hidden', !canEditData());
     }
 
-    if (permissionSettingsBtn) {
-        permissionSettingsBtn.classList.toggle('hidden', !canChangePassword());
-        permissionSettingsBtn.classList.toggle('flex', canChangePassword());
-    }
+if (permissionSettingsBtn) {
+    permissionSettingsBtn.classList.toggle(
+        'hidden',
+        !canChangePassword()
+    );
+
+    permissionSettingsBtn.classList.toggle(
+        'flex',
+        canChangePassword()
+    );
+}
+
+/*
+ * 年度名稱修改限管理者。
+ *
+ * 使用者仍可依既有權限新增年度，
+ * 但既有年度改名／刪除仍限管理者。
+ */
+if (yearInput) {
+
+    const canEditYear =
+        canManageYearFolders() &&
+        !isPreviewDataMode;
+
+    yearInput.readOnly =
+        !canEditYear;
+
+    yearInput.style.cursor =
+        canEditYear
+            ? 'pointer'
+            : 'default';
+
+    yearInput.title =
+        canEditYear
+            ? '點擊可修改年度'
+            : '僅管理者可修改年度';
+}
 
 applyPerformanceEditModeUI();
 updateJsonActionButtons();
@@ -7777,15 +8173,22 @@ function addNewRow() {
 
     saveCurrentTabData();
 
-    appData[currentTab].push({
-        id: (appData[currentTab].length + 1).toString(),
-        name: "新項目",
-        content: "內容描述",
-        schedule: "適時",
-        target: "-"
-    });
+appData[currentTab].push({
+    id:
+        (
+            appData[currentTab].length +
+            1
+        ).toString(),
 
-    renderTable(currentTab);
+    name: "新項目",
+    content: "內容描述",
+    schedule: "適時",
+    target: "-"
+});
+
+markPerformanceDirty();
+
+renderTable(currentTab);
     scrollRowNearView(appData[currentTab].length - 1);
 }
 
@@ -7843,7 +8246,10 @@ if (!confirm("確定刪除？")) return;
         // numericKey === idx 的附件不保留，因為該列已刪除。
     });
 
-    attachmentsStore[currentTab] = newAttachments;
+attachmentsStore[currentTab] =
+    newAttachments;
+
+markPerformanceDirty();
 
 await persistToStorage();
 renderTable(currentTab);
@@ -7851,25 +8257,116 @@ scrollRowNearView(Math.max(0, idx - 1));
 }
 
 function handleYearFormat(input) {
+
     if (isPreviewDataMode) {
-        alert('目前為預覽資料模式，不能修改年度資料夾。請先以管理者身分正式載入資料後再操作。');
+        alert(
+            '目前為預覽資料模式，不能修改年度資料夾。請先以管理者身分正式載入資料後再操作。'
+        );
+
         syncGlobalsFromCurrentYearFolder();
+
         return;
     }
 
-    const numericYear = normalizeYearValue(input.value);
-    if (!numericYear) return;
+    const folder =
+        getCurrentYearFolder();
 
-            input.value = formatYearFolderName(numericYear);
+    if (!folder) {
+        return;
+    }
 
-            const folder = getCurrentYearFolder();
-            if (folder && canManageYearFolders()) {
-                folder.year = numericYear;
-                folder.name = input.value;
-                renderYearFolders();
-                persistToStorage();
-            }
-        }
+    /*
+     * 年度改名屬於管理者功能。
+     *
+     * 使用者／預覽者若嘗試修改
+     * 上方年度欄位，
+     * 立即恢復正式年度名稱。
+     */
+    if (!canManageYearFolders()) {
+        input.value =
+            folder.name;
+
+        return;
+    }
+
+    const numericYear =
+        normalizeYearValue(
+            input.value
+        );
+
+    /*
+     * 格式錯誤時，
+     * 恢復原本正式年度。
+     */
+    if (!numericYear) {
+        input.value =
+            folder.name;
+
+        return;
+    }
+
+    /*
+     * 年度完全相同，
+     * 不算修改。
+     */
+    if (
+        Number(folder.year) ===
+        numericYear
+    ) {
+        input.value =
+            folder.name;
+
+        return;
+    }
+
+    /*
+     * 不允許與其他年度資料夾重複。
+     */
+    const duplicated =
+        yearFolders.some(
+            item =>
+                item.id !==
+                    folder.id &&
+                Number(
+                    item.year
+                ) ===
+                    numericYear
+        );
+
+    if (duplicated) {
+        alert(
+            `${formatYearFolderName(
+                numericYear
+            )} 已存在`
+        );
+
+        input.value =
+            folder.name;
+
+        return;
+    }
+
+    /*
+     * 只有管理者通過所有檢查後，
+     * 才正式修改年度。
+     */
+    folder.year =
+        numericYear;
+
+    folder.name =
+        formatYearFolderName(
+            numericYear
+        );
+
+    input.value =
+        folder.name;
+
+    markPerformanceDirty();
+
+    renderYearFolders();
+
+    persistToStorage();
+}
 
         function getExecutionMonthsDisplayText(value) {
             const raw = value === undefined || value === null ? '-' : String(value).trim();
@@ -7973,9 +8470,34 @@ function handleYearFormat(input) {
 
         function confirmExecutionMonthsSelection(panel) {
             if (!panel) return;
-            const hidden = panel.querySelector('.execution-months-value');
-            const value = getExecutionMonthsDraftValue(panel);
-            if (hidden) hidden.value = value;
+const hidden =
+    panel.querySelector(
+        '.execution-months-value'
+    );
+
+const previousValue =
+    hidden
+        ? hidden.value
+        : '-';
+
+const value =
+    getExecutionMonthsDraftValue(
+        panel
+    );
+
+if (hidden) {
+    hidden.value = value;
+}
+
+/*
+ * 只有確認後的值真的不同，
+ * 才算實際修改。
+ */
+if (
+    value !== previousValue
+) {
+    markPerformanceDirty();
+}
             updateExecutionMonthsPanelLabel(panel);
             refreshRowSummary(panel.closest('tr'));
             applyTableFilters();
@@ -7989,9 +8511,16 @@ function handleYearFormat(input) {
             if (!row) return;
 
             const executionPanel = row.cells[4]?.querySelector('.execution-months-panel');
-            setExecutionMonthsPanelValue(executionPanel, getDefaultExecutionMonthsBySchedule(select.value));
+setExecutionMonthsPanelValue(
+    executionPanel,
+    getDefaultExecutionMonthsBySchedule(
+        select.value
+    )
+);
 
-            refreshRowSummary(row);
+markPerformanceDirty();
+
+refreshRowSummary(row);
             applyTableFilters();
         }
 
@@ -8074,8 +8603,12 @@ function handleYearFormat(input) {
             select.classList.remove('status-empty', 'status-complete', 'status-progress', 'status-incomplete', 'status-delay', 'status-na');
             select.classList.add(getStatusClass(status));
 
-            const row = select.closest('tr');
-            refreshRowSummary(row);
+const row =
+    select.closest('tr');
+
+markPerformanceDirty();
+
+refreshRowSummary(row);
 
             // 同步目前列資料，讓畫面統計、年度資料夾資料與匯出統計都讀到剛選取的月份狀態。
             if (row && row.parentElement) {

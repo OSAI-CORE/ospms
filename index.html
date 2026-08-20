@@ -2644,7 +2644,7 @@ main > .p-4,
 
 
                 <p class="text-[11px] text-slate-400 leading-snug text-center mt-3">
-                    正式資料維持原有 JSON；預覽資料另設有效期限與開啟次數。
+                    正式資料維持原有檔案格式；預覽資料另設有效期限與開啟次數。
                 </p>
 
 
@@ -4167,13 +4167,13 @@ function exportJSON() {
     }
 
     if (isPreviewDataMode) {
-        alert('目前為預覽資料模式，請先以使用者或管理者身分正式載入資料後再匯出 JSON。');
+        alert('目前為預覽資料模式，請先以使用者或管理者身分正式載入資料後再匯出資料檔案。');
         return;
     }
 
 if (isAttachmentUploadBusy) {
     alert(
-        '附件正在上傳，請待完成後再匯出 JSON。'
+        '附件正在上傳，請待完成後再匯出資料檔案。'
     );
 
     return;
@@ -4184,7 +4184,7 @@ if (
 ) {
     alert(
         '目前仍有尚未儲存的績效修改。\n\n' +
-        '請先按下綠色「儲存」後再匯出 JSON。'
+        '請先按下綠色「儲存」後再匯出資料檔案。'
     );
 
     return;
@@ -4340,8 +4340,7 @@ function validateAndConsumeLimitedPreview(
             ok: false,
 
             message:
-                '此檔案不是本系統產生的預覽專用 JSON。\n\n' +
-                '請使用「匯出資料 → 預覽資料」產生的檔案。'
+'此檔案不是本系統產生的預覽專用檔案。'
         };
     }
 
@@ -4847,7 +4846,7 @@ if (
 
     alert(
         '此檔案為預覽專用資料，不能載入正式工作區。\n\n' +
-        '如需接續編輯，請使用正式「匯出資料」所產生的 JSON。'
+        '如需接續編輯，請使用正式「匯出資料」所產生的檔案。'
     );
 
 
@@ -4989,21 +4988,21 @@ function updateJsonActionButtons() {
                 '<i data-lucide="file-input" class="w-3 h-3"></i><span>匯入資料</span>';
 
             importJsonBtn.title =
-                '載入 JSON 資料';
+                '匯入正式資料檔案';
 
         } else if (isEditor) {
             importJsonBtn.innerHTML =
                 '<i data-lucide="file-input" class="w-3 h-3"></i><span>載入資料</span>';
 
             importJsonBtn.title =
-                '載入 JSON 資料';
+                '載入正式資料檔案';
 
         } else {
             importJsonBtn.innerHTML =
                 '<i data-lucide="file-search" class="w-3 h-3"></i><span>載入預覽</span>';
 
             importJsonBtn.title =
-                '載入限時／限次預覽 JSON';
+                '載入限時／限次預覽檔案';
         }
     }
 
@@ -8632,14 +8631,14 @@ performanceDirty = false;
 
 if (hadChanges) {
     showToast(
-        '資料已儲存至目前工作階段，請記得匯出最新 JSON。'
+        '資料已儲存至目前工作階段，請記得匯出最新資料檔案。'
     );
 
 } else if (
     sessionNeedsExport
 ) {
     showToast(
-        '目前沒有新的績效修改，但既有工作成果仍尚未匯出 JSON。'
+        '目前沒有新的績效修改，但既有工作成果仍尚未匯出資料檔案。'
     );
 
 } else {
@@ -8685,10 +8684,10 @@ function confirmLogout() {
 const logoutMessage =
     hasPendingSessionChanges()
         ? (
-            '確定登出系統？\n\n' +
-            '目前仍有尚未儲存或尚未匯出 JSON 的工作成果，' +
-            '登出後本次工作階段資料將清除。\n\n' +
-            '請確認已先完成儲存並匯出最新 JSON。'
+'確定登出系統？\n\n' +
+'目前仍有尚未儲存或尚未匯出資料檔案的工作成果，' +
+'登出後本次工作階段資料將清除。\n\n' +
+'請確認已先完成儲存並匯出最新資料檔案。'
         )
         : (
             '確定登出系統？\n\n' +

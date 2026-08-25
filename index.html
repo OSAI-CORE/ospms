@@ -2099,16 +2099,30 @@ main > .p-4,
     }
 
     /* 登入及管理者權限設定密碼欄位 */
-    #login-modal input[type="password"] {
-        font-size: 16px !important;
-        line-height: 1.25 !important;
+#login-modal input[type="password"],
+#cloud-publisher-account,
+#cloud-publisher-login-modal input[type="password"] {
+    font-size: 16px !important;
+    line-height: 1.25 !important;
 
-        -webkit-text-size-adjust: 100% !important;
-        text-size-adjust: 100% !important;
-    }
+    -webkit-text-size-adjust: 100% !important;
+    text-size-adjust: 100% !important;
+}
 
 #preview-expiry-select,
-#preview-max-views-select {
+#preview-max-views-select,
+#cloud-preview-publish-name,
+#cloud-preview-publish-password,
+#cloud-preview-publish-expiry,
+#cloud-preview-publish-max-views,
+#cloud-preview-view-id,
+#cloud-preview-view-password,
+#cloud-preview-edit-name,
+#cloud-preview-edit-password,
+#cloud-preview-edit-expiry,
+#cloud-preview-edit-max-views,
+#cloud-publisher-new-password,
+#cloud-publisher-confirm-password {
     font-size: 16px !important;
 
     -webkit-text-size-adjust: 100% !important;
@@ -2231,6 +2245,38 @@ main > .p-4,
            accept=".json"
            onchange="importJSON(event)">
 </div>
+
+<!-- 雲端預覽入口 -->
+<button id="cloud-preview-entry-btn"
+        type="button"
+        onclick="openCloudPreviewModal()"
+        class="w-full mb-2 px-3 py-2
+               rounded-lg
+               border border-sky-700/50
+               bg-gradient-to-r
+               from-slate-700
+               via-slate-700
+               to-sky-900/70
+               text-slate-100
+               hover:from-slate-600
+               hover:via-slate-600
+               hover:to-sky-800/80
+               hover:border-sky-500/60
+               transition-all duration-200
+               shadow-sm
+               flex items-center justify-center gap-2"
+        title="雲端預覽">
+
+    <i data-lucide="cloud"
+       class="w-3.5 h-3.5 text-sky-300"></i>
+
+    <span class="text-[12px]
+                 leading-none
+                 font-bold">
+        雲端預覽
+    </span>
+
+</button>
 
             <button class="w-full bg-blue-600 text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center space-x-2 hover:bg-blue-500 transition" onclick="exportFullReport()">
                 <i data-lucide="file-up" class="w-4 h-4"></i><span>匯出年度績效報表</span>
@@ -2800,6 +2846,1255 @@ main > .p-4,
 
 </div>
 
+<!-- =========================================================
+     雲端預覽中心
+========================================================= -->
+<div id="cloud-preview-modal"
+     onclick="closeCloudPreviewModalOutside(event)"
+     class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm
+            z-[130] hidden flex items-center justify-center
+            p-4 no-print">
+
+<div onclick="event.stopPropagation()"
+     class="bg-white w-full max-w-sm mx-3
+            rounded-2xl shadow-2xl
+            border border-slate-200
+            scale-in-center
+            overflow-y-auto
+            max-h-[calc(100svh-24px)]">
+
+<!-- Header -->
+<div class="relative
+            bg-gradient-to-r
+            from-slate-900
+            via-slate-800
+            to-sky-900
+            px-5 py-4
+            text-white">
+
+    <button type="button"
+            onclick="closeCloudPreviewModal()"
+            class="absolute right-3 top-3
+                   w-8 h-8 rounded-full
+                   bg-white/10 hover:bg-white/20
+                   text-slate-200 hover:text-white
+                   transition
+                   flex items-center justify-center"
+            title="關閉">
+
+        <i data-lucide="x"
+           class="w-4 h-4"></i>
+
+    </button>
+
+    <div class="flex items-center gap-2.5">
+
+        <i data-lucide="cloud"
+           class="w-5 h-5 text-sky-300"></i>
+
+        <h3 class="text-lg font-black">
+            雲端預覽
+        </h3>
+
+    </div>
+
+    <p class="mt-1
+              text-[10px]
+              text-slate-300
+              tracking-[0.14em]
+              font-semibold">
+        CLOUD PREVIEW
+    </p>
+
+</div>
+
+        <!-- Body -->
+        <div class="px-5 pt-2 pb-5">
+
+            <!-- 目前角色 -->
+            <div class="flex items-center justify-between
+                        gap-3 mb-3
+                        bg-slate-50 border border-slate-200
+                        rounded-xl px-3 py-2">
+
+                <div class="flex items-center gap-2 min-w-0">
+
+                    <i id="cloud-preview-role-icon"
+                       data-lucide="eye"
+                       class="w-4 h-4 text-slate-500 shrink-0"></i>
+
+                    <span class="text-xs font-bold text-slate-500">
+                        目前權限
+                    </span>
+
+                </div>
+
+                <span id="cloud-preview-role-label"
+                      class="shrink-0 px-2.5 py-1 rounded-full
+                             text-[10px] font-black
+                             bg-slate-200 text-slate-600">
+                    預覽者模式
+                </span>
+
+            </div>
+
+
+<!-- =============================================
+     Viewer
+============================================== -->
+<div id="cloud-preview-viewer-home"
+     class="hidden">
+
+    <div class="space-y-3">
+
+        <!-- 預覽 ID -->
+        <div>
+
+            <label for="cloud-preview-view-id"
+                   class="block text-xs
+                          font-bold text-slate-600 mb-1">
+                預覽 ID
+            </label>
+
+            <input type="text"
+                   id="cloud-preview-view-id"
+                   autocomplete="off"
+                   spellcheck="false"
+                   class="w-full h-11 px-4
+                          bg-slate-100
+                          border-none
+                          rounded-xl
+                          focus:ring-2
+                          focus:ring-sky-500
+                          outline-none
+                          text-sm text-slate-700"
+                   placeholder="輸入 Preview ID">
+
+        </div>
+
+
+        <!-- 預覽密碼 -->
+        <div>
+
+            <label for="cloud-preview-view-password"
+                   class="block text-xs
+                          font-bold text-slate-600 mb-1">
+                預覽密碼
+            </label>
+
+            <input type="password"
+                   id="cloud-preview-view-password"
+                   autocomplete="current-password"
+                   class="w-full h-11 px-4
+                          bg-slate-100
+                          border-none
+                          rounded-xl
+                          focus:ring-2
+                          focus:ring-sky-500
+                          outline-none
+                          text-sm text-slate-700"
+                   placeholder="輸入預覽密碼"
+                   onkeydown="if(event.key === 'Enter') submitCloudPreviewViewerOpen()">
+
+        </div>
+
+
+        <!-- 狀態 -->
+        <div id="cloud-preview-view-status"
+             class="hidden rounded-xl
+                    border px-3 py-2.5
+                    text-[11px] font-bold">
+        </div>
+
+
+        <!-- 開啟 -->
+        <button type="button"
+                id="cloud-preview-view-open-btn"
+                onclick="submitCloudPreviewViewerOpen()"
+                class="w-full h-11
+                       rounded-xl
+                       bg-sky-600 hover:bg-sky-700
+                       text-white
+                       text-sm font-black
+                       flex items-center
+                       justify-center gap-2
+                       transition shadow-sm">
+
+            <i data-lucide="cloud-download"
+               class="w-4 h-4"></i>
+
+            <span>開啟雲端預覽</span>
+
+        </button>
+
+    </div>
+
+</div>
+
+            <!-- =============================================
+                 Admin / Editor
+            ============================================== -->
+            <div id="cloud-preview-publisher-home"
+                 class="hidden">
+
+                <div class="space-y-2.5">
+
+<!-- 發布 -->
+<button type="button"
+        id="cloud-preview-publish-card"
+        onclick="openCloudPreviewPublishView()"
+        class="w-full min-h-[58px] rounded-xl
+               border border-slate-200
+               bg-slate-50
+               px-4 py-2.5
+               flex items-center gap-3
+               text-left
+               hover:bg-sky-50/60
+               hover:border-sky-200
+               hover:shadow-sm
+               transition-all duration-200
+               cursor-pointer group">
+
+    <span class="w-9 h-9 rounded-xl
+                 bg-white
+                 border border-sky-100
+                 shadow-sm
+                 flex items-center justify-center
+                 shrink-0">
+
+        <i data-lucide="cloud-upload"
+           class="w-4 h-4 text-sky-600"></i>
+
+    </span>
+
+    <span class="min-w-0 flex-1">
+
+<span class="block
+             text-sm
+             font-black
+             text-slate-800
+             leading-tight">
+    發布新預覽
+</span>
+
+        <span class="block mt-1
+                     text-[9px]
+                     font-bold
+                     tracking-[0.12em]
+                     text-sky-600">
+            PUBLISH PREVIEW
+        </span>
+
+    </span>
+
+    <i data-lucide="chevron-right"
+       class="w-4 h-4
+              text-sky-300
+              shrink-0"></i>
+
+</button>
+
+<!-- 管理：只有管理者顯示 -->
+<button type="button"
+        id="cloud-preview-manage-card"
+        onclick="openCloudPreviewManageView()"
+        class="hidden w-full min-h-[58px] rounded-xl
+               border border-slate-200
+               bg-slate-50
+               px-4 py-2.5
+               text-left
+               items-center gap-3
+               hover:bg-sky-50/60
+               hover:border-sky-200
+               hover:shadow-sm
+               transition-all duration-200
+               cursor-pointer group">
+
+    <span class="w-9 h-9 rounded-xl
+                 bg-white
+                 border border-sky-100
+                 shadow-sm
+                 flex items-center justify-center
+                 shrink-0">
+
+        <i data-lucide="cloud-cog"
+           class="w-4 h-4 text-sky-600"></i>
+
+    </span>
+
+    <span class="min-w-0 flex-1">
+
+<span class="block
+             text-sm
+             font-black
+             text-slate-800
+             leading-tight">
+    管理雲端預覽
+</span>
+
+        <span class="block mt-1
+                     text-[9px]
+                     font-bold
+                     tracking-[0.12em]
+                     text-sky-600">
+            MANAGE PREVIEWS
+        </span>
+
+    </span>
+
+    <i data-lucide="chevron-right"
+       class="w-4 h-4
+              text-sky-300
+              shrink-0"></i>
+
+</button>
+
+<!-- 發布帳號管理：只有管理者顯示 -->
+<button type="button"
+        id="cloud-publisher-accounts-card"
+        onclick="openCloudPublisherAccountsView()"
+        class="hidden w-full min-h-[58px] rounded-xl
+               border border-slate-200
+               bg-slate-50
+               px-4 py-2.5
+               text-left
+               items-center gap-3
+               hover:bg-indigo-50/60
+               hover:border-indigo-200
+               hover:shadow-sm
+               transition-all duration-200
+               cursor-pointer group">
+
+    <span class="w-9 h-9 rounded-xl
+                 bg-white
+                 border border-indigo-100
+                 shadow-sm
+                 flex items-center justify-center
+                 shrink-0">
+
+        <i data-lucide="users"
+           class="w-4 h-4 text-indigo-600"></i>
+
+    </span>
+
+    <span class="min-w-0 flex-1">
+
+        <span class="block
+                     text-sm
+                     font-black
+                     text-slate-800
+                     leading-tight">
+            管理發布帳號
+        </span>
+
+        <span class="block mt-1
+                     text-[9px]
+                     font-bold
+                     tracking-[0.12em]
+                     text-indigo-600">
+            PUBLISHER ACCOUNTS
+        </span>
+
+    </span>
+
+    <i data-lucide="chevron-right"
+       class="w-4 h-4
+              text-indigo-300
+              shrink-0"></i>
+
+</button>
+
+                </div>
+
+            </div>
+
+<!-- =============================================
+     發布新雲端預覽
+============================================== -->
+<div id="cloud-preview-publish-view"
+     class="hidden">
+
+    <!-- 標題列 -->
+    <div class="flex items-center gap-3 mb-4">
+
+        <button type="button"
+                onclick="backToCloudPreviewHome()"
+                class="h-9 px-3 rounded-xl
+                       bg-slate-100 hover:bg-slate-200
+                       text-slate-600
+                       text-xs font-bold
+                       transition
+                       flex items-center gap-1.5">
+
+            <i data-lucide="arrow-left"
+               class="w-4 h-4"></i>
+
+            <span>返回</span>
+
+        </button>
+
+        <div class="min-w-0 flex-1 text-center pr-[72px]">
+
+            <h4 class="text-sm font-black text-slate-800">
+                發布新預覽
+            </h4>
+
+            <p class="text-[10px]
+                      text-sky-600
+                      tracking-[0.12em]
+                      font-bold
+                      mt-0.5">
+                PUBLISH PREVIEW
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="space-y-3">
+
+        <!-- 預覽名稱 -->
+        <div>
+
+            <label for="cloud-preview-publish-name"
+                   class="block text-xs
+                          font-bold text-slate-600 mb-1">
+                預覽名稱
+            </label>
+
+            <input type="text"
+                   id="cloud-preview-publish-name"
+                   maxlength="80"
+                   autocomplete="off"
+                   class="w-full h-11 px-4
+                          bg-slate-100
+                          border-none
+                          rounded-xl
+                          focus:ring-2
+                          focus:ring-sky-500
+                          outline-none
+                          text-sm text-slate-700"
+                   placeholder="例如：年度績效預覽">
+
+        </div>
+
+
+        <!-- 預覽密碼 -->
+        <div>
+
+            <label for="cloud-preview-publish-password"
+                   class="block text-xs
+                          font-bold text-slate-600 mb-1">
+                預覽密碼
+            </label>
+
+            <input type="password"
+                   id="cloud-preview-publish-password"
+                   autocomplete="new-password"
+                   class="w-full h-11 px-4
+                          bg-slate-100
+                          border-none
+                          rounded-xl
+                          focus:ring-2
+                          focus:ring-sky-500
+                          outline-none
+                          text-sm text-slate-700"
+                   placeholder="設定預覽者開啟密碼">
+
+        </div>
+
+
+        <div class="grid grid-cols-2 gap-3">
+
+            <!-- 有效期限 -->
+            <div>
+
+                <label for="cloud-preview-publish-expiry"
+                       class="block text-xs
+                              font-bold text-slate-600 mb-1">
+                    有效期限
+                </label>
+
+                <select id="cloud-preview-publish-expiry"
+                        class="w-full h-11 px-3
+                               bg-slate-100
+                               border-none
+                               rounded-xl
+                               focus:ring-2
+                               focus:ring-sky-500
+                               outline-none
+                               text-sm font-bold
+                               text-slate-700">
+
+                    <option value="1">1 小時</option>
+                    <option value="8">8 小時</option>
+                    <option value="24" selected>24 小時</option>
+                    <option value="72">3 天</option>
+                    <option value="168">7 天</option>
+
+                </select>
+
+            </div>
+
+
+            <!-- 可開啟次數 -->
+            <div>
+
+                <label for="cloud-preview-publish-max-views"
+                       class="block text-xs
+                              font-bold text-slate-600 mb-1">
+                    可開啟次數
+                </label>
+
+                <select id="cloud-preview-publish-max-views"
+                        class="w-full h-11 px-3
+                               bg-slate-100
+                               border-none
+                               rounded-xl
+                               focus:ring-2
+                               focus:ring-sky-500
+                               outline-none
+                               text-sm font-bold
+                               text-slate-700">
+
+                    <option value="1">1 次</option>
+                    <option value="2">2 次</option>
+                    <option value="3" selected>3 次</option>
+                    <option value="5">5 次</option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+
+        <!-- 發布進度／結果 -->
+        <div id="cloud-preview-publish-status"
+             class="hidden rounded-xl
+                    border px-3 py-2.5
+                    text-[11px] font-bold">
+        </div>
+
+
+        <!-- 發布雲端預覽 -->
+<button type="button"
+        id="cloud-preview-publish-submit-btn"
+        onclick="submitCloudPreviewPublish()"
+        class="w-full h-11
+               rounded-xl
+               bg-sky-600 hover:bg-sky-700
+               text-white
+               text-sm font-black
+               flex items-center justify-center gap-2
+               transition
+               shadow-sm">
+
+    <i data-lucide="cloud-upload"
+       class="w-4 h-4"></i>
+
+    <span>發布雲端預覽</span>
+
+</button>
+
+    </div>
+
+</div>            
+
+<!-- =============================================
+     管理雲端預覽
+============================================== -->
+<div id="cloud-preview-manage-view"
+     class="hidden">
+
+    <!-- 標題列 -->
+    <div class="flex items-center justify-between gap-3 mb-4">
+
+        <button type="button"
+                onclick="backToCloudPreviewHome()"
+                class="h-9 px-3 rounded-xl
+                       bg-slate-100 hover:bg-slate-200
+                       text-slate-600
+                       text-xs font-bold
+                       transition
+                       flex items-center gap-1.5">
+
+            <i data-lucide="arrow-left"
+               class="w-4 h-4"></i>
+
+            <span>返回</span>
+        </button>
+
+
+        <div class="min-w-0 text-center flex-1">
+
+            <h4 class="text-sm font-black text-slate-800">
+                管理雲端預覽
+            </h4>
+
+            <p class="text-[10px] text-slate-400 mt-0.5">
+                PERFORMANCE CLOUD PREVIEWS
+            </p>
+
+        </div>
+
+
+        <button type="button"
+                onclick="loadCloudPreviewManageList()"
+                class="w-9 h-9 rounded-xl
+                       bg-sky-50 hover:bg-sky-100
+                       border border-sky-100
+                       text-sky-600
+                       transition
+                       flex items-center justify-center"
+                title="重新整理">
+
+            <i data-lucide="refresh-cw"
+               class="w-4 h-4"></i>
+
+        </button>
+
+    </div>
+
+
+    <!-- 狀態訊息 -->
+    <div id="cloud-preview-manage-status"
+         class="hidden mb-3 rounded-xl
+                border px-3 py-2.5
+                text-[11px] font-bold">
+    </div>
+
+
+    <!-- 預覽清單 -->
+    <div id="cloud-preview-manage-list"
+         class="space-y-2.5
+                max-h-[46svh]
+                overflow-y-auto
+                pr-1">
+    </div>
+
+</div>
+
+<!-- =============================================
+     管理發布帳號
+============================================== -->
+<div id="cloud-publisher-accounts-view"
+     class="hidden">
+
+    <!-- 標題列 -->
+    <div class="flex items-center justify-between gap-3 mb-4">
+
+        <button type="button"
+                onclick="backToCloudPreviewHome()"
+                class="h-9 px-3 rounded-xl
+                       bg-slate-100 hover:bg-slate-200
+                       text-slate-600
+                       text-xs font-bold
+                       transition
+                       flex items-center gap-1.5">
+
+            <i data-lucide="arrow-left"
+               class="w-4 h-4"></i>
+
+            <span>返回</span>
+
+        </button>
+
+
+        <div class="min-w-0 text-center flex-1">
+
+            <h4 class="text-sm font-black text-slate-800">
+                管理發布帳號
+            </h4>
+
+            <p class="text-[10px]
+                      text-indigo-500
+                      mt-0.5
+                      font-bold
+                      tracking-[0.08em]">
+                CLOUD PUBLISHER ACCOUNTS
+            </p>
+
+        </div>
+
+
+        <button type="button"
+                onclick="loadCloudPublisherAccountsList()"
+                class="w-9 h-9 rounded-xl
+                       bg-indigo-50 hover:bg-indigo-100
+                       border border-indigo-100
+                       text-indigo-600
+                       transition
+                       flex items-center justify-center"
+                title="重新整理">
+
+            <i data-lucide="refresh-cw"
+               class="w-4 h-4"></i>
+
+        </button>
+
+    </div>
+
+
+    <!-- 狀態 -->
+    <div id="cloud-publisher-accounts-status"
+         class="hidden mb-3 rounded-xl
+                border px-3 py-2.5
+                text-[11px] font-bold">
+    </div>
+
+
+    <!-- 帳號清單 -->
+    <div id="cloud-publisher-accounts-list"
+         class="space-y-2.5
+                max-h-[43svh]
+                overflow-y-auto
+                pr-1">
+    </div>
+
+
+    <div class="mt-3
+                rounded-xl
+                bg-slate-50
+                border border-slate-200
+                px-3 py-2.5">
+
+        <p class="text-[10px]
+                  leading-relaxed
+                  text-slate-500">
+            發布帳號由 Cloud Admin 管理。
+            停用帳號後將立即禁止新的雲端發布操作；
+            密碼修改不會寫入本系統資料。
+        </p>
+
+    </div>
+
+</div>
+
+            <button type="button"
+                    onclick="closeCloudPreviewModal()"
+                    class="w-full mt-4
+                           h-10 rounded-xl
+                           bg-slate-100 hover:bg-slate-200
+                           text-slate-600
+                           text-xs font-bold
+                           transition">
+                關閉
+            </button>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- =========================================================
+     Cloud Admin：修改發布帳號密碼
+========================================================= -->
+<div id="cloud-publisher-password-modal"
+     onclick="closeCloudPublisherPasswordModalOutside(event)"
+     class="fixed inset-0
+            bg-slate-900/60 backdrop-blur-sm
+            z-[150]
+            hidden
+            flex items-center justify-center
+            p-4 no-print">
+
+    <div onclick="event.stopPropagation()"
+         class="bg-white
+                w-full max-w-sm mx-3
+                rounded-2xl
+                shadow-2xl
+                border border-slate-200
+                overflow-hidden">
+
+        <!-- Header -->
+        <div class="relative
+                    bg-gradient-to-r
+                    from-slate-900
+                    via-slate-800
+                    to-indigo-900
+                    px-5 py-4
+                    text-white">
+
+            <button type="button"
+                    onclick="closeCloudPublisherPasswordModal()"
+                    class="absolute right-3 top-3
+                           w-8 h-8 rounded-full
+                           bg-white/10 hover:bg-white/20
+                           flex items-center justify-center">
+
+                <i data-lucide="x"
+                   class="w-4 h-4"></i>
+
+            </button>
+
+            <div class="flex items-center gap-2.5">
+
+                <i data-lucide="key-round"
+                   class="w-5 h-5 text-indigo-300"></i>
+
+                <h3 class="text-lg font-black">
+                    修改發布帳號密碼
+                </h3>
+
+            </div>
+
+            <p class="mt-1
+                      text-[10px]
+                      text-slate-300
+                      tracking-[0.14em]
+                      font-semibold">
+                CHANGE CLOUD PASSWORD
+            </p>
+
+        </div>
+
+
+        <!-- Body -->
+        <div class="px-5 py-5 space-y-3">
+
+            <div class="rounded-xl
+                        bg-indigo-50
+                        border border-indigo-100
+                        px-3 py-2.5
+                        text-center">
+
+                <p class="text-[10px]
+                          font-bold
+                          text-indigo-500">
+                    發布帳號
+                </p>
+
+                <p id="cloud-publisher-password-account"
+                   class="mt-0.5
+                          text-sm
+                          font-black
+                          text-indigo-700">
+                </p>
+
+            </div>
+
+
+            <div>
+
+                <label for="cloud-publisher-new-password"
+                       class="block text-xs
+                              font-bold text-slate-600 mb-1">
+                    新密碼
+                </label>
+
+                <input type="password"
+                       id="cloud-publisher-new-password"
+                       autocomplete="new-password"
+                       minlength="8"
+                       maxlength="128"
+                       class="w-full h-11 px-4
+                              bg-slate-100
+                              border-none
+                              rounded-xl
+                              focus:ring-2
+                              focus:ring-indigo-500
+                              outline-none
+                              text-sm text-slate-700"
+                       placeholder="至少 8 個字元">
+
+            </div>
+
+
+            <div>
+
+                <label for="cloud-publisher-confirm-password"
+                       class="block text-xs
+                              font-bold text-slate-600 mb-1">
+                    再次輸入新密碼
+                </label>
+
+                <input type="password"
+                       id="cloud-publisher-confirm-password"
+                       autocomplete="new-password"
+                       minlength="8"
+                       maxlength="128"
+                       onkeydown="if(event.key === 'Enter') submitCloudPublisherPasswordChange()"
+                       class="w-full h-11 px-4
+                              bg-slate-100
+                              border-none
+                              rounded-xl
+                              focus:ring-2
+                              focus:ring-indigo-500
+                              outline-none
+                              text-sm text-slate-700"
+                       placeholder="再次輸入新密碼">
+
+            </div>
+
+
+            <div id="cloud-publisher-password-status"
+                 class="hidden
+                        rounded-xl
+                        border px-3 py-2.5
+                        text-[11px]
+                        font-bold">
+            </div>
+
+
+            <div class="grid grid-cols-2 gap-2 pt-1">
+
+                <button type="button"
+                        onclick="closeCloudPublisherPasswordModal()"
+                        class="h-10 rounded-xl
+                               bg-slate-100
+                               hover:bg-slate-200
+                               text-slate-600
+                               text-xs font-bold
+                               transition">
+
+                    取消
+
+                </button>
+
+                <button type="button"
+                        id="cloud-publisher-password-save-btn"
+                        onclick="submitCloudPublisherPasswordChange()"
+                        class="h-10 rounded-xl
+                               bg-indigo-600
+                               hover:bg-indigo-700
+                               text-white
+                               text-xs font-black
+                               transition
+                               flex items-center
+                               justify-center gap-1.5">
+
+                    <i data-lucide="save"
+                       class="w-4 h-4"></i>
+
+                    <span>更新密碼</span>
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- =========================================================
+     管理者：編輯既有雲端預覽
+========================================================= -->
+<div id="cloud-preview-edit-modal"
+     onclick="closeCloudPreviewEditModalOutside(event)"
+     class="fixed inset-0
+            bg-slate-900/60 backdrop-blur-sm
+            z-[145]
+            hidden
+            flex items-center justify-center
+            p-4 no-print">
+
+    <div onclick="event.stopPropagation()"
+         class="bg-white
+                w-full max-w-sm mx-3
+                rounded-2xl
+                shadow-2xl
+                border border-slate-200
+                overflow-hidden
+                max-h-[calc(100svh-24px)]
+                overflow-y-auto">
+
+        <!-- Header -->
+        <div class="relative
+                    bg-gradient-to-r
+                    from-slate-900
+                    via-slate-800
+                    to-sky-900
+                    px-5 py-4
+                    text-white">
+
+            <button type="button"
+                    onclick="closeCloudPreviewEditModal()"
+                    class="absolute right-3 top-3
+                           w-8 h-8 rounded-full
+                           bg-white/10 hover:bg-white/20
+                           text-slate-200 hover:text-white
+                           transition
+                           flex items-center justify-center"
+                    title="關閉">
+
+                <i data-lucide="x"
+                   class="w-4 h-4"></i>
+            </button>
+
+            <div class="flex items-center gap-2.5">
+
+                <i data-lucide="square-pen"
+                   class="w-5 h-5 text-sky-300"></i>
+
+                <h3 class="text-lg font-black">
+                    編輯雲端預覽
+                </h3>
+
+            </div>
+
+            <p class="mt-1
+                      text-[10px]
+                      text-slate-300
+                      tracking-[0.14em]
+                      font-semibold">
+                EDIT CLOUD PREVIEW
+            </p>
+
+        </div>
+
+
+        <!-- Body -->
+        <div class="px-5 py-5 space-y-3">
+
+            <!-- 預覽名稱 -->
+            <div>
+
+                <label for="cloud-preview-edit-name"
+                       class="block text-xs
+                              font-bold text-slate-600 mb-1">
+                    預覽名稱
+                </label>
+
+                <input type="text"
+                       id="cloud-preview-edit-name"
+                       maxlength="80"
+                       autocomplete="off"
+                       class="w-full h-11 px-4
+                              bg-slate-100
+                              border-none
+                              rounded-xl
+                              focus:ring-2
+                              focus:ring-sky-500
+                              outline-none
+                              text-sm text-slate-700">
+
+            </div>
+
+
+            <!-- 新預覽密碼 -->
+            <div>
+
+                <label for="cloud-preview-edit-password"
+                       class="block text-xs
+                              font-bold text-slate-600 mb-1">
+                    新預覽密碼
+                </label>
+
+                <input type="password"
+                       id="cloud-preview-edit-password"
+                       autocomplete="new-password"
+                       class="w-full h-11 px-4
+                              bg-slate-100
+                              border-none
+                              rounded-xl
+                              focus:ring-2
+                              focus:ring-sky-500
+                              outline-none
+                              text-sm text-slate-700"
+                       placeholder="留白表示維持目前密碼">
+
+                <p class="mt-1 text-[10px]
+                          text-slate-400 leading-snug">
+                    如不需要變更密碼，請保持空白。
+                </p>
+
+            </div>
+
+
+            <!-- 有效期限 -->
+            <div>
+
+                <label for="cloud-preview-edit-expiry"
+                       class="block text-xs
+                              font-bold text-slate-600 mb-1">
+                    有效期限
+                </label>
+
+                <input type="datetime-local"
+                       id="cloud-preview-edit-expiry"
+                       class="w-full h-11 px-4
+                              bg-slate-100
+                              border-none
+                              rounded-xl
+                              focus:ring-2
+                              focus:ring-sky-500
+                              outline-none
+                              text-sm text-slate-700">
+
+            </div>
+
+
+            <!-- 可開啟次數 -->
+            <div>
+
+                <label for="cloud-preview-edit-max-views"
+                       class="block text-xs
+                              font-bold text-slate-600 mb-1">
+                    可開啟次數
+                </label>
+
+                <input type="number"
+                       id="cloud-preview-edit-max-views"
+                       min="1"
+                       step="1"
+                       inputmode="numeric"
+                       class="w-full h-11 px-4
+                              bg-slate-100
+                              border-none
+                              rounded-xl
+                              focus:ring-2
+                              focus:ring-sky-500
+                              outline-none
+                              text-sm text-slate-700">
+
+                <p id="cloud-preview-edit-view-hint"
+                   class="mt-1 text-[10px]
+                          text-slate-400 leading-snug">
+                </p>
+
+            </div>
+
+
+            <!-- 狀態 -->
+            <div id="cloud-preview-edit-status"
+                 class="hidden rounded-xl
+                        border px-3 py-2.5
+                        text-[11px] font-bold">
+            </div>
+
+
+            <!-- 操作 -->
+            <div class="grid grid-cols-2
+                        gap-2 pt-1">
+
+                <button type="button"
+                        onclick="closeCloudPreviewEditModal()"
+                        class="h-10 rounded-xl
+                               bg-slate-100
+                               hover:bg-slate-200
+                               text-slate-600
+                               text-xs font-bold
+                               transition">
+                    取消
+                </button>
+
+                <button type="button"
+                        id="cloud-preview-edit-save-btn"
+                        onclick="submitCloudPreviewEdit()"
+                        class="h-10 rounded-xl
+                               bg-sky-600
+                               hover:bg-sky-700
+                               text-white
+                               text-xs font-black
+                               transition
+                               flex items-center
+                               justify-center gap-1.5">
+
+                    <i data-lucide="save"
+                       class="w-4 h-4"></i>
+
+                    <span>儲存修改</span>
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Cloud Publisher 雲端發布登入 -->
+<div id="cloud-publisher-login-modal"
+     onclick="closeCloudPublisherLoginModalOutside(event)"
+     class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[140] hidden flex items-center justify-center p-4 no-print">
+
+<div onclick="event.stopPropagation()"
+     class="bg-white w-full max-w-sm mx-3 rounded-2xl shadow-2xl overflow-y-auto border border-slate-200 max-h-[calc(100svh-24px)]">
+
+        <div class="relative bg-gradient-to-r from-slate-900 via-slate-800 to-sky-900 px-5 py-4 text-white">
+
+            <button type="button"
+                    onclick="closeCloudPublisherLoginModal()"
+                    class="absolute right-3 top-3 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center">
+
+                <i data-lucide="x"
+                   class="w-4 h-4"></i>
+
+            </button>
+
+            <div class="flex items-center gap-2.5">
+                <i data-lucide="cloud-upload"
+                   class="w-5 h-5 text-sky-300"></i>
+
+                <h3 class="text-lg font-black">
+                    雲端發布驗證
+                </h3>
+            </div>
+
+            <p class="mt-1 text-[10px] text-slate-300 tracking-[0.14em] font-semibold">
+                CLOUD PUBLISHER
+            </p>
+        </div>
+
+        <div class="px-5 py-5 space-y-4">
+
+            <p class="text-xs text-slate-500 text-center leading-relaxed">
+                請登入已授權的 Cloud Publisher 帳號。
+                同一次開啟系統期間不需重複登入。
+            </p>
+
+<div>
+    <label class="block text-xs font-bold text-slate-600 mb-1">
+        帳號
+    </label>
+
+    <input type="text"
+           id="cloud-publisher-account"
+           autocomplete="username"
+           autocapitalize="none"
+           spellcheck="false"
+           maxlength="7"
+           class="w-full h-11 px-4 bg-slate-100 border-none rounded-xl focus:ring-2 focus:ring-sky-500 outline-none text-sm">
+</div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1">
+                    密碼
+                </label>
+
+                <input type="password"
+                       id="cloud-publisher-password"
+                       autocomplete="current-password"
+                       onkeydown="if(event.key === 'Enter') submitCloudPublisherLogin()"
+                       class="w-full h-11 px-4 bg-slate-100 border-none rounded-xl focus:ring-2 focus:ring-sky-500 outline-none text-sm">
+            </div>
+
+            <p id="cloud-publisher-login-error"
+               class="hidden text-center text-xs font-bold text-red-500">
+                雲端發布帳號驗證失敗
+            </p>
+
+            <button type="button"
+                    id="cloud-publisher-login-btn"
+                    onclick="submitCloudPublisherLogin()"
+                    class="w-full h-11 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-black transition flex items-center justify-center gap-2">
+
+                <i data-lucide="log-in"
+                   class="w-4 h-4"></i>
+
+                登入雲端發布
+            </button>
+
+        </div>
+    </div>
+</div>
+
 <!-- 附件管理彈窗 -->
 <div id="attachment-modal" onclick="closeAttachmentModalOutside(event)" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] hidden flex items-center justify-center p-4">
     <div onclick="event.stopPropagation()" class="attachment-panel">
@@ -3052,6 +4347,17 @@ let activeLimitedPreviewId = '';
 
 
 /*
+ * 目前正在顯示的雲端預覽識別碼。
+ *
+ * 只存在目前網頁記憶體，
+ * 不寫入 localStorage / IndexedDB。
+ */
+let activeCloudPreviewId = '';
+
+let cloudPreviewExpiryTimer = null;
+
+
+/*
  * 預覽到期自動清除 Timer。
  */
 let limitedPreviewExpiryTimer = null;
@@ -3064,6 +4370,6307 @@ let isYearFolderPanelOpen = false;
 let activeAttachmentTarget = null;
 let isAttachmentUploadBusy = false;
 
+/* =========================================================
+   Supabase 雲端預覽共用設定
+========================================================= */
+
+const OSH_CLOUD_PROJECT_URL =
+    'https://tfjhwcapmtulqkuazwib.supabase.co';
+
+/*
+ * 這裡只放 Supabase Publishable Key。
+ *
+ * Publishable Key 本來就是提供瀏覽器前端使用，
+ * 不可以在這裡放 service_role key。
+ */
+const OSH_CLOUD_PUBLISHABLE_KEY =
+    'sb_publishable_z4Pnz8m-YIiMrgyA1VT7xg_T2VRqtyC';
+
+const OSH_CLOUD_SYSTEM_TYPE =
+    'performance';
+
+const OSH_CLOUD_ADMIN_FUNCTION =
+    `${OSH_CLOUD_PROJECT_URL}/functions/v1/cloud-preview-admin`;
+
+const OSH_CLOUD_VIEW_FUNCTION =
+    `${OSH_CLOUD_PROJECT_URL}/functions/v1/cloud-preview-view`;
+
+
+/*
+ * Cloud Publisher 登入狀態只存在目前網頁記憶體。
+ *
+ * 不寫入：
+ * localStorage
+ * sessionStorage
+ * IndexedDB
+ *
+ * 關閉頁面後自然消失。
+ */
+let cloudPublisherSession = {
+    accessToken: '',
+    refreshToken: '',
+    expiresAt: 0
+};
+
+let cloudPublisherLoginResolver = null;
+
+
+/*
+ * 清除 Cloud Publisher 登入狀態。
+ */
+function clearCloudPublisherSession() {
+    cloudPublisherSession = {
+        accessToken: '',
+        refreshToken: '',
+        expiresAt: 0
+    };
+}
+
+
+/*
+ * 儲存 Supabase Auth 回傳的登入資訊。
+ */
+function setCloudPublisherSession(data) {
+    const expiresIn =
+        Number(data?.expires_in) || 3600;
+
+    cloudPublisherSession = {
+        accessToken:
+            String(data?.access_token || ''),
+
+        refreshToken:
+            String(data?.refresh_token || ''),
+
+        /*
+         * 提前 60 秒視為到期，
+         * 避免剛送出 API 時 Token 正好失效。
+         */
+        expiresAt:
+            Date.now() +
+            Math.max(
+                0,
+                expiresIn - 60
+            ) * 1000
+    };
+}
+
+/*
+ * 將使用者看到的簡易帳號
+ * 轉換成 Supabase Auth 使用的 Email。
+ *
+ * 對外登入：
+ * admin
+ * user001 ～ user006
+ *
+ * Supabase Auth：
+ * osms.cloud.auth+帳號@gmail.com
+ */
+function getCloudPublisherEmailFromAccount(
+    value
+) {
+    const account =
+        String(
+            value || ''
+        )
+            .trim()
+            .toLowerCase();
+
+
+    /*
+     * Cloud Admin。
+     */
+    if (
+        account ===
+        'admin'
+    ) {
+        return (
+            'osms.cloud.auth+admin@gmail.com'
+        );
+    }
+
+
+    /*
+     * 預留六組 Publisher：
+     * user001 ～ user006。
+     *
+     * 尚未於 Supabase 建立的帳號
+     * 即使格式正確也無法登入。
+     */
+    if (
+        /^user00[1-6]$/
+            .test(
+                account
+            )
+    ) {
+        return (
+            `osms.cloud.auth+${account}@gmail.com`
+        );
+    }
+
+
+    return '';
+}
+
+/*
+ * 使用 Supabase Auth 的 Email / Password 登入。
+ *
+ * Email 不由使用者直接輸入，
+ * 而是由簡易帳號自動轉換。
+ */
+async function loginCloudPublisher(
+    email,
+    password
+) {
+    const response =
+        await fetch(
+            `${OSH_CLOUD_PROJECT_URL}/auth/v1/token?grant_type=password`,
+            {
+                method: 'POST',
+
+                headers: {
+                    apikey:
+                        OSH_CLOUD_PUBLISHABLE_KEY,
+
+                    'Content-Type':
+                        'application/json'
+                },
+
+                body: JSON.stringify({
+                    email,
+                    password
+                })
+            }
+        );
+
+    let data = {};
+
+    try {
+        data =
+            await response.json();
+    } catch (_) {}
+
+    if (
+        !response.ok ||
+        !data?.access_token
+    ) {
+        throw new Error(
+            data?.msg ||
+            data?.message ||
+            data?.error ||
+            'CLOUD_LOGIN_FAILED'
+        );
+    }
+
+    setCloudPublisherSession(
+        data
+    );
+
+    return (
+        cloudPublisherSession
+            .accessToken
+    );
+}
+
+
+/*
+ * Access Token 到期後，
+ * 使用 Refresh Token 自動更新。
+ */
+async function refreshCloudPublisherSession() {
+    const refreshToken =
+        cloudPublisherSession
+            .refreshToken;
+
+    if (!refreshToken) {
+        return false;
+    }
+
+    try {
+        const response =
+            await fetch(
+                `${OSH_CLOUD_PROJECT_URL}/auth/v1/token?grant_type=refresh_token`,
+                {
+                    method: 'POST',
+
+                    headers: {
+                        apikey:
+                            OSH_CLOUD_PUBLISHABLE_KEY,
+
+                        'Content-Type':
+                            'application/json'
+                    },
+
+                    body: JSON.stringify({
+                        refresh_token:
+                            refreshToken
+                    })
+                }
+            );
+
+        const data =
+            await response.json();
+
+        if (
+            !response.ok ||
+            !data?.access_token
+        ) {
+            clearCloudPublisherSession();
+            return false;
+        }
+
+        setCloudPublisherSession(
+            data
+        );
+
+        return true;
+
+    } catch (error) {
+        console.error(
+            'Cloud Publisher Token 更新失敗：',
+            error
+        );
+
+        clearCloudPublisherSession();
+
+        return false;
+    }
+}
+
+
+/*
+ * 確認目前是否已有可用的
+ * Cloud Publisher Access Token。
+ */
+async function ensureCloudPublisherAccessToken() {
+    if (
+        cloudPublisherSession
+            .accessToken &&
+        cloudPublisherSession
+            .expiresAt >
+            Date.now()
+    ) {
+        return (
+            cloudPublisherSession
+                .accessToken
+        );
+    }
+
+    const refreshed =
+        await refreshCloudPublisherSession();
+
+    if (refreshed) {
+        return (
+            cloudPublisherSession
+                .accessToken
+        );
+    }
+
+    /*
+     * 尚未登入時，
+     * 開啟正式的 Cloud Publisher 登入視窗。
+     */
+    return new Promise(
+        (resolve, reject) => {
+            cloudPublisherLoginResolver = {
+                resolve,
+                reject
+            };
+
+            openCloudPublisherLoginModal();
+        }
+    );
+}
+
+
+/*
+ * 呼叫管理端 Edge Function。
+ */
+async function cloudAdminRequest(
+    requestBody
+) {
+    const accessToken =
+        await ensureCloudPublisherAccessToken();
+
+    const response =
+        await fetch(
+            OSH_CLOUD_ADMIN_FUNCTION,
+            {
+                method: 'POST',
+
+                headers: {
+                    apikey:
+                        OSH_CLOUD_PUBLISHABLE_KEY,
+
+                    Authorization:
+                        `Bearer ${accessToken}`,
+
+                    'Content-Type':
+                        'application/json'
+                },
+
+                body:
+                    JSON.stringify(
+                        requestBody
+                    )
+            }
+        );
+
+    let data = {};
+
+    try {
+        data =
+            await response.json();
+    } catch (_) {}
+
+    /*
+     * JWT 若真的失效，
+     * 清掉目前工作階段，
+     * 下次再自動要求登入。
+     */
+    if (response.status === 401) {
+        clearCloudPublisherSession();
+    }
+
+    if (
+        !response.ok ||
+        data?.ok !== true
+    ) {
+        const error =
+            new Error(
+                data?.error ||
+                `HTTP_${response.status}`
+            );
+
+        error.status =
+            response.status;
+
+        error.data =
+            data;
+
+        throw error;
+    }
+
+    return data;
+}
+
+
+/*
+ * Viewer 呼叫公開預覽 Edge Function。
+ *
+ * 這裡不需要 Cloud Publisher Access Token。
+ */
+async function cloudViewerRequest(
+    previewId,
+    previewPassword
+) {
+    const response =
+        await fetch(
+            OSH_CLOUD_VIEW_FUNCTION,
+            {
+                method: 'POST',
+
+                headers: {
+                    apikey:
+                        OSH_CLOUD_PUBLISHABLE_KEY,
+
+                    'Content-Type':
+                        'application/json'
+                },
+
+                body:
+                    JSON.stringify({
+                        preview_id:
+                            previewId,
+
+                        preview_password:
+                            previewPassword
+                    })
+            }
+        );
+
+    let data = {};
+
+    try {
+        data =
+            await response.json();
+    } catch (_) {}
+
+    if (
+        !response.ok ||
+        data?.ok !== true
+    ) {
+        const error =
+            new Error(
+                data?.error ||
+                `HTTP_${response.status}`
+            );
+
+        error.status =
+            response.status;
+
+        error.data =
+            data;
+
+        throw error;
+    }
+
+    return data;
+}
+
+
+/* =========================================================
+   Cloud Viewer
+========================================================= */
+
+function setCloudPreviewViewerStatus(
+    message,
+    type = 'info'
+) {
+    const box =
+        document.getElementById(
+            'cloud-preview-view-status'
+        );
+
+    if (!box) return;
+
+    if (!message) {
+        box.classList.add('hidden');
+        box.textContent = '';
+        return;
+    }
+
+    box.classList.remove('hidden');
+
+    if (type === 'error') {
+
+        box.className =
+            'rounded-xl border border-red-100 bg-red-50 px-3 py-2.5 text-[11px] font-bold text-red-600';
+
+    } else if (type === 'success') {
+
+        box.className =
+            'rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2.5 text-[11px] font-bold text-emerald-700';
+
+    } else {
+
+        box.className =
+            'rounded-xl border border-sky-100 bg-sky-50 px-3 py-2.5 text-[11px] font-bold text-sky-700';
+    }
+
+    box.textContent =
+        message;
+}
+
+
+function setCloudPreviewViewerBusy(
+    busy
+) {
+    const button =
+        document.getElementById(
+            'cloud-preview-view-open-btn'
+        );
+
+    if (!button) return;
+
+    button.disabled =
+        busy;
+
+    if (busy) {
+
+        button.classList.add(
+            'opacity-60',
+            'cursor-wait'
+        );
+
+        button.innerHTML = `
+            <span class="
+                w-4 h-4
+                rounded-full
+                border-2
+                border-white/40
+                border-t-white
+                animate-spin
+            "></span>
+
+            <span>正在載入...</span>
+        `;
+
+    } else {
+
+        button.classList.remove(
+            'opacity-60',
+            'cursor-wait'
+        );
+
+        button.innerHTML = `
+            <i data-lucide="cloud-download"
+               class="w-4 h-4"></i>
+
+            <span>開啟雲端預覽</span>
+        `;
+
+        lucide.createIcons();
+    }
+}
+
+
+/*
+ * 清除 Cloud Preview
+ * 目前頁面的執行狀態。
+ */
+function clearCloudPreviewRuntimeState() {
+
+    if (cloudPreviewExpiryTimer) {
+
+        clearTimeout(
+            cloudPreviewExpiryTimer
+        );
+    }
+
+    cloudPreviewExpiryTimer =
+        null;
+
+    activeCloudPreviewId =
+        '';
+}
+
+
+/*
+ * Cloud Preview 到期。
+ */
+function expireCurrentCloudPreview() {
+
+    if (
+        !isPreviewDataMode ||
+        !activeCloudPreviewId
+    ) {
+
+        clearCloudPreviewRuntimeState();
+
+        return;
+    }
+
+
+    clearPreviewDataAndRestoreTemplate();
+
+
+    alert(
+        '此雲端預覽已超過有效期限。\n\n' +
+        '目前預覽內容已自動關閉。'
+    );
+}
+
+
+/*
+ * 啟動 Cloud Preview 到期 Timer。
+ */
+function startCloudPreviewExpiryTimer(
+    previewId,
+    expiresAt
+) {
+
+    clearCloudPreviewRuntimeState();
+
+
+    const expiresAtMs =
+        new Date(
+            expiresAt
+        ).getTime();
+
+
+    if (
+        !Number.isFinite(
+            expiresAtMs
+        )
+    ) {
+        return;
+    }
+
+
+    activeCloudPreviewId =
+        String(
+            previewId || ''
+        );
+
+
+    const remaining =
+        expiresAtMs -
+        Date.now();
+
+
+    if (remaining <= 0) {
+
+        expireCurrentCloudPreview();
+
+        return;
+    }
+
+
+    cloudPreviewExpiryTimer =
+        setTimeout(
+            expireCurrentCloudPreview,
+            remaining
+        );
+}
+
+
+/*
+ * 把 Payload 裡面的：
+ *
+ * cloud_file_id
+ *
+ * 換成 cloud-preview-view
+ * 回傳的 Signed URL。
+ */
+function hydrateCloudPreviewPayload(
+    value,
+    cloudFileMap
+) {
+
+    if (
+        value &&
+        typeof value === 'object' &&
+        !Array.isArray(value) &&
+        value.cloud_file_id
+    ) {
+
+        const cloudFileId =
+            String(
+                value.cloud_file_id
+            );
+
+
+        const cloudFile =
+            cloudFileMap.get(
+                cloudFileId
+            );
+
+
+        if (
+            !cloudFile ||
+            !cloudFile.signed_url
+        ) {
+
+            throw new Error(
+                'CLOUD_VIEW_ATTACHMENT_MISSING'
+            );
+        }
+
+
+        return {
+
+            name:
+                value.name ||
+                cloudFile.file_name ||
+                '附件',
+
+            type:
+                value.type ||
+                cloudFile.mime_type ||
+                '',
+
+            size:
+                Number(
+                    value.size ||
+                    cloudFile.file_size ||
+                    0
+                ),
+
+            /*
+             * 原本附件系統統一從 file.data
+             * 取得附件來源。
+             *
+             * Cloud 模式直接放 Signed URL。
+             */
+            data:
+                cloudFile.signed_url,
+
+            cloud_file_id:
+                cloudFileId,
+
+            is_cloud_file:
+                true
+        };
+    }
+
+
+    if (Array.isArray(value)) {
+
+        return value.map(
+            item =>
+                hydrateCloudPreviewPayload(
+                    item,
+                    cloudFileMap
+                )
+        );
+    }
+
+
+    if (
+        value &&
+        typeof value === 'object'
+    ) {
+
+        const output = {};
+
+
+        Object.entries(value)
+            .forEach(
+                ([key, child]) => {
+
+                    output[key] =
+                        hydrateCloudPreviewPayload(
+                            child,
+                            cloudFileMap
+                        );
+                }
+            );
+
+
+        return output;
+    }
+
+
+    return value;
+}
+
+
+/*
+ * Cloud Viewer 錯誤訊息。
+ */
+function getCloudPreviewViewerErrorMessage(
+    error
+) {
+
+    const code =
+        String(
+            error?.message || ''
+        );
+
+
+    const messages = {
+
+        PREVIEW_PASSWORD_REQUIRED:
+            '請輸入預覽密碼。',
+
+        PREVIEW_PASSWORD_INVALID:
+            '預覽密碼錯誤。',
+
+        PREVIEW_DISABLED:
+            '此雲端預覽目前已停用。',
+
+        PREVIEW_EXPIRED:
+            '此雲端預覽已超過有效期限。',
+
+        PREVIEW_VIEW_LIMIT_REACHED:
+            '此雲端預覽的可開啟次數已用完。',
+
+        PREVIEW_NOT_FOUND:
+            '找不到此雲端預覽。',
+
+        CLOUD_VIEW_ATTACHMENT_MISSING:
+            '雲端附件資料不完整。',
+
+        CLOUD_VIEW_PAYLOAD_INVALID:
+            '雲端預覽資料格式錯誤。'
+    };
+
+
+    return (
+        messages[code] ||
+        '無法開啟雲端預覽。'
+    );
+}
+
+
+/*
+ * 預覽者正式開啟 Cloud Preview。
+ */
+async function submitCloudPreviewViewerOpen() {
+
+    /*
+     * 只有未登入的 Viewer
+     * 可以使用此入口。
+     */
+    if (
+        getCurrentRole() !==
+        'viewer'
+    ) {
+        return;
+    }
+
+
+    const idInput =
+        document.getElementById(
+            'cloud-preview-view-id'
+        );
+
+
+    const passwordInput =
+        document.getElementById(
+            'cloud-preview-view-password'
+        );
+
+
+    const previewId =
+        String(
+            idInput?.value || ''
+        ).trim();
+
+
+    const previewPassword =
+        String(
+            passwordInput?.value || ''
+        );
+
+
+    if (!previewId) {
+
+        setCloudPreviewViewerStatus(
+            '請輸入預覽 ID。',
+            'error'
+        );
+
+        idInput?.focus();
+
+        return;
+    }
+
+
+    if (!previewPassword) {
+
+        setCloudPreviewViewerStatus(
+            '請輸入預覽密碼。',
+            'error'
+        );
+
+        passwordInput?.focus();
+
+        return;
+    }
+
+
+    /*
+     * 目前若已有本機或雲端預覽，
+     * 先確認是否替換。
+     *
+     * 確認是在呼叫後端以前，
+     * 避免取消操作卻浪費一次開啟次數。
+     */
+    if (
+        isPreviewDataMode &&
+        !confirm(
+            '目前已有預覽資料，是否改為開啟新的雲端預覽？'
+        )
+    ) {
+        return;
+    }
+
+
+    try {
+
+        setCloudPreviewViewerBusy(
+            true
+        );
+
+
+        setCloudPreviewViewerStatus(
+            '正在連線雲端預覽服務...',
+            'info'
+        );
+
+
+        /*
+         * 密碼正確且 Preview 可用時，
+         * 後端才會正式消耗一次開啟次數。
+         */
+        const result =
+            await cloudViewerRequest(
+                previewId,
+                previewPassword
+            );
+
+/*
+ * cloud-preview-view 的正式回傳格式：
+ *
+ * {
+ *   ok: true,
+ *   preview: {
+ *       id,
+ *       system_type,
+ *       preview_name,
+ *       expires_at,
+ *       view_count,
+ *       max_views,
+ *       payload,
+ *       attachments
+ *   }
+ * }
+ */
+const cloudPreview =
+    result?.preview;
+
+
+if (
+    !cloudPreview ||
+    typeof cloudPreview !== 'object'
+) {
+
+    throw new Error(
+        'CLOUD_VIEW_PAYLOAD_INVALID'
+    );
+}            
+
+        /*
+         * 確認這筆 Preview
+         * 是績效系統資料。
+         */
+const systemType =
+    String(
+        cloudPreview?.system_type ||
+        ''
+    );
+
+
+        if (
+            systemType &&
+            systemType !==
+                OSH_CLOUD_SYSTEM_TYPE
+        ) {
+
+            throw new Error(
+                'CLOUD_VIEW_PAYLOAD_INVALID'
+            );
+        }
+
+
+const sourcePayload =
+    cloudPreview?.payload;
+
+
+        /*
+         * 雲端 Payload 本身仍沿用
+         * 正式績效 JSON 格式。
+         */
+        if (
+            !sourcePayload ||
+            typeof sourcePayload !==
+                'object' ||
+            Array.isArray(
+                sourcePayload
+            ) ||
+            sourcePayload.version !==
+                'performance-system-json-v2' ||
+            sourcePayload.exportType !==
+                'unified-data' ||
+            !Array.isArray(
+                sourcePayload.year_folders
+            ) ||
+            sourcePayload.year_folders.length ===
+                0
+        ) {
+
+            throw new Error(
+                'CLOUD_VIEW_PAYLOAD_INVALID'
+            );
+        }
+
+
+        /*
+         * 建立：
+         *
+         * cloud_file_id
+         * ↓
+         * Signed URL
+         *
+         * 的索引。
+         */
+const attachments =
+    Array.isArray(
+        cloudPreview?.attachments
+    )
+        ? cloudPreview.attachments
+        : [];
+
+
+        const cloudFileMap =
+            new Map();
+
+
+        attachments.forEach(
+            file => {
+
+                if (file?.id) {
+
+                    cloudFileMap.set(
+                        String(file.id),
+                        file
+                    );
+                }
+            }
+        );
+
+
+        /*
+         * 不下載 162 個附件到記憶體。
+         *
+         * 只把附件參照改成 Signed URL，
+         * 真正點附件時才由瀏覽器讀取。
+         */
+        const hydratedPayload =
+            hydrateCloudPreviewPayload(
+                sourcePayload,
+                cloudFileMap
+            );
+
+
+        /*
+         * 停掉上一份預覽 Timer。
+         */
+        clearLimitedPreviewRuntimeState();
+
+        clearCloudPreviewRuntimeState();
+
+
+        /*
+         * 完全沿用現有績效匯入流程，
+         * 不寫入 IndexedDB。
+         */
+        applyImportedPerformanceData(
+            hydratedPayload
+        );
+
+
+        releaseImportedPerformancePayload(
+            hydratedPayload
+        );
+
+
+        isPreviewDataMode =
+            true;
+
+        isPerformanceEditMode =
+            false;
+
+
+        clearWorkProtectionState();
+
+
+/*
+ * 使用 cloud-preview-view
+ * 回傳的 Preview 有效期限。
+ */
+startCloudPreviewExpiryTimer(
+
+    cloudPreview?.id ||
+        previewId,
+
+    cloudPreview?.expires_at ||
+        ''
+);
+
+
+        normalizeAllExecutionMonths();
+
+
+        renderYearFolders();
+
+
+        switchTab(
+            currentTab,
+            false
+        );
+
+
+        updateUIState();
+
+
+        /*
+         * 成功後不要把預覽密碼
+         * 留在輸入框內。
+         */
+        if (passwordInput) {
+
+            passwordInput.value =
+                '';
+        }
+
+
+        closeCloudPreviewModal();
+
+
+const viewCount =
+    Number(
+        cloudPreview?.view_count
+    );
+
+
+const maxViews =
+    Number(
+        cloudPreview?.max_views
+    );
+
+
+        if (
+            Number.isFinite(
+                viewCount
+            ) &&
+            Number.isFinite(
+                maxViews
+            )
+        ) {
+
+            showToast(
+                `雲端預覽已開啟（${viewCount}/${maxViews}）`
+            );
+
+        } else {
+
+            showToast(
+                '雲端預覽已開啟'
+            );
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            '雲端預覽開啟失敗：',
+            error
+        );
+
+
+        setCloudPreviewViewerStatus(
+
+            getCloudPreviewViewerErrorMessage(
+                error
+            ),
+
+            'error'
+        );
+
+
+    } finally {
+
+        setCloudPreviewViewerBusy(
+            false
+        );
+    }
+}
+
+
+/* =========================================================
+   雲端預覽中心介面
+========================================================= */
+
+function openCloudPreviewModal() {
+    /*
+     * 手機直式從側邊功能列進入時，
+     * 先收起側欄。
+     */
+    closeMobileSidebar();
+
+document
+    .getElementById(
+        'cloud-preview-manage-view'
+    )
+    ?.classList
+    .add('hidden');
+
+document
+    .getElementById(
+        'cloud-publisher-accounts-view'
+    )
+    ?.classList
+    .add('hidden');    
+
+document
+    .getElementById(
+        'cloud-preview-publish-view'
+    )
+    ?.classList
+    .add('hidden');
+
+updateCloudPreviewModalHome();
+
+    document
+        .getElementById(
+            'cloud-preview-modal'
+        )
+        ?.classList
+        .remove(
+            'hidden'
+        );
+
+    lucide.createIcons();
+}
+
+
+function closeCloudPreviewModal() {
+    document
+        .getElementById(
+            'cloud-preview-modal'
+        )
+        ?.classList
+        .add(
+            'hidden'
+        );
+
+    closeCloudPreviewEditModal();
+closeCloudPublisherPasswordModal();
+
+}
+
+
+function closeCloudPreviewModalOutside(
+    event
+) {
+    if (
+        event.target ===
+        event.currentTarget
+    ) {
+        closeCloudPreviewModal();
+    }
+}
+
+
+function updateCloudPreviewModalHome() {
+    const role =
+        getCurrentRole();
+
+    const viewerHome =
+        document.getElementById(
+            'cloud-preview-viewer-home'
+        );
+
+    const publisherHome =
+        document.getElementById(
+            'cloud-preview-publisher-home'
+        );
+
+    const manageCard =
+        document.getElementById(
+            'cloud-preview-manage-card'
+        );
+
+const accountsCard =
+    document.getElementById(
+        'cloud-publisher-accounts-card'
+    );
+
+    const roleLabel =
+        document.getElementById(
+            'cloud-preview-role-label'
+        );
+
+    const roleIcon =
+        document.getElementById(
+            'cloud-preview-role-icon'
+        );
+
+    /*
+     * Viewer
+     */
+    if (role === 'viewer') {
+        viewerHome?.classList.remove(
+            'hidden'
+        );
+
+        publisherHome?.classList.add(
+            'hidden'
+        );
+
+        if (roleLabel) {
+            roleLabel.textContent =
+                '預覽者模式';
+
+            roleLabel.className =
+                'shrink-0 px-2.5 py-1 rounded-full text-[10px] font-black bg-slate-200 text-slate-600';
+        }
+
+        if (roleIcon) {
+            roleIcon.setAttribute(
+                'data-lucide',
+                'eye'
+            );
+
+            roleIcon.className =
+                'w-4 h-4 text-slate-500 shrink-0';
+        }
+
+        lucide.createIcons();
+        return;
+    }
+
+
+    /*
+     * 管理者 / 使用者共用發布區
+     */
+    viewerHome?.classList.add(
+        'hidden'
+    );
+
+    publisherHome?.classList.remove(
+        'hidden'
+    );
+
+
+    if (role === 'admin') {
+        if (roleLabel) {
+            roleLabel.textContent =
+                '管理者模式';
+
+            roleLabel.className =
+                'shrink-0 px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-100 text-amber-700';
+        }
+
+        if (roleIcon) {
+            roleIcon.setAttribute(
+                'data-lucide',
+                'shield-check'
+            );
+
+            roleIcon.className =
+                'w-4 h-4 text-amber-600 shrink-0';
+        }
+
+        if (manageCard) {
+            manageCard.classList.remove(
+                'hidden'
+            );
+
+            manageCard.classList.add(
+                'flex'
+            );
+        }
+
+if (accountsCard) {
+    accountsCard.classList.remove(
+        'hidden'
+    );
+
+    accountsCard.classList.add(
+        'flex'
+    );
+}
+
+    } else {
+        /*
+         * Editor
+         */
+        if (roleLabel) {
+            roleLabel.textContent =
+                '使用者模式';
+
+            roleLabel.className =
+                'shrink-0 px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700';
+        }
+
+        if (roleIcon) {
+            roleIcon.setAttribute(
+                'data-lucide',
+                'user-check'
+            );
+
+            roleIcon.className =
+                'w-4 h-4 text-emerald-600 shrink-0';
+        }
+
+        if (manageCard) {
+            manageCard.classList.add(
+                'hidden'
+            );
+
+            manageCard.classList.remove(
+                'flex'
+            );
+        }
+
+if (accountsCard) {
+    accountsCard.classList.add(
+        'hidden'
+    );
+
+    accountsCard.classList.remove(
+        'flex'
+    );
+}
+
+    }
+
+    lucide.createIcons();
+}
+
+/* =========================================================
+   雲端預覽發布設定
+========================================================= */
+
+function resetCloudPreviewPublishForm() {
+    const nameInput =
+        document.getElementById(
+            'cloud-preview-publish-name'
+        );
+
+    const passwordInput =
+        document.getElementById(
+            'cloud-preview-publish-password'
+        );
+
+    const expirySelect =
+        document.getElementById(
+            'cloud-preview-publish-expiry'
+        );
+
+    const maxViewsSelect =
+        document.getElementById(
+            'cloud-preview-publish-max-views'
+        );
+
+    if (nameInput) {
+        nameInput.value =
+            `${getCurrentReportYear()}年度績效預覽`;
+    }
+
+    if (passwordInput) {
+        passwordInput.value = '';
+    }
+
+    if (expirySelect) {
+        expirySelect.value = '24';
+    }
+
+    if (maxViewsSelect) {
+        maxViewsSelect.value = '3';
+    }
+}
+
+
+function showCloudPreviewPublishView() {
+    document
+        .getElementById(
+            'cloud-preview-viewer-home'
+        )
+        ?.classList
+        .add('hidden');
+
+    document
+        .getElementById(
+            'cloud-preview-publisher-home'
+        )
+        ?.classList
+        .add('hidden');
+
+    document
+        .getElementById(
+            'cloud-preview-manage-view'
+        )
+        ?.classList
+        .add('hidden');
+
+document
+    .getElementById(
+        'cloud-publisher-accounts-view'
+    )
+    ?.classList
+    .add('hidden');
+
+    document
+        .getElementById(
+            'cloud-preview-publish-view'
+        )
+        ?.classList
+        .remove('hidden');
+
+    lucide.createIcons();
+}
+
+
+function openCloudPreviewPublishView() {
+    if (
+        !canExportReviewData() ||
+        isPreviewDataMode
+    ) {
+        showToast(
+            '目前無法發布雲端預覽。',
+            'error'
+        );
+
+        return;
+    }
+
+    if (isAttachmentUploadBusy) {
+        showToast(
+            '附件仍在處理中，請稍後再發布。',
+            'error'
+        );
+
+        return;
+    }
+
+    if (hasUnsavedPerformanceChanges()) {
+        showToast(
+            '請先儲存目前的績效修改後再發布。',
+            'error'
+        );
+
+        return;
+    }
+
+    resetCloudPreviewPublishForm();
+    showCloudPreviewPublishView();
+
+    setTimeout(() => {
+        document
+            .getElementById(
+                'cloud-preview-publish-name'
+            )
+            ?.focus();
+    }, 50);
+}
+
+/* =========================================================
+   雲端預覽正式發布
+========================================================= */
+
+function setCloudPreviewPublishStatus(
+    message,
+    type = 'info'
+) {
+    const box =
+        document.getElementById(
+            'cloud-preview-publish-status'
+        );
+
+    if (!box) return;
+
+    if (!message) {
+        box.classList.add('hidden');
+        box.textContent = '';
+        return;
+    }
+
+    box.classList.remove('hidden');
+
+    if (type === 'error') {
+        box.className =
+            'rounded-xl border border-red-100 bg-red-50 px-3 py-2.5 text-[11px] font-bold text-red-600';
+
+    } else if (type === 'success') {
+        box.className =
+            'rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2.5 text-[11px] font-bold text-emerald-700';
+
+    } else {
+        box.className =
+            'rounded-xl border border-sky-100 bg-sky-50 px-3 py-2.5 text-[11px] font-bold text-sky-700';
+    }
+
+    box.textContent = message;
+}
+
+
+function setCloudPreviewPublishBusy(
+    busy,
+    message = '正在發布...'
+) {
+    const button =
+        document.getElementById(
+            'cloud-preview-publish-submit-btn'
+        );
+
+    if (!button) return;
+
+    button.disabled = busy;
+
+    if (busy) {
+        button.classList.add(
+            'opacity-60',
+            'cursor-wait'
+        );
+
+        button.innerHTML = `
+            <span class="
+                w-4 h-4
+                rounded-full
+                border-2
+                border-white/40
+                border-t-white
+                animate-spin
+            "></span>
+
+            <span>${message}</span>
+        `;
+
+    } else {
+        button.classList.remove(
+            'opacity-60',
+            'cursor-wait'
+        );
+
+        button.innerHTML = `
+            <i data-lucide="cloud-upload"
+               class="w-4 h-4"></i>
+
+            <span>發布雲端預覽</span>
+        `;
+
+        lucide.createIcons();
+    }
+}
+
+
+/*
+ * 判斷目前物件是不是績效附件。
+ *
+ * 原本附件格式：
+ * {
+ *     name,
+ *     type,
+ *     size,
+ *     data
+ * }
+ */
+function isCloudPreviewAttachment(
+    value
+) {
+    return (
+        value &&
+        typeof value === 'object' &&
+        !Array.isArray(value) &&
+        typeof value.name === 'string' &&
+        typeof value.type === 'string' &&
+        typeof value.data === 'string' &&
+        value.data.startsWith('data:')
+    );
+}
+
+
+/*
+ * 掃描整份績效資料，
+ * 找出所有不重複附件。
+ *
+ * 使用 data URL 本身作為去重依據，
+ * 所以「套用全年度」的同一檔案
+ * 不會重複上傳 12 次。
+ */
+function collectUniqueCloudPreviewAttachments(
+    value,
+    map = new Map()
+) {
+    if (isCloudPreviewAttachment(value)) {
+        if (!map.has(value.data)) {
+            map.set(
+                value.data,
+                {
+                    name:
+                        value.name ||
+                        'attachment',
+
+                    type:
+                        value.type ||
+                        'application/octet-stream',
+
+                    size:
+                        Number(value.size) || 0,
+
+                    data:
+                        value.data
+                }
+            );
+        }
+
+        return map;
+    }
+
+    if (Array.isArray(value)) {
+        value.forEach(item => {
+            collectUniqueCloudPreviewAttachments(
+                item,
+                map
+            );
+        });
+
+        return map;
+    }
+
+    if (
+        value &&
+        typeof value === 'object'
+    ) {
+        Object.values(value).forEach(item => {
+            collectUniqueCloudPreviewAttachments(
+                item,
+                map
+            );
+        });
+    }
+
+    return map;
+}
+
+
+/*
+ * 將本機附件資料：
+ *
+ * {
+ *   name,
+ *   type,
+ *   size,
+ *   data
+ * }
+ *
+ * 改成雲端附件引用：
+ *
+ * {
+ *   name,
+ *   type,
+ *   size,
+ *   cloud_file_id
+ * }
+ *
+ * 原本 DataURL 不會寫進 cloud_previews.payload。
+ */
+function buildCloudPerformancePayload(
+    value,
+    cloudFileIdMap
+) {
+    if (isCloudPreviewAttachment(value)) {
+        const cloudFileId =
+            cloudFileIdMap.get(
+                value.data
+            );
+
+        if (!cloudFileId) {
+            throw new Error(
+                'CLOUD_FILE_ID_MISSING'
+            );
+        }
+
+        return {
+            name:
+                value.name ||
+                'attachment',
+
+            type:
+                value.type ||
+                'application/octet-stream',
+
+            size:
+                Number(value.size) || 0,
+
+            cloud_file_id:
+                cloudFileId
+        };
+    }
+
+    if (Array.isArray(value)) {
+        return value.map(item =>
+            buildCloudPerformancePayload(
+                item,
+                cloudFileIdMap
+            )
+        );
+    }
+
+    if (
+        value &&
+        typeof value === 'object'
+    ) {
+        const output = {};
+
+        Object.entries(value)
+            .forEach(
+                ([key, child]) => {
+                    output[key] =
+                        buildCloudPerformancePayload(
+                            child,
+                            cloudFileIdMap
+                        );
+                }
+            );
+
+        return output;
+    }
+
+    return value;
+}
+
+
+/*
+ * DataURL → Blob
+ */
+function cloudPreviewAttachmentToBlob(
+    file
+) {
+    const bytes =
+        dataUrlToUint8Array(
+            file.data
+        );
+
+    return new Blob(
+        [bytes],
+        {
+            type:
+                file.type ||
+                'application/octet-stream'
+        }
+    );
+}
+
+
+/*
+ * 使用後端核發的 signed upload token，
+ * 把附件上傳至 Private Storage。
+ */
+async function uploadCloudPreviewAttachment(
+    previewId,
+    file
+) {
+    const allowedMimeTypes =
+        new Set([
+            'application/pdf',
+            'image/png',
+            'image/jpeg',
+            'image/jpg'
+        ]);
+
+    const mimeType =
+        String(
+            file.type || ''
+        )
+            .toLowerCase()
+            .trim();
+
+    if (
+        !allowedMimeTypes.has(
+            mimeType
+        )
+    ) {
+        throw new Error(
+            'CLOUD_FILE_TYPE_NOT_ALLOWED'
+        );
+    }
+
+    const blob =
+        cloudPreviewAttachmentToBlob(
+            file
+        );
+
+    /*
+     * 本績效系統仍維持原本單檔 10MB 限制。
+     */
+    if (
+        blob.size < 1 ||
+        blob.size >
+            10 * 1024 * 1024
+    ) {
+        throw new Error(
+            'CLOUD_FILE_SIZE_INVALID'
+        );
+    }
+
+
+    /*
+     * 第一步：
+     * 向 Edge Function 取得
+     * Storage signed upload token。
+     */
+    const uploadResult =
+        await cloudAdminRequest({
+            action:
+                'create-file-upload',
+
+            preview_id:
+                previewId,
+
+            file_name:
+                file.name,
+
+            mime_type:
+                mimeType,
+
+            file_size:
+                blob.size
+        });
+
+
+    const upload =
+        uploadResult?.upload;
+
+    if (
+        !upload?.bucket ||
+        !upload?.storage_path ||
+        !upload?.token
+    ) {
+        throw new Error(
+            'CLOUD_SIGNED_UPLOAD_INVALID'
+        );
+    }
+
+
+    /*
+     * Storage signed upload URL。
+     *
+     * 不要手動指定 Content-Type，
+     * 因為 FormData 需要瀏覽器自行建立 boundary。
+     */
+    const fullObjectPath =
+        `${upload.bucket}/${upload.storage_path}`;
+
+    const encodedObjectPath =
+        fullObjectPath
+            .split('/')
+            .map(segment =>
+                encodeURIComponent(
+                    segment
+                )
+            )
+            .join('/');
+
+    const uploadUrl =
+        `${OSH_CLOUD_PROJECT_URL}` +
+        `/storage/v1/object/upload/sign/` +
+        `${encodedObjectPath}` +
+        `?token=` +
+        `${encodeURIComponent(upload.token)}`;
+
+
+    const formData =
+        new FormData();
+
+    formData.append(
+        'cacheControl',
+        '3600'
+    );
+
+    formData.append(
+        '',
+        blob,
+        file.name ||
+            'attachment'
+    );
+
+
+    const accessToken =
+        await ensureCloudPublisherAccessToken();
+
+
+    const storageResponse =
+        await fetch(
+            uploadUrl,
+            {
+                method:
+                    'PUT',
+
+                headers: {
+                    apikey:
+                        OSH_CLOUD_PUBLISHABLE_KEY,
+
+                    Authorization:
+                        `Bearer ${accessToken}`
+                },
+
+                body:
+                    formData
+            }
+        );
+
+
+    if (!storageResponse.ok) {
+        let errorText = '';
+
+        try {
+            errorText =
+                await storageResponse.text();
+        } catch (_) {}
+
+        console.error(
+            '雲端附件上傳失敗：',
+            storageResponse.status,
+            errorText
+        );
+
+        throw new Error(
+            'CLOUD_STORAGE_UPLOAD_FAILED'
+        );
+    }
+
+
+    /*
+     * 第二步：
+     * Storage 真正完成後，
+     * 再讓後端登記 cloud_preview_files。
+     */
+    const registerResult =
+        await cloudAdminRequest({
+            action:
+                'register-file',
+
+            preview_id:
+                previewId,
+
+            storage_path:
+                upload.storage_path,
+
+            file_name:
+                file.name
+        });
+
+
+    if (
+        !registerResult?.file?.id
+    ) {
+        throw new Error(
+            'CLOUD_FILE_REGISTER_FAILED'
+        );
+    }
+
+
+    return registerResult.file;
+}
+
+
+/*
+ * =========================================================
+ * 雲端附件並行上傳
+ *
+ * 同時間最多處理 3 個附件。
+ * 避免大量附件逐筆等待，
+ * 同時也避免一次開啟過多網路請求。
+ * =========================================================
+ */
+
+const CLOUD_PREVIEW_UPLOAD_CONCURRENCY = 3;
+
+
+async function uploadCloudPreviewAttachmentsWithConcurrency(
+    previewId,
+    uniqueAttachments,
+    cloudFileIdMap
+) {
+    const total =
+        uniqueAttachments.length;
+
+
+    if (total === 0) {
+        return;
+    }
+
+
+    let nextIndex = 0;
+
+    let completed = 0;
+
+    let firstError = null;
+
+
+    /*
+     * 每一個 worker 一次處理一筆附件。
+     *
+     * 一筆完成後，
+     * 再自動取得下一筆。
+     */
+    async function worker() {
+
+        while (true) {
+
+            /*
+             * 只要其中一筆已失敗，
+             * 就不再開始新的附件。
+             */
+            if (firstError) {
+                return;
+            }
+
+
+            const index =
+                nextIndex++;
+
+
+            if (index >= total) {
+                return;
+            }
+
+
+            const file =
+                uniqueAttachments[index];
+
+
+            try {
+
+                const registeredFile =
+                    await uploadCloudPreviewAttachment(
+                        previewId,
+                        file
+                    );
+
+
+                cloudFileIdMap.set(
+                    file.data,
+                    registeredFile.id
+                );
+
+
+                completed++;
+
+
+                /*
+                 * 顯示真正已完成數量，
+                 * 不使用附件開始順序，
+                 * 因為並行上傳完成順序可能不同。
+                 */
+                setCloudPreviewPublishStatus(
+                    `正在並行上傳附件，已完成 ${completed} / ${total}`,
+                    'info'
+                );
+
+
+                setCloudPreviewPublishBusy(
+                    true,
+                    `上傳附件 ${completed}/${total}`
+                );
+
+
+            } catch (error) {
+
+                /*
+                 * 保存第一個發生的錯誤。
+                 */
+                if (!firstError) {
+                    firstError =
+                        error;
+                }
+
+
+                return;
+            }
+        }
+    }
+
+
+    /*
+     * 不論有多少附件，
+     * 同時間最多建立 3 個 worker。
+     */
+    const workerCount =
+        Math.min(
+            CLOUD_PREVIEW_UPLOAD_CONCURRENCY,
+            total
+        );
+
+
+    const workers =
+        Array.from(
+            {
+                length:
+                    workerCount
+            },
+            () =>
+                worker()
+        );
+
+
+    /*
+     * 若其中一筆失敗，
+     * 仍等待已經開始的附件工作結束。
+     *
+     * 避免外層立即 rollback 時，
+     * Storage 還有其他上傳請求正在執行。
+     */
+    await Promise.allSettled(
+        workers
+    );
+
+
+    /*
+     * 全部正在執行的 worker
+     * 都已經停止後才向外丟出錯誤。
+     */
+    if (firstError) {
+        throw firstError;
+    }
+}
+
+
+function getCloudPreviewPublishErrorMessage(
+    error
+) {
+    const code =
+        String(
+            error?.message || ''
+        );
+
+    const messages = {
+        CLOUD_LOGIN_CANCELLED:
+            '已取消雲端發布驗證。',
+
+        PUBLISHER_NOT_ALLOWED:
+            '此 Cloud Publisher 帳號沒有發布權限。',
+
+        PREVIEW_PUBLISH_FAILED:
+            '建立雲端預覽失敗。',
+
+        SIGNED_UPLOAD_FAILED:
+            '無法取得附件上傳權限。',
+
+        CLOUD_SIGNED_UPLOAD_INVALID:
+            '附件上傳資訊不完整。',
+
+        CLOUD_STORAGE_UPLOAD_FAILED:
+            '附件上傳至雲端失敗。',
+
+        CLOUD_FILE_REGISTER_FAILED:
+            '附件雲端登記失敗。',
+
+        CLOUD_FILE_TYPE_NOT_ALLOWED:
+            '附件格式不支援。',
+
+        CLOUD_FILE_SIZE_INVALID:
+            '附件大小超過系統限制。',
+
+        CLOUD_FILE_ID_MISSING:
+            '附件雲端資料建立失敗。',
+
+        PREVIEW_UPDATE_FAILED:
+            '雲端預覽資料更新失敗。',
+
+        PREVIEW_DELETE_FAILED:
+            '失敗資料無法自動清除。'
+    };
+
+    return (
+        messages[code] ||
+        code ||
+        '雲端預覽發布失敗。'
+    );
+}
+
+
+/*
+ * 正式發布績效雲端預覽。
+ */
+async function submitCloudPreviewPublish() {
+    if (
+        !canExportReviewData() ||
+        isPreviewDataMode
+    ) {
+        setCloudPreviewPublishStatus(
+            '目前無法發布雲端預覽。',
+            'error'
+        );
+
+        return;
+    }
+
+    if (
+        isAttachmentUploadBusy
+    ) {
+        setCloudPreviewPublishStatus(
+            '附件仍在處理中，請稍後再發布。',
+            'error'
+        );
+
+        return;
+    }
+
+    if (
+        hasUnsavedPerformanceChanges()
+    ) {
+        setCloudPreviewPublishStatus(
+            '請先儲存目前績效修改後再發布。',
+            'error'
+        );
+
+        return;
+    }
+
+
+    const nameInput =
+        document.getElementById(
+            'cloud-preview-publish-name'
+        );
+
+    const passwordInput =
+        document.getElementById(
+            'cloud-preview-publish-password'
+        );
+
+    const expirySelect =
+        document.getElementById(
+            'cloud-preview-publish-expiry'
+        );
+
+    const maxViewsSelect =
+        document.getElementById(
+            'cloud-preview-publish-max-views'
+        );
+
+
+    const previewName =
+        String(
+            nameInput?.value || ''
+        ).trim();
+
+    const previewPassword =
+        String(
+            passwordInput?.value || ''
+        );
+
+    const expiryHours =
+        Number(
+            expirySelect?.value
+        );
+
+    const maxViews =
+        Number(
+            maxViewsSelect?.value
+        );
+
+
+    if (!previewName) {
+        setCloudPreviewPublishStatus(
+            '請輸入預覽名稱。',
+            'error'
+        );
+
+        nameInput?.focus();
+        return;
+    }
+
+    if (!previewPassword) {
+        setCloudPreviewPublishStatus(
+            '請設定預覽密碼。',
+            'error'
+        );
+
+        passwordInput?.focus();
+        return;
+    }
+
+    if (
+        !Number.isFinite(
+            expiryHours
+        ) ||
+        expiryHours <= 0
+    ) {
+        setCloudPreviewPublishStatus(
+            '有效期限設定錯誤。',
+            'error'
+        );
+
+        return;
+    }
+
+    if (
+        !Number.isInteger(
+            maxViews
+        ) ||
+        maxViews < 1
+    ) {
+        setCloudPreviewPublishStatus(
+            '可開啟次數設定錯誤。',
+            'error'
+        );
+
+        return;
+    }
+
+
+    const expiresAt =
+        new Date(
+            Date.now() +
+            expiryHours *
+            60 *
+            60 *
+            1000
+        ).toISOString();
+
+
+    let previewId = '';
+
+    let rollbackFailed = false;
+
+
+    try {
+        setCloudPreviewPublishBusy(
+            true
+        );
+
+        setCloudPreviewPublishStatus(
+            '正在準備績效資料...',
+            'info'
+        );
+
+
+        /*
+         * 沿用既有正式 JSON 建構函式，
+         * 不改原本正式匯出格式。
+         */
+        const sourceData =
+            buildPerformanceExportData();
+
+
+        /*
+         * 找出不重複附件。
+         */
+        const uniqueAttachmentMap =
+            collectUniqueCloudPreviewAttachments(
+                sourceData
+            );
+
+        const uniqueAttachments =
+            Array.from(
+                uniqueAttachmentMap.values()
+            );
+
+
+        /*
+         * 先建立 Preview 主資料。
+         *
+         * 此時只送非常小的 building payload，
+         * 不會把任何 DataURL 寫進資料庫。
+         */
+        setCloudPreviewPublishStatus(
+            '正在建立雲端預覽...',
+            'info'
+        );
+
+
+        const publishResult =
+            await cloudAdminRequest({
+                action:
+                    'publish',
+
+                system_type:
+                    OSH_CLOUD_SYSTEM_TYPE,
+
+                preview_name:
+                    previewName,
+
+                preview_password:
+                    previewPassword,
+
+                expires_at:
+                    expiresAt,
+
+                max_views:
+                    maxViews,
+
+                payload: {
+                    version:
+                        'performance-cloud-preview-building-v1',
+
+                    status:
+                        'building'
+                }
+            });
+
+
+        previewId =
+            publishResult?.preview?.id ||
+            '';
+
+
+        if (!previewId) {
+            throw new Error(
+                'PREVIEW_PUBLISH_FAILED'
+            );
+        }
+
+
+        /*
+         * publish 預設會 enabled=true。
+         *
+         * 建立後立刻暫停，
+         * 避免附件尚未完成時
+         * 被預覽者開啟。
+         */
+        await cloudAdminRequest({
+            action:
+                'set-enabled',
+
+            preview_id:
+                previewId,
+
+            enabled:
+                false
+        });
+
+
+        /*
+         * 上傳並登記所有唯一附件。
+         *
+         * 採最多 3 筆並行，
+         * 大量附件時可明顯降低總等待時間。
+         */
+        const cloudFileIdMap =
+            new Map();
+
+
+        if (
+            uniqueAttachments.length > 0
+        ) {
+
+            setCloudPreviewPublishStatus(
+                `正在準備上傳 ${uniqueAttachments.length} 個附件...`,
+                'info'
+            );
+
+
+            setCloudPreviewPublishBusy(
+                true,
+                `上傳附件 0/${uniqueAttachments.length}`
+            );
+
+
+            await uploadCloudPreviewAttachmentsWithConcurrency(
+                previewId,
+                uniqueAttachments,
+                cloudFileIdMap
+            );
+        }
+
+
+        /*
+         * 將正式資料中的 DataURL
+         * 全部轉成 cloud_file_id。
+         */
+        setCloudPreviewPublishStatus(
+            '正在完成雲端資料...',
+            'info'
+        );
+
+        setCloudPreviewPublishBusy(
+            true,
+            '正在完成發布...'
+        );
+
+
+        const finalPayload =
+            buildCloudPerformancePayload(
+                sourceData,
+                cloudFileIdMap
+            );
+
+
+        /*
+         * 更新正式 Cloud Payload。
+         */
+        await cloudAdminRequest({
+            action:
+                'update',
+
+            preview_id:
+                previewId,
+
+            payload:
+                finalPayload
+        });
+
+
+        /*
+         * 所有資料完整後，
+         * 才正式重新開放 Preview。
+         */
+        await cloudAdminRequest({
+            action:
+                'set-enabled',
+
+            preview_id:
+                previewId,
+
+            enabled:
+                true
+        });
+
+
+        setCloudPreviewPublishStatus(
+            '雲端預覽發布完成。',
+            'success'
+        );
+
+
+        alert(
+            '雲端預覽發布成功！\n\n' +
+            `Preview ID：${previewId}\n` +
+            `預覽密碼：${previewPassword}\n\n` +
+            '請將以上資訊提供給預覽者。'
+        );
+
+
+        backToCloudPreviewHome();
+
+
+    } catch (error) {
+        console.error(
+            '雲端預覽發布失敗：',
+            error
+        );
+
+
+        /*
+         * Preview 已建立但中途失敗時，
+         * 自動刪除 Preview 與已上傳附件。
+         */
+        if (previewId) {
+            try {
+                await cloudAdminRequest({
+                    action:
+                        'delete',
+
+                    preview_id:
+                        previewId
+                });
+
+            } catch (
+                rollbackError
+            ) {
+                rollbackFailed = true;
+
+                console.error(
+                    '雲端預覽回復刪除失敗：',
+                    rollbackError
+                );
+            }
+        }
+
+
+        const message =
+            getCloudPreviewPublishErrorMessage(
+                error
+            );
+
+
+        setCloudPreviewPublishStatus(
+            rollbackFailed
+                ? `${message} 請至「管理雲端預覽」確認並刪除未完成資料。`
+                : message,
+            'error'
+        );
+
+
+    } finally {
+        setCloudPreviewPublishBusy(
+            false
+        );
+    }
+}
+
+/* =========================================================
+   雲端預覽管理清單
+========================================================= */
+
+function showCloudPreviewManageView() {
+    document
+        .getElementById(
+            'cloud-preview-viewer-home'
+        )
+        ?.classList
+        .add('hidden');
+
+document
+    .getElementById(
+        'cloud-publisher-accounts-view'
+    )
+    ?.classList
+    .add('hidden');
+
+    document
+        .getElementById(
+            'cloud-preview-publisher-home'
+        )
+        ?.classList
+        .add('hidden');
+
+    document
+        .getElementById(
+            'cloud-preview-manage-view'
+        )
+        ?.classList
+        .remove('hidden');
+
+document
+    .getElementById(
+        'cloud-preview-publish-view'
+    )
+    ?.classList
+    .add('hidden');        
+
+    lucide.createIcons();
+}
+
+
+function backToCloudPreviewHome() {
+    document
+        .getElementById(
+            'cloud-preview-manage-view'
+        )
+        ?.classList
+        .add('hidden');
+
+    document
+        .getElementById(
+            'cloud-preview-publish-view'
+        )
+        ?.classList
+        .add('hidden');
+
+    document
+        .getElementById(
+            'cloud-publisher-accounts-view'
+        )
+        ?.classList
+        .add('hidden');
+
+    updateCloudPreviewModalHome();
+
+    lucide.createIcons();
+}
+
+
+async function openCloudPreviewManageView() {
+    /*
+     * 管理頁只允許系統管理者進入。
+     */
+    if (!isAdmin) {
+        showToast(
+            '僅管理者可管理雲端預覽。',
+            'error'
+        );
+
+        return;
+    }
+
+    showCloudPreviewManageView();
+
+    await loadCloudPreviewManageList();
+}
+
+
+function setCloudPreviewManageStatus(
+    message,
+    type = 'info'
+) {
+    const box =
+        document.getElementById(
+            'cloud-preview-manage-status'
+        );
+
+    if (!box) {
+        return;
+    }
+
+    if (!message) {
+        box.classList.add('hidden');
+        box.innerHTML = '';
+        return;
+    }
+
+    box.classList.remove('hidden');
+
+    if (type === 'error') {
+        box.className =
+            'mb-3 rounded-xl border border-red-100 bg-red-50 px-3 py-2.5 text-[11px] font-bold text-red-600';
+
+    } else if (type === 'success') {
+        box.className =
+            'mb-3 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2.5 text-[11px] font-bold text-emerald-700';
+
+    } else {
+        box.className =
+            'mb-3 rounded-xl border border-sky-100 bg-sky-50 px-3 py-2.5 text-[11px] font-bold text-sky-700';
+    }
+
+    box.textContent =
+        message;
+}
+
+/* =========================================================
+   Cloud Publisher 帳號管理
+========================================================= */
+
+function showCloudPublisherAccountsView() {
+
+    document
+        .getElementById(
+            'cloud-preview-viewer-home'
+        )
+        ?.classList
+        .add('hidden');
+
+
+    document
+        .getElementById(
+            'cloud-preview-publisher-home'
+        )
+        ?.classList
+        .add('hidden');
+
+
+    document
+        .getElementById(
+            'cloud-preview-publish-view'
+        )
+        ?.classList
+        .add('hidden');
+
+
+    document
+        .getElementById(
+            'cloud-preview-manage-view'
+        )
+        ?.classList
+        .add('hidden');
+
+
+    document
+        .getElementById(
+            'cloud-publisher-accounts-view'
+        )
+        ?.classList
+        .remove('hidden');
+
+
+    lucide.createIcons();
+}
+
+
+async function openCloudPublisherAccountsView() {
+
+    /*
+     * 第一層：
+     * 必須先是本機系統管理者。
+     */
+    if (!isAdmin) {
+
+        showToast(
+            '僅管理者可管理發布帳號。',
+            'error'
+        );
+
+        return;
+    }
+
+
+    /*
+     * 發布帳號管理屬於高權限操作。
+     *
+     * 每次進入帳號管理時
+     * 清除既有 Cloud Publisher Token，
+     * 強制重新以 Cloud Admin 驗證。
+     */
+    clearCloudPublisherSession();
+
+
+    showCloudPublisherAccountsView();
+
+
+    await loadCloudPublisherAccountsList();
+}
+
+
+function setCloudPublisherAccountsStatus(
+    message,
+    type = 'info'
+) {
+    const box =
+        document.getElementById(
+            'cloud-publisher-accounts-status'
+        );
+
+
+    if (!box) {
+        return;
+    }
+
+
+    if (!message) {
+
+        box.classList.add(
+            'hidden'
+        );
+
+        box.textContent =
+            '';
+
+        return;
+    }
+
+
+    box.classList.remove(
+        'hidden'
+    );
+
+
+    if (type === 'error') {
+
+        box.className =
+            'mb-3 rounded-xl border border-red-100 bg-red-50 px-3 py-2.5 text-[11px] font-bold text-red-600';
+
+    } else if (type === 'success') {
+
+        box.className =
+            'mb-3 rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2.5 text-[11px] font-bold text-emerald-700';
+
+    } else {
+
+        box.className =
+            'mb-3 rounded-xl border border-indigo-100 bg-indigo-50 px-3 py-2.5 text-[11px] font-bold text-indigo-700';
+    }
+
+
+    box.textContent =
+        message;
+}
+
+
+function renderCloudPublisherAccountsList(
+    publishers
+) {
+    const container =
+        document.getElementById(
+            'cloud-publisher-accounts-list'
+        );
+
+
+    if (!container) {
+        return;
+    }
+
+
+    if (
+        !Array.isArray(
+            publishers
+        ) ||
+        publishers.length === 0
+    ) {
+
+        container.innerHTML = `
+            <div class="
+                rounded-xl
+                border border-dashed
+                border-slate-200
+                bg-slate-50
+                px-4 py-7
+                text-center
+            ">
+
+                <i data-lucide="users"
+                   class="
+                       w-6 h-6
+                       text-slate-300
+                       mx-auto mb-2
+                   "></i>
+
+                <p class="
+                    text-xs
+                    font-bold
+                    text-slate-500
+                ">
+                    尚無發布帳號
+                </p>
+
+            </div>
+        `;
+
+        lucide.createIcons();
+
+        return;
+    }
+
+
+    container.innerHTML =
+        publishers
+            .map(
+                publisher => {
+
+                    const userId =
+                        escapeCloudPreviewHtml(
+                            publisher?.user_id ||
+                            ''
+                        );
+
+
+                    const accountName =
+                        escapeCloudPreviewHtml(
+                            publisher?.account_name ||
+                            ''
+                        );
+
+
+                    const displayName =
+                        escapeCloudPreviewHtml(
+                            publisher?.display_name ||
+                            ''
+                        );
+
+
+                    const role =
+                        String(
+                            publisher?.role ||
+                            ''
+                        )
+                            .trim()
+                            .toLowerCase();
+
+
+                    const enabled =
+                        publisher?.enabled ===
+                        true;
+
+
+                    const isAdminAccount =
+                        role ===
+                        'admin';
+
+
+                    const shownAccount =
+                        accountName ||
+                        displayName ||
+                        '未辨識帳號';
+
+
+                    const roleText =
+                        isAdminAccount
+                            ? 'Cloud Admin'
+                            : 'Cloud Publisher';
+
+
+                    const roleClass =
+                        isAdminAccount
+                            ? 'bg-amber-100 text-amber-700'
+                            : 'bg-indigo-100 text-indigo-700';
+
+
+                    const statusText =
+                        enabled
+                            ? '已啟用'
+                            : '已停用';
+
+
+                    const statusClass =
+                        enabled
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : 'bg-slate-200 text-slate-500';
+
+
+                    const toggleLabel =
+                        enabled
+                            ? '停用'
+                            : '重新啟用';
+
+
+                    const toggleClass =
+                        enabled
+                            ? 'border-amber-100 bg-amber-50 text-amber-700 hover:bg-amber-100'
+                            : 'border-emerald-100 bg-emerald-50 text-emerald-700 hover:bg-emerald-100';
+
+
+                    return `
+                        <div class="
+                            rounded-xl
+                            border border-slate-200
+                            bg-white
+                            px-3.5 py-3
+                            shadow-sm
+                        ">
+
+                            <div class="
+                                flex items-start
+                                justify-between
+                                gap-3
+                            ">
+
+                                <div class="
+                                    min-w-0
+                                    flex-1
+                                ">
+
+                                    <div class="
+                                        flex
+                                        items-center
+                                        gap-2
+                                        min-w-0
+                                    ">
+
+                                        <i data-lucide="${
+                                            isAdminAccount
+                                                ? 'shield-check'
+                                                : 'user-check'
+                                        }"
+                                           class="
+                                               w-4 h-4
+                                               ${
+                                                   isAdminAccount
+                                                       ? 'text-amber-600'
+                                                       : 'text-indigo-600'
+                                               }
+                                               shrink-0
+                                           "></i>
+
+                                        <span class="
+                                            text-sm
+                                            font-black
+                                            text-slate-800
+                                            truncate
+                                        ">
+                                            ${shownAccount}
+                                        </span>
+
+                                    </div>
+
+
+                                    <div class="
+                                        mt-2
+                                        flex
+                                        flex-wrap
+                                        items-center
+                                        gap-1.5
+                                    ">
+
+                                        <span class="
+                                            px-2 py-0.5
+                                            rounded-full
+                                            text-[9px]
+                                            font-black
+                                            ${roleClass}
+                                        ">
+                                            ${roleText}
+                                        </span>
+
+
+                                        <span class="
+                                            px-2 py-0.5
+                                            rounded-full
+                                            text-[9px]
+                                            font-black
+                                            ${statusClass}
+                                        ">
+                                            ${statusText}
+                                        </span>
+
+                                    </div>
+
+
+                                    ${
+                                        displayName &&
+                                        displayName !==
+                                            shownAccount
+                                            ? `
+                                                <p class="
+                                                    mt-1.5
+                                                    text-[10px]
+                                                    text-slate-400
+                                                    truncate
+                                                ">
+                                                    ${displayName}
+                                                </p>
+                                            `
+                                            : ''
+                                    }
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="
+                                mt-3 pt-2.5
+                                border-t
+                                border-slate-100
+                                grid
+                                ${
+                                    isAdminAccount
+                                        ? 'grid-cols-1'
+                                        : 'grid-cols-2'
+                                }
+                                gap-2
+                            ">
+
+                                ${
+                                    !isAdminAccount
+                                        ? `
+                                            <button
+                                                type="button"
+                                                data-user-id="${userId}"
+                                                data-account-name="${shownAccount}"
+                                                data-enabled="${
+                                                    enabled
+                                                        ? 'true'
+                                                        : 'false'
+                                                }"
+                                                onclick="toggleCloudPublisherAccountEnabledFromButton(this)"
+                                                class="
+                                                    w-full
+                                                    h-8
+                                                    px-2
+                                                    rounded-lg
+                                                    border
+                                                    ${toggleClass}
+                                                    transition
+                                                    flex
+                                                    items-center
+                                                    justify-center
+                                                    gap-1.5
+                                                    text-[10px]
+                                                    font-bold
+                                                ">
+
+                                                <i data-lucide="${
+                                                    enabled
+                                                        ? 'pause'
+                                                        : 'play'
+                                                }"
+                                                   class="
+                                                       w-3.5
+                                                       h-3.5
+                                                   "></i>
+
+                                                <span>
+                                                    ${toggleLabel}
+                                                </span>
+
+                                            </button>
+                                        `
+                                        : ''
+                                }
+
+
+                                <button
+                                    type="button"
+                                    data-user-id="${userId}"
+                                    data-account-name="${shownAccount}"
+                                    onclick="openCloudPublisherPasswordModalFromButton(this)"
+                                    class="
+                                        w-full
+                                        h-8
+                                        px-2
+                                        rounded-lg
+                                        border
+                                        border-indigo-100
+                                        bg-indigo-50
+                                        text-indigo-600
+                                        hover:bg-indigo-100
+                                        transition
+                                        flex
+                                        items-center
+                                        justify-center
+                                        gap-1.5
+                                        text-[10px]
+                                        font-bold
+                                    ">
+
+                                    <i data-lucide="key-round"
+                                       class="
+                                           w-3.5
+                                           h-3.5
+                                       "></i>
+
+                                    <span>
+                                        修改密碼
+                                    </span>
+
+                                </button>
+
+                            </div>
+
+                        </div>
+                    `;
+                }
+            )
+            .join(
+                ''
+            );
+
+
+    lucide.createIcons();
+}
+
+
+async function loadCloudPublisherAccountsList() {
+
+    const container =
+        document.getElementById(
+            'cloud-publisher-accounts-list'
+        );
+
+
+    if (container) {
+
+        container.innerHTML = `
+            <div class="
+                py-8
+                flex flex-col
+                items-center
+                justify-center
+                text-center
+            ">
+
+                <span class="
+                    w-6 h-6
+                    rounded-full
+                    border-2
+                    border-indigo-200
+                    border-t-indigo-600
+                    animate-spin
+                "></span>
+
+                <span class="
+                    mt-2
+                    text-[11px]
+                    font-bold
+                    text-slate-500
+                ">
+                    正在讀取發布帳號...
+                </span>
+
+            </div>
+        `;
+    }
+
+
+    setCloudPublisherAccountsStatus(
+        ''
+    );
+
+
+    try {
+
+        const result =
+            await cloudAdminRequest({
+                action:
+                    'list-publishers'
+            });
+
+
+        renderCloudPublisherAccountsList(
+            result?.publishers ||
+            []
+        );
+
+
+        setCloudPublisherAccountsStatus(
+            '已成功連線發布帳號服務。',
+            'success'
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            '讀取發布帳號失敗：',
+            error
+        );
+
+
+        if (
+            error?.message ===
+            'CLOUD_LOGIN_CANCELLED'
+        ) {
+
+            backToCloudPreviewHome();
+
+            return;
+        }
+
+
+        let message =
+            '無法讀取發布帳號，請稍後再試。';
+
+
+        if (
+            error?.status ===
+            401
+        ) {
+
+            clearCloudPublisherSession();
+
+            message =
+                'Cloud Admin 登入已失效，請重新登入。';
+
+        } else if (
+            error?.status ===
+            403
+        ) {
+
+            /*
+             * 若誤用 user001 等 Publisher 登入，
+             * 清除該 Token。
+             *
+             * 再按重新整理即可重新登入 admin。
+             */
+            clearCloudPublisherSession();
+
+            message =
+                '此功能僅限 Cloud Admin。請使用 admin 帳號重新登入。';
+        }
+
+
+        if (container) {
+            container.innerHTML =
+                '';
+        }
+
+
+        setCloudPublisherAccountsStatus(
+            message,
+            'error'
+        );
+    }
+}
+
+
+async function toggleCloudPublisherAccountEnabledFromButton(
+    button
+) {
+
+    if (!isAdmin) {
+
+        showToast(
+            '僅管理者可管理發布帳號。',
+            'error'
+        );
+
+        return;
+    }
+
+
+    const userId =
+        String(
+            button?.dataset?.userId ||
+            ''
+        ).trim();
+
+
+    const accountName =
+        String(
+            button?.dataset?.accountName ||
+            '發布帳號'
+        ).trim();
+
+
+    const currentlyEnabled =
+        button?.dataset?.enabled ===
+        'true';
+
+
+    const nextEnabled =
+        !currentlyEnabled;
+
+
+    if (!userId) {
+
+        setCloudPublisherAccountsStatus(
+            '找不到要管理的發布帳號。',
+            'error'
+        );
+
+        return;
+    }
+
+
+    const message =
+        currentlyEnabled
+            ? (
+                `確定要停用「${accountName}」？\n\n` +
+                '停用後，此帳號將無法繼續執行新的雲端發布與管理操作。'
+            )
+            : (
+                `確定要重新啟用「${accountName}」？\n\n` +
+                '重新啟用後，此帳號即可再次使用原密碼登入發布。'
+            );
+
+
+    if (
+        !confirm(
+            message
+        )
+    ) {
+        return;
+    }
+
+
+    const originalHtml =
+        button.innerHTML;
+
+
+    try {
+
+        button.disabled =
+            true;
+
+
+        button.classList.add(
+            'opacity-60',
+            'cursor-wait'
+        );
+
+
+        button.innerHTML = `
+            <span class="
+                w-3.5 h-3.5
+                rounded-full
+                border-2
+                border-current/30
+                border-t-current
+                animate-spin
+            "></span>
+
+            <span>
+                ${
+                    nextEnabled
+                        ? '啟用中'
+                        : '停用中'
+                }
+            </span>
+        `;
+
+
+        await cloudAdminRequest({
+
+            action:
+                'set-publisher-enabled',
+
+            user_id:
+                userId,
+
+            enabled:
+                nextEnabled
+        });
+
+
+        await loadCloudPublisherAccountsList();
+
+
+        setCloudPublisherAccountsStatus(
+            nextEnabled
+                ? `「${accountName}」已重新啟用。`
+                : `「${accountName}」已停用。`,
+            'success'
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            '變更發布帳號狀態失敗：',
+            error
+        );
+
+
+        let errorMessage =
+            '變更發布帳號狀態失敗，請稍後再試。';
+
+
+        if (
+            error?.status ===
+            401
+        ) {
+
+            clearCloudPublisherSession();
+
+            errorMessage =
+                'Cloud Admin 登入已失效，請重新登入。';
+
+        } else if (
+            error?.status ===
+            403
+        ) {
+
+            clearCloudPublisherSession();
+
+            errorMessage =
+                '此操作僅限 Cloud Admin。';
+
+        } else if (
+            error?.message ===
+            'ADMIN_DISABLE_NOT_ALLOWED'
+        ) {
+
+            errorMessage =
+                'Cloud Admin 帳號不可停用。';
+
+        } else if (
+            error?.message ===
+            'SELF_DISABLE_NOT_ALLOWED'
+        ) {
+
+            errorMessage =
+                '目前登入的 Cloud Admin 不可停用自己。';
+        }
+
+
+        setCloudPublisherAccountsStatus(
+            errorMessage,
+            'error'
+        );
+
+
+    } finally {
+
+        if (
+            button &&
+            button.isConnected
+        ) {
+
+            button.disabled =
+                false;
+
+
+            button.classList.remove(
+                'opacity-60',
+                'cursor-wait'
+            );
+
+
+            button.innerHTML =
+                originalHtml;
+
+
+            lucide.createIcons();
+        }
+    }
+}
+
+
+/* =========================================================
+   修改 Cloud Publisher 密碼
+========================================================= */
+
+function setCloudPublisherPasswordStatus(
+    message,
+    type = 'error'
+) {
+    const box =
+        document.getElementById(
+            'cloud-publisher-password-status'
+        );
+
+
+    if (!box) {
+        return;
+    }
+
+
+    if (!message) {
+
+        box.classList.add(
+            'hidden'
+        );
+
+        box.textContent =
+            '';
+
+        return;
+    }
+
+
+    box.classList.remove(
+        'hidden'
+    );
+
+
+    if (type === 'success') {
+
+        box.className =
+            'rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2.5 text-[11px] font-bold text-emerald-700';
+
+    } else {
+
+        box.className =
+            'rounded-xl border border-red-100 bg-red-50 px-3 py-2.5 text-[11px] font-bold text-red-600';
+    }
+
+
+    box.textContent =
+        message;
+}
+
+
+function openCloudPublisherPasswordModalFromButton(
+    button
+) {
+
+    if (!isAdmin) {
+
+        showToast(
+            '僅管理者可修改發布帳號密碼。',
+            'error'
+        );
+
+        return;
+    }
+
+
+    const userId =
+        String(
+            button?.dataset?.userId ||
+            ''
+        ).trim();
+
+
+    const accountName =
+        String(
+            button?.dataset?.accountName ||
+            ''
+        ).trim();
+
+
+    if (!userId) {
+
+        setCloudPublisherAccountsStatus(
+            '找不到要修改的發布帳號。',
+            'error'
+        );
+
+        return;
+    }
+
+
+    const modal =
+        document.getElementById(
+            'cloud-publisher-password-modal'
+        );
+
+
+    if (!modal) {
+        return;
+    }
+
+
+    modal.dataset.userId =
+        userId;
+
+
+    modal.dataset.accountName =
+        accountName;
+
+
+    const accountLabel =
+        document.getElementById(
+            'cloud-publisher-password-account'
+        );
+
+
+    const passwordInput =
+        document.getElementById(
+            'cloud-publisher-new-password'
+        );
+
+
+    const confirmInput =
+        document.getElementById(
+            'cloud-publisher-confirm-password'
+        );
+
+
+    if (accountLabel) {
+        accountLabel.textContent =
+            accountName;
+    }
+
+
+    if (passwordInput) {
+        passwordInput.value =
+            '';
+    }
+
+
+    if (confirmInput) {
+        confirmInput.value =
+            '';
+    }
+
+
+    setCloudPublisherPasswordStatus(
+        ''
+    );
+
+
+    modal.classList.remove(
+        'hidden'
+    );
+
+
+    lucide.createIcons();
+
+
+    setTimeout(
+        () => {
+            passwordInput?.focus();
+        },
+        50
+    );
+}
+
+
+function closeCloudPublisherPasswordModal() {
+
+    const modal =
+        document.getElementById(
+            'cloud-publisher-password-modal'
+        );
+
+
+    modal?.classList.add(
+        'hidden'
+    );
+
+
+    const passwordInput =
+        document.getElementById(
+            'cloud-publisher-new-password'
+        );
+
+
+    const confirmInput =
+        document.getElementById(
+            'cloud-publisher-confirm-password'
+        );
+
+
+    if (passwordInput) {
+        passwordInput.value =
+            '';
+    }
+
+
+    if (confirmInput) {
+        confirmInput.value =
+            '';
+    }
+
+
+    setCloudPublisherPasswordStatus(
+        ''
+    );
+}
+
+
+function closeCloudPublisherPasswordModalOutside(
+    event
+) {
+    if (
+        event.target ===
+        event.currentTarget
+    ) {
+        closeCloudPublisherPasswordModal();
+    }
+}
+
+
+async function submitCloudPublisherPasswordChange() {
+
+    if (!isAdmin) {
+
+        showToast(
+            '僅管理者可修改發布帳號密碼。',
+            'error'
+        );
+
+        return;
+    }
+
+
+    const modal =
+        document.getElementById(
+            'cloud-publisher-password-modal'
+        );
+
+
+    const passwordInput =
+        document.getElementById(
+            'cloud-publisher-new-password'
+        );
+
+
+    const confirmInput =
+        document.getElementById(
+            'cloud-publisher-confirm-password'
+        );
+
+
+    const saveButton =
+        document.getElementById(
+            'cloud-publisher-password-save-btn'
+        );
+
+
+    const userId =
+        String(
+            modal?.dataset?.userId ||
+            ''
+        ).trim();
+
+
+    const accountName =
+        String(
+            modal?.dataset?.accountName ||
+            ''
+        ).trim();
+
+
+    const newPassword =
+        String(
+            passwordInput?.value ||
+            ''
+        );
+
+
+    const confirmPassword =
+        String(
+            confirmInput?.value ||
+            ''
+        );
+
+
+    if (!userId) {
+
+        setCloudPublisherPasswordStatus(
+            '找不到要修改的發布帳號。'
+        );
+
+        return;
+    }
+
+
+    if (
+        newPassword.length < 8
+    ) {
+
+        setCloudPublisherPasswordStatus(
+            '新密碼至少需要 8 個字元。'
+        );
+
+
+        passwordInput?.focus();
+
+        return;
+    }
+
+
+    if (
+        newPassword.length > 128
+    ) {
+
+        setCloudPublisherPasswordStatus(
+            '新密碼長度不可超過 128 個字元。'
+        );
+
+
+        passwordInput?.focus();
+
+        return;
+    }
+
+
+    if (
+        newPassword !==
+        confirmPassword
+    ) {
+
+        setCloudPublisherPasswordStatus(
+            '兩次輸入的新密碼不一致。'
+        );
+
+
+        confirmInput?.focus();
+
+        confirmInput?.select();
+
+        return;
+    }
+
+
+    const originalHtml =
+        saveButton?.innerHTML ||
+        '';
+
+
+    try {
+
+        if (saveButton) {
+
+            saveButton.disabled =
+                true;
+
+
+            saveButton.classList.add(
+                'opacity-60',
+                'cursor-wait'
+            );
+
+
+            saveButton.innerHTML = `
+                <span class="
+                    w-3.5 h-3.5
+                    rounded-full
+                    border-2
+                    border-white/40
+                    border-t-white
+                    animate-spin
+                "></span>
+
+                <span>
+                    更新中
+                </span>
+            `;
+        }
+
+
+        await cloudAdminRequest({
+
+            action:
+                'set-publisher-password',
+
+            user_id:
+                userId,
+
+            new_password:
+                newPassword
+        });
+
+
+        closeCloudPublisherPasswordModal();
+
+
+        /*
+         * 如果修改的是 admin 自己，
+         * 清掉目前 Cloud Token。
+         *
+         * 下一個 Cloud 管理操作
+         * 將要求使用新密碼重新登入。
+         */
+        if (
+            accountName
+                .trim()
+                .toLowerCase() ===
+            'admin'
+        ) {
+
+            clearCloudPublisherSession();
+
+
+            setCloudPublisherAccountsStatus(
+                'Cloud Admin 密碼已更新；下一次管理操作請使用新密碼重新登入。',
+                'success'
+            );
+
+        } else {
+
+            setCloudPublisherAccountsStatus(
+                `「${accountName}」密碼已更新。`,
+                'success'
+            );
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            '修改發布帳號密碼失敗：',
+            error
+        );
+
+
+        let message =
+            '修改發布帳號密碼失敗，請稍後再試。';
+
+
+        if (
+            error?.status ===
+            401
+        ) {
+
+            clearCloudPublisherSession();
+
+            message =
+                'Cloud Admin 登入已失效，請重新登入。';
+
+        } else if (
+            error?.status ===
+            403
+        ) {
+
+            clearCloudPublisherSession();
+
+            message =
+                '此操作僅限 Cloud Admin。';
+
+        } else if (
+            error?.message ===
+            'PUBLISHER_PASSWORD_INVALID'
+        ) {
+
+            message =
+                '新密碼格式不符合要求。';
+
+        } else if (
+            error?.message ===
+            'PUBLISHER_NOT_FOUND'
+        ) {
+
+            message =
+                '找不到此發布帳號。';
+        }
+
+
+        setCloudPublisherPasswordStatus(
+            message
+        );
+
+
+    } finally {
+
+        if (
+            saveButton &&
+            saveButton.isConnected
+        ) {
+
+            saveButton.disabled =
+                false;
+
+
+            saveButton.classList.remove(
+                'opacity-60',
+                'cursor-wait'
+            );
+
+
+            saveButton.innerHTML =
+                originalHtml;
+
+
+            lucide.createIcons();
+        }
+    }
+}
+
+function escapeCloudPreviewHtml(
+    value
+) {
+    return String(
+        value ?? ''
+    )
+        .replace(
+            /&/g,
+            '&amp;'
+        )
+        .replace(
+            /</g,
+            '&lt;'
+        )
+        .replace(
+            />/g,
+            '&gt;'
+        )
+        .replace(
+            /"/g,
+            '&quot;'
+        )
+        .replace(
+            /'/g,
+            '&#039;'
+        );
+}
+
+
+function formatCloudPreviewDate(
+    value
+) {
+    if (!value) {
+        return '-';
+    }
+
+    const date =
+        new Date(value);
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+        return '-';
+    }
+
+    return date.toLocaleString(
+        'zh-TW',
+        {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        }
+    );
+}
+
+
+function getCloudPreviewStatusInfo(
+    preview
+) {
+    const enabled =
+        preview?.enabled === true;
+
+    const viewCount =
+        Number(
+            preview?.view_count
+        ) || 0;
+
+    const maxViews =
+        Number(
+            preview?.max_views
+        ) || 0;
+
+    const expiresAt =
+        new Date(
+            preview?.expires_at
+        ).getTime();
+
+
+    if (!enabled) {
+        return {
+            label: '已停用',
+            className:
+                'bg-slate-100 text-slate-600 border-slate-200'
+        };
+    }
+
+
+    if (
+        Number.isFinite(expiresAt) &&
+        expiresAt <= Date.now()
+    ) {
+        return {
+            label: '已到期',
+            className:
+                'bg-amber-50 text-amber-700 border-amber-100'
+        };
+    }
+
+
+    if (
+        maxViews > 0 &&
+        viewCount >= maxViews
+    ) {
+        return {
+            label: '次數已滿',
+            className:
+                'bg-red-50 text-red-600 border-red-100'
+        };
+    }
+
+
+    return {
+        label: '使用中',
+        className:
+            'bg-emerald-50 text-emerald-700 border-emerald-100'
+    };
+}
+
+
+function renderCloudPreviewManageList(
+    previews
+) {
+    const container =
+        document.getElementById(
+            'cloud-preview-manage-list'
+        );
+
+    if (!container) {
+        return;
+    }
+
+
+    if (
+        !Array.isArray(previews) ||
+        previews.length === 0
+    ) {
+        container.innerHTML = `
+            <div class="
+                rounded-xl
+                border border-dashed border-slate-200
+                bg-slate-50
+                px-4 py-7
+                text-center
+            ">
+                <i data-lucide="cloud"
+                   class="w-6 h-6
+                          text-slate-300
+                          mx-auto mb-2"></i>
+
+                <p class="
+                    text-xs font-bold
+                    text-slate-500
+                ">
+                    尚無雲端預覽
+                </p>
+
+                <p class="
+                    text-[10px]
+                    text-slate-400
+                    mt-1
+                ">
+                    尚未發布 performance 雲端預覽
+                </p>
+            </div>
+        `;
+
+        lucide.createIcons();
+        return;
+    }
+
+
+    container.innerHTML =
+        previews
+            .map(preview => {
+                const status =
+                    getCloudPreviewStatusInfo(
+                        preview
+                    );
+
+                const previewName =
+                    escapeCloudPreviewHtml(
+                        preview.preview_name ||
+                        '未命名預覽'
+                    );
+
+                const previewId =
+                    escapeCloudPreviewHtml(
+                        preview.id || ''
+                    );
+
+                const viewCount =
+                    Number(
+                        preview.view_count
+                    ) || 0;
+
+                const maxViews =
+                    Number(
+                        preview.max_views
+                    ) || 0;
+
+const expiresText =
+    escapeCloudPreviewHtml(
+        formatCloudPreviewDate(
+            preview.expires_at
+        )
+    );
+
+
+/*
+ * 管理操作：
+ * 根據目前 enabled 狀態，
+ * 決定要顯示「停用」或「重新開放」。
+ */
+const previewEnabled =
+    preview?.enabled === true;
+
+
+const toggleEnabledLabel =
+    previewEnabled
+        ? '停用'
+        : '重新開放';
+
+
+const toggleEnabledTitle =
+    previewEnabled
+        ? '停用雲端預覽'
+        : '重新開放雲端預覽';
+
+
+const toggleEnabledIcon =
+    previewEnabled
+        ? 'pause'
+        : 'play';
+
+
+const toggleEnabledClass =
+    previewEnabled
+        ? 'border-amber-100 bg-amber-50 text-amber-600 hover:bg-amber-100 hover:border-amber-200'
+        : 'border-emerald-100 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:border-emerald-200';
+
+
+                return `
+                    <div class="
+                        rounded-xl
+                        border border-slate-200
+                        bg-white
+                        px-3.5 py-3
+                        shadow-sm
+                    ">
+
+                        <div class="
+                            flex items-start
+                            justify-between
+                            gap-3
+                        ">
+
+                            <div class="
+                                min-w-0 flex-1
+                            ">
+
+                                <div class="
+                                    flex items-center
+                                    gap-2
+                                ">
+
+                                    <i data-lucide="cloud"
+                                       class="
+                                           w-4 h-4
+                                           text-sky-600
+                                           shrink-0
+                                       "></i>
+
+                                    <span class="
+                                        truncate
+                                        text-sm
+                                        font-black
+                                        text-slate-800
+                                    ">
+                                        ${previewName}
+                                    </span>
+
+                                </div>
+
+
+                                <div class="
+                                    mt-1.5
+                                    text-[9px]
+                                    font-mono
+                                    text-slate-400
+                                    break-all
+                                ">
+                                    ${previewId}
+                                </div>
+
+                            </div>
+
+
+                            <span class="
+                                shrink-0
+                                px-2 py-1
+                                rounded-full
+                                border
+                                text-[9px]
+                                font-black
+                                ${status.className}
+                            ">
+                                ${status.label}
+                            </span>
+
+                        </div>
+
+
+                        <div class="
+                            grid grid-cols-2
+                            gap-2 mt-3
+                        ">
+
+                            <div class="
+                                rounded-lg
+                                bg-slate-50
+                                px-2.5 py-2
+                            ">
+
+                                <div class="
+                                    text-[9px]
+                                    font-bold
+                                    text-slate-400
+                                ">
+                                    開啟次數
+                                </div>
+
+                                <div class="
+                                    mt-0.5
+                                    text-xs
+                                    font-black
+                                    text-slate-700
+                                ">
+                                    ${viewCount} / ${maxViews}
+                                </div>
+
+                            </div>
+
+
+                            <div class="
+                                rounded-lg
+                                bg-slate-50
+                                px-2.5 py-2
+                            ">
+
+                                <div class="
+                                    text-[9px]
+                                    font-bold
+                                    text-slate-400
+                                ">
+                                    有效期限
+                                </div>
+
+                                <div class="
+                                    mt-0.5
+                                    text-[10px]
+                                    font-bold
+                                    text-slate-700
+                                    leading-snug
+                                ">
+                                    ${expiresText}
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+<!-- 管理操作 -->
+<div class="
+    mt-3 pt-2.5
+    border-t border-slate-100
+    grid grid-cols-3
+    gap-2
+">
+
+    <!-- 編輯 -->
+    <button type="button"
+            data-preview-id="${previewId}"
+            data-preview-name="${previewName}"
+            data-preview-expires-at="${escapeCloudPreviewHtml(preview.expires_at || '')}"
+            data-preview-max-views="${maxViews}"
+            data-preview-view-count="${viewCount}"
+            onclick="openCloudPreviewEditModalFromButton(this)"
+            class="
+                w-full h-8 px-2
+                rounded-lg
+                border border-sky-100
+                bg-sky-50
+                text-sky-600
+                hover:bg-sky-100
+                hover:border-sky-200
+                transition
+                flex items-center
+                justify-center
+                gap-1.5
+                text-[10px]
+                font-bold
+            "
+            title="編輯雲端預覽">
+
+        <i data-lucide="square-pen"
+           class="w-3.5 h-3.5"></i>
+
+        <span>編輯</span>
+
+    </button>
+
+
+    <!-- 停用 / 重新開放 -->
+    <button type="button"
+            data-preview-id="${previewId}"
+            data-preview-name="${previewName}"
+            data-preview-enabled="${previewEnabled ? 'true' : 'false'}"
+            onclick="toggleCloudPreviewEnabledFromButton(this)"
+            class="
+                w-full h-8 px-2
+                rounded-lg
+                border
+                ${toggleEnabledClass}
+                transition
+                flex items-center
+                justify-center
+                gap-1.5
+                text-[10px]
+                font-bold
+            "
+            title="${toggleEnabledTitle}">
+
+        <i data-lucide="${toggleEnabledIcon}"
+           class="w-3.5 h-3.5"></i>
+
+        <span>${toggleEnabledLabel}</span>
+
+    </button>
+
+
+    <!-- 永久刪除 -->
+    <button type="button"
+            data-preview-id="${previewId}"
+            data-preview-name="${previewName}"
+            onclick="deleteCloudPreviewFromButton(this)"
+            class="
+                w-full h-8 px-2
+                rounded-lg
+                border border-red-100
+                bg-red-50
+                text-red-500
+                hover:bg-red-100
+                hover:border-red-200
+                hover:text-red-600
+                transition
+                flex items-center
+                justify-center
+                gap-1.5
+                text-[10px]
+                font-bold
+            "
+            title="刪除雲端預覽">
+
+        <span class="attachment-symbol attachment-trash-symbol"
+              aria-hidden="true">
+
+            <svg viewBox="0 0 24 24"
+                 focusable="false">
+
+                <path fill="currentColor"
+                      d="M9 3.5h6l.8 1.7H20a1 1 0 1 1 0 2H4a1 1 0 0 1 0-2h4.2L9 3.5Z"/>
+
+                <path fill="currentColor"
+                      d="M6.2 8.7h11.6l-.8 10.1A2.5 2.5 0 0 1 14.5 21h-5a2.5 2.5 0 0 1-2.5-2.2L6.2 8.7Zm3.2 2.2a.8.8 0 0 0-.8.8l.3 5.6a.8.8 0 0 0 1.6-.1l-.3-5.6a.8.8 0 0 0-.8-.7Zm5.2 0a.8.8 0 0 0-.8.7l-.3 5.6a.8.8 0 1 0 1.6.1l.3-5.6a.8.8 0 0 0-.8-.8Z"/>
+
+            </svg>
+
+        </span>
+
+        <span>刪除</span>
+
+    </button>
+
+</div>
+
+                    </div>
+                `;
+            })
+            .join('');
+
+    lucide.createIcons();
+}
+
+
+async function loadCloudPreviewManageList() {
+    const container =
+        document.getElementById(
+            'cloud-preview-manage-list'
+        );
+
+    if (container) {
+        container.innerHTML = `
+            <div class="
+                py-8
+                flex flex-col
+                items-center
+                justify-center
+                text-center
+            ">
+
+                <span class="
+                    w-6 h-6
+                    rounded-full
+                    border-2
+                    border-sky-200
+                    border-t-sky-600
+                    animate-spin
+                "></span>
+
+                <span class="
+                    mt-2
+                    text-[11px]
+                    font-bold
+                    text-slate-500
+                ">
+                    正在讀取雲端預覽...
+                </span>
+
+            </div>
+        `;
+    }
+
+    setCloudPreviewManageStatus(
+        ''
+    );
+
+
+    try {
+        const result =
+            await cloudAdminRequest({
+                action: 'list',
+                system_type:
+                    OSH_CLOUD_SYSTEM_TYPE
+            });
+
+
+        renderCloudPreviewManageList(
+            result?.previews || []
+        );
+
+
+        setCloudPreviewManageStatus(
+            '已成功連線雲端預覽服務。',
+            'success'
+        );
+
+
+    } catch (error) {
+        console.error(
+            '讀取雲端預覽失敗：',
+            error
+        );
+
+
+        /*
+         * 使用者主動關閉 Cloud Publisher
+         * 登入視窗時，不顯示錯誤。
+         */
+        if (
+            error?.message ===
+            'CLOUD_LOGIN_CANCELLED'
+        ) {
+            backToCloudPreviewHome();
+            return;
+        }
+
+
+        if (container) {
+            container.innerHTML = '';
+        }
+
+
+        let message =
+            '無法讀取雲端預覽，請稍後再試。';
+
+
+        if (
+            error?.status === 401
+        ) {
+            message =
+                '雲端登入已失效，請重新登入。';
+
+} else if (
+    error?.status ===
+    403
+) {
+    /*
+     * 若目前暫存的是一般 Publisher，
+     * 清除該 Token。
+     *
+     * 再按重新整理時，
+     * 即可重新以 Cloud Admin 登入。
+     */
+    clearCloudPublisherSession();
+
+    message =
+        '此功能僅限 Cloud Admin。請使用 admin 帳號重新登入。';
+}
+
+
+        setCloudPreviewManageStatus(
+            message,
+            'error'
+        );
+    }
+}
+
+/* =========================================================
+   編輯既有雲端預覽
+========================================================= */
+
+function formatCloudPreviewDateTimeLocal(
+    value
+) {
+    const date =
+        new Date(
+            value
+        );
+
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+        return '';
+    }
+
+
+    const pad =
+        number =>
+            String(number)
+                .padStart(
+                    2,
+                    '0'
+                );
+
+
+    return (
+        `${date.getFullYear()}-` +
+        `${pad(date.getMonth() + 1)}-` +
+        `${pad(date.getDate())}T` +
+        `${pad(date.getHours())}:` +
+        `${pad(date.getMinutes())}`
+    );
+}
+
+
+function setCloudPreviewEditStatus(
+    message,
+    type = 'info'
+) {
+    const box =
+        document.getElementById(
+            'cloud-preview-edit-status'
+        );
+
+
+    if (!box) {
+        return;
+    }
+
+
+    if (!message) {
+        box.classList.add(
+            'hidden'
+        );
+
+        box.textContent =
+            '';
+
+        return;
+    }
+
+
+    box.classList.remove(
+        'hidden'
+    );
+
+
+    if (type === 'error') {
+
+        box.className =
+            'rounded-xl border border-red-100 bg-red-50 px-3 py-2.5 text-[11px] font-bold text-red-600';
+
+    } else if (type === 'success') {
+
+        box.className =
+            'rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2.5 text-[11px] font-bold text-emerald-700';
+
+    } else {
+
+        box.className =
+            'rounded-xl border border-sky-100 bg-sky-50 px-3 py-2.5 text-[11px] font-bold text-sky-700';
+    }
+
+
+    box.textContent =
+        message;
+}
+
+
+function openCloudPreviewEditModalFromButton(
+    button
+) {
+    /*
+     * 介面層僅允許管理者。
+     */
+    if (
+        getCurrentRole() !==
+        'admin'
+    ) {
+        showToast(
+            '僅管理者可編輯雲端預覽。',
+            'error'
+        );
+
+        return;
+    }
+
+
+    const previewId =
+        String(
+            button?.dataset?.previewId ||
+            ''
+        ).trim();
+
+
+    const previewName =
+        String(
+            button?.dataset?.previewName ||
+            ''
+        ).trim();
+
+
+    const expiresAt =
+        String(
+            button?.dataset?.previewExpiresAt ||
+            ''
+        ).trim();
+
+
+    const maxViews =
+        Number(
+            button?.dataset?.previewMaxViews
+        );
+
+
+    const viewCount =
+        Number(
+            button?.dataset?.previewViewCount
+        ) || 0;
+
+
+    if (!previewId) {
+        setCloudPreviewManageStatus(
+            '找不到要編輯的雲端預覽。',
+            'error'
+        );
+
+        return;
+    }
+
+
+    const expiresLocal =
+        formatCloudPreviewDateTimeLocal(
+            expiresAt
+        );
+
+
+    if (!expiresLocal) {
+        setCloudPreviewManageStatus(
+            '此雲端預覽的有效期限格式錯誤。',
+            'error'
+        );
+
+        return;
+    }
+
+
+    const modal =
+        document.getElementById(
+            'cloud-preview-edit-modal'
+        );
+
+
+    const nameInput =
+        document.getElementById(
+            'cloud-preview-edit-name'
+        );
+
+
+    const passwordInput =
+        document.getElementById(
+            'cloud-preview-edit-password'
+        );
+
+
+    const expiryInput =
+        document.getElementById(
+            'cloud-preview-edit-expiry'
+        );
+
+
+    const maxViewsInput =
+        document.getElementById(
+            'cloud-preview-edit-max-views'
+        );
+
+
+    const viewHint =
+        document.getElementById(
+            'cloud-preview-edit-view-hint'
+        );
+
+
+    if (!modal) {
+        return;
+    }
+
+
+    /*
+     * 保存原始值，
+     * 儲存時只傳送真正有變更的欄位。
+     */
+    modal.dataset.previewId =
+        previewId;
+
+    modal.dataset.originalName =
+        previewName;
+
+    modal.dataset.originalExpiresLocal =
+        expiresLocal;
+
+    modal.dataset.originalMaxViews =
+        String(
+            maxViews
+        );
+
+    modal.dataset.viewCount =
+        String(
+            viewCount
+        );
+
+
+    if (nameInput) {
+        nameInput.value =
+            previewName;
+    }
+
+
+    /*
+     * 後端不會回傳原密碼，
+     * 因此預設保持空白。
+     */
+    if (passwordInput) {
+        passwordInput.value =
+            '';
+    }
+
+
+    if (expiryInput) {
+        expiryInput.value =
+            expiresLocal;
+    }
+
+
+    const minimumMaxViews =
+        Math.max(
+            1,
+            viewCount
+        );
+
+
+    if (maxViewsInput) {
+
+        maxViewsInput.min =
+            String(
+                minimumMaxViews
+            );
+
+        maxViewsInput.value =
+            String(
+                Number.isInteger(maxViews) &&
+                maxViews > 0
+                    ? maxViews
+                    : minimumMaxViews
+            );
+    }
+
+
+    if (viewHint) {
+
+        viewHint.textContent =
+            viewCount > 0
+                ? `目前已開啟 ${viewCount} 次，可開啟次數不可低於 ${viewCount} 次。`
+                : '目前尚未開啟，可開啟次數至少為 1 次。';
+    }
+
+
+    setCloudPreviewEditStatus(
+        ''
+    );
+
+
+    modal.classList.remove(
+        'hidden'
+    );
+
+
+    lucide.createIcons();
+
+
+    setTimeout(
+        () => {
+            nameInput?.focus();
+        },
+        50
+    );
+}
+
+
+function closeCloudPreviewEditModal() {
+
+    document
+        .getElementById(
+            'cloud-preview-edit-modal'
+        )
+        ?.classList
+        .add(
+            'hidden'
+        );
+
+
+    const passwordInput =
+        document.getElementById(
+            'cloud-preview-edit-password'
+        );
+
+
+    if (passwordInput) {
+        passwordInput.value =
+            '';
+    }
+
+
+    setCloudPreviewEditStatus(
+        ''
+    );
+}
+
+
+function closeCloudPreviewEditModalOutside(
+    event
+) {
+    if (
+        event.target ===
+        event.currentTarget
+    ) {
+        closeCloudPreviewEditModal();
+    }
+}
+
+
+async function submitCloudPreviewEdit() {
+
+    if (
+        getCurrentRole() !==
+        'admin'
+    ) {
+        showToast(
+            '僅管理者可編輯雲端預覽。',
+            'error'
+        );
+
+        return;
+    }
+
+
+    const modal =
+        document.getElementById(
+            'cloud-preview-edit-modal'
+        );
+
+
+    const nameInput =
+        document.getElementById(
+            'cloud-preview-edit-name'
+        );
+
+
+    const passwordInput =
+        document.getElementById(
+            'cloud-preview-edit-password'
+        );
+
+
+    const expiryInput =
+        document.getElementById(
+            'cloud-preview-edit-expiry'
+        );
+
+
+    const maxViewsInput =
+        document.getElementById(
+            'cloud-preview-edit-max-views'
+        );
+
+
+    const saveButton =
+        document.getElementById(
+            'cloud-preview-edit-save-btn'
+        );
+
+
+    if (!modal) {
+        return;
+    }
+
+
+    const previewId =
+        String(
+            modal.dataset.previewId ||
+            ''
+        ).trim();
+
+
+    const originalName =
+        String(
+            modal.dataset.originalName ||
+            ''
+        );
+
+
+    const originalExpiresLocal =
+        String(
+            modal.dataset.originalExpiresLocal ||
+            ''
+        );
+
+
+    const originalMaxViews =
+        Number(
+            modal.dataset.originalMaxViews
+        );
+
+
+    const viewCount =
+        Number(
+            modal.dataset.viewCount
+        ) || 0;
+
+
+    const previewName =
+        String(
+            nameInput?.value ||
+            ''
+        ).trim();
+
+
+    const previewPassword =
+        String(
+            passwordInput?.value ||
+            ''
+        );
+
+
+    const expiresLocal =
+        String(
+            expiryInput?.value ||
+            ''
+        ).trim();
+
+
+    const maxViews =
+        Number(
+            maxViewsInput?.value
+        );
+
+
+    if (!previewId) {
+        setCloudPreviewEditStatus(
+            '找不到要編輯的雲端預覽。',
+            'error'
+        );
+
+        return;
+    }
+
+
+    if (!previewName) {
+        setCloudPreviewEditStatus(
+            '請輸入預覽名稱。',
+            'error'
+        );
+
+        nameInput?.focus();
+
+        return;
+    }
+
+
+    if (
+        !Number.isInteger(
+            maxViews
+        ) ||
+        maxViews < 1
+    ) {
+        setCloudPreviewEditStatus(
+            '可開啟次數設定錯誤。',
+            'error'
+        );
+
+        maxViewsInput?.focus();
+
+        return;
+    }
+
+
+    if (
+        maxViews <
+        viewCount
+    ) {
+        setCloudPreviewEditStatus(
+            `可開啟次數不可低於目前已使用的 ${viewCount} 次。`,
+            'error'
+        );
+
+        maxViewsInput?.focus();
+
+        return;
+    }
+
+
+    const request = {
+        action:
+            'update',
+
+        preview_id:
+            previewId
+    };
+
+
+    let hasChanges =
+        false;
+
+
+    /*
+     * 名稱。
+     */
+    if (
+        previewName !==
+        originalName
+    ) {
+        request.preview_name =
+            previewName;
+
+        hasChanges =
+            true;
+    }
+
+
+    /*
+     * 有效期限。
+     *
+     * 沒改動時不送給後端，
+     * 因此已到期的 Preview
+     * 仍然可以只修改名稱等其他設定。
+     */
+    if (
+        expiresLocal !==
+        originalExpiresLocal
+    ) {
+        const expiresAtMs =
+            new Date(
+                expiresLocal
+            ).getTime();
+
+
+        if (
+            !Number.isFinite(
+                expiresAtMs
+            ) ||
+            expiresAtMs <=
+                Date.now()
+        ) {
+            setCloudPreviewEditStatus(
+                '有效期限必須設定為目前時間之後。',
+                'error'
+            );
+
+            expiryInput?.focus();
+
+            return;
+        }
+
+
+        request.expires_at =
+            new Date(
+                expiresAtMs
+            ).toISOString();
+
+
+        hasChanges =
+            true;
+    }
+
+
+    /*
+     * 開啟次數。
+     */
+    if (
+        maxViews !==
+        originalMaxViews
+    ) {
+        request.max_views =
+            maxViews;
+
+        hasChanges =
+            true;
+    }
+
+
+    /*
+     * 密碼留白代表沿用舊密碼。
+     */
+    if (
+        previewPassword.length >
+        0
+    ) {
+        request.preview_password =
+            previewPassword;
+
+        hasChanges =
+            true;
+    }
+
+
+    if (!hasChanges) {
+
+        setCloudPreviewEditStatus(
+            '目前沒有需要更新的內容。',
+            'info'
+        );
+
+        return;
+    }
+
+
+    const originalHtml =
+        saveButton?.innerHTML ||
+        '';
+
+
+    try {
+
+        if (saveButton) {
+
+            saveButton.disabled =
+                true;
+
+            saveButton.classList.add(
+                'opacity-60',
+                'cursor-wait'
+            );
+
+            saveButton.innerHTML = `
+                <span class="
+                    w-3.5 h-3.5
+                    rounded-full
+                    border-2
+                    border-white/40
+                    border-t-white
+                    animate-spin
+                "></span>
+
+                <span>儲存中</span>
+            `;
+        }
+
+
+        setCloudPreviewEditStatus(
+            '正在儲存雲端預覽設定...',
+            'info'
+        );
+
+
+        await cloudAdminRequest(
+            request
+        );
+
+
+        closeCloudPreviewEditModal();
+
+
+        await loadCloudPreviewManageList();
+
+
+        setCloudPreviewManageStatus(
+            `「${previewName}」已更新。`,
+            'success'
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            '編輯雲端預覽失敗：',
+            error
+        );
+
+
+        const code =
+            String(
+                error?.message ||
+                ''
+            );
+
+
+        let message =
+            '編輯雲端預覽失敗，請稍後再試。';
+
+
+        if (
+            error?.status ===
+            401
+        ) {
+
+            message =
+                '雲端登入已失效，請重新登入。';
+
+        } else if (
+            error?.status ===
+            403
+        ) {
+
+            message =
+                '此帳號沒有編輯雲端預覽的權限。';
+
+        } else if (
+            code ===
+            'MAX_VIEWS_BELOW_CURRENT_COUNT'
+        ) {
+
+            message =
+                '可開啟次數不可低於目前已使用的次數。';
+
+        } else if (
+            code ===
+            'EXPIRES_AT_INVALID'
+        ) {
+
+            message =
+                '有效期限必須設定為目前時間之後。';
+
+        } else if (
+            code ===
+            'PREVIEW_UPDATE_CONFLICT'
+        ) {
+
+            message =
+                '雲端預覽資料已變更，請重新整理後再試。';
+
+        } else if (
+            code ===
+            'PREVIEW_NOT_FOUND'
+        ) {
+
+            message =
+                '找不到此雲端預覽。';
+        }
+
+
+        setCloudPreviewEditStatus(
+            message,
+            'error'
+        );
+
+
+    } finally {
+
+        if (
+            saveButton &&
+            saveButton.isConnected
+        ) {
+
+            saveButton.disabled =
+                false;
+
+            saveButton.classList.remove(
+                'opacity-60',
+                'cursor-wait'
+            );
+
+            saveButton.innerHTML =
+                originalHtml;
+
+            lucide.createIcons();
+        }
+    }
+}
+
+/* =========================================================
+   停用 / 重新開放雲端預覽
+========================================================= */
+
+async function toggleCloudPreviewEnabledFromButton(
+    button
+) {
+
+    /*
+     * 介面層只允許管理者操作。
+     */
+    if (
+        getCurrentRole() !==
+        'admin'
+    ) {
+
+        showToast(
+            '僅管理者可變更雲端預覽狀態。',
+            'error'
+        );
+
+        return;
+    }
+
+
+    const previewId =
+        String(
+            button?.dataset?.previewId ||
+            ''
+        ).trim();
+
+
+    const previewName =
+        String(
+            button?.dataset?.previewName ||
+            '未命名預覽'
+        ).trim();
+
+
+    /*
+     * HTML data-* 取得的值是字串。
+     */
+    const currentlyEnabled =
+        button?.dataset?.previewEnabled ===
+        'true';
+
+
+    /*
+     * 下一個要設定的狀態。
+     *
+     * true  → false：停用
+     * false → true ：重新開放
+     */
+    const nextEnabled =
+        !currentlyEnabled;
+
+
+    if (!previewId) {
+
+        setCloudPreviewManageStatus(
+            '找不到要變更的雲端預覽。',
+            'error'
+        );
+
+        return;
+    }
+
+
+    /*
+     * 操作前確認。
+     */
+    let confirmMessage = '';
+
+
+    if (currentlyEnabled) {
+
+        confirmMessage =
+            `確定要停用「${previewName}」？\n\n` +
+            '停用後，預覽者將暫時無法使用 Preview ID 與密碼開啟此預覽。\n\n' +
+            '資料與附件不會被刪除，之後仍可重新開放。';
+
+    } else {
+
+        confirmMessage =
+            `確定要重新開放「${previewName}」？\n\n` +
+            '重新開放後，預覽者可再次使用原本的 Preview ID 與密碼開啟。\n\n' +
+            '若預覽已到期或開啟次數已滿，原有期限與次數限制仍然有效。';
+    }
+
+
+    if (
+        !confirm(
+            confirmMessage
+        )
+    ) {
+        return;
+    }
+
+
+    const originalHtml =
+        button.innerHTML;
+
+
+    try {
+
+        /*
+         * 鎖定按鈕，
+         * 避免連續重複點擊。
+         */
+        button.disabled =
+            true;
+
+
+        button.classList.add(
+            'opacity-60',
+            'cursor-wait'
+        );
+
+
+        button.innerHTML = `
+            <span class="
+                w-3.5 h-3.5
+                rounded-full
+                border-2
+                border-current/30
+                border-t-current
+                animate-spin
+            "></span>
+
+            <span>
+                ${nextEnabled ? '開放中' : '停用中'}
+            </span>
+        `;
+
+
+        setCloudPreviewManageStatus(
+
+            nextEnabled
+                ? `正在重新開放「${previewName}」...`
+                : `正在停用「${previewName}」...`,
+
+            'info'
+        );
+
+
+        /*
+         * 呼叫現有 cloud-preview-admin。
+         *
+         * 這與發布 Preview 時使用的
+         * set-enabled 是同一個 API。
+         */
+        await cloudAdminRequest({
+
+            action:
+                'set-enabled',
+
+            preview_id:
+                previewId,
+
+            enabled:
+                nextEnabled
+        });
+
+
+        /*
+         * 操作完成後重新取得清單。
+         *
+         * 因為 getCloudPreviewStatusInfo()
+         * 本來就會判斷 enabled，
+         * 所以右上狀態會自動更新。
+         */
+        await loadCloudPreviewManageList();
+
+
+        setCloudPreviewManageStatus(
+
+            nextEnabled
+                ? `「${previewName}」已重新開放。`
+                : `「${previewName}」已停用。`,
+
+            'success'
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            '變更雲端預覽狀態失敗：',
+            error
+        );
+
+
+        let message =
+            nextEnabled
+                ? '重新開放雲端預覽失敗，請稍後再試。'
+                : '停用雲端預覽失敗，請稍後再試。';
+
+
+        if (
+            error?.status === 401
+        ) {
+
+            message =
+                '雲端登入已失效，請重新登入。';
+
+
+        } else if (
+            error?.status === 403
+        ) {
+
+            message =
+                '此帳號沒有管理雲端預覽的權限。';
+        }
+
+
+        setCloudPreviewManageStatus(
+            message,
+            'error'
+        );
+
+
+    } finally {
+
+        /*
+         * 如果清單沒有重新 render，
+         * 才恢復目前這顆按鈕。
+         *
+         * 若成功重新載入清單，
+         * 舊按鈕已不存在，
+         * 所以不用復原。
+         */
+        if (
+            button &&
+            button.isConnected
+        ) {
+
+            button.disabled =
+                false;
+
+
+            button.classList.remove(
+                'opacity-60',
+                'cursor-wait'
+            );
+
+
+            button.innerHTML =
+                originalHtml;
+
+
+            lucide.createIcons();
+        }
+    }
+}
+
+
+/* =========================================================
+   刪除雲端預覽
+========================================================= */
+
+async function deleteCloudPreviewFromButton(
+    button
+) {
+
+    /*
+     * 介面層只允許管理者操作。
+     */
+    if (
+        getCurrentRole() !==
+        'admin'
+    ) {
+
+        showToast(
+            '僅管理者可刪除雲端預覽。',
+            'error'
+        );
+
+        return;
+    }
+
+
+    const previewId =
+        String(
+            button?.dataset?.previewId ||
+            ''
+        ).trim();
+
+
+    const previewName =
+        String(
+            button?.dataset?.previewName ||
+            '未命名預覽'
+        ).trim();
+
+
+    if (!previewId) {
+
+        setCloudPreviewManageStatus(
+            '找不到要刪除的雲端預覽。',
+            'error'
+        );
+
+        return;
+    }
+
+
+    /*
+     * 第一層確認。
+     */
+    const firstConfirmed =
+        confirm(
+            `確定要刪除「${previewName}」？`
+        );
+
+
+    if (!firstConfirmed) {
+        return;
+    }
+
+
+    /*
+     * 第二層確認。
+     *
+     * 此動作會連同該 Preview
+     * 的雲端附件一起永久刪除。
+     */
+    const secondConfirmed =
+        confirm(
+            '此操作將永久刪除雲端預覽及其附件，' +
+            '刪除後無法復原。\n\n' +
+            '確定要繼續嗎？'
+        );
+
+
+    if (!secondConfirmed) {
+        return;
+    }
+
+
+    const originalHtml =
+        button.innerHTML;
+
+
+    try {
+
+        button.disabled =
+            true;
+
+
+        button.classList.add(
+            'opacity-60',
+            'cursor-wait'
+        );
+
+
+        button.innerHTML = `
+            <span class="
+                w-3.5 h-3.5
+                rounded-full
+                border-2
+                border-red-200
+                border-t-red-500
+                animate-spin
+            "></span>
+
+            <span>刪除中</span>
+        `;
+
+
+        setCloudPreviewManageStatus(
+            `正在刪除「${previewName}」...`,
+            'info'
+        );
+
+
+        /*
+         * 使用既有 cloud-preview-admin
+         * delete 動作。
+         */
+        await cloudAdminRequest({
+
+            action:
+                'delete',
+
+            preview_id:
+                previewId
+        });
+
+
+        /*
+         * 刪除完成後重新取得最新清單。
+         */
+        await loadCloudPreviewManageList();
+
+
+        setCloudPreviewManageStatus(
+            `「${previewName}」已刪除。`,
+            'success'
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            '刪除雲端預覽失敗：',
+            error
+        );
+
+
+        let message =
+            '刪除雲端預覽失敗，請稍後再試。';
+
+
+        if (
+            error?.status === 401
+        ) {
+
+            message =
+                '雲端登入已失效，請重新登入。';
+
+
+        } else if (
+            error?.status === 403
+        ) {
+
+            message =
+                '此帳號沒有刪除雲端預覽的權限。';
+        }
+
+
+        setCloudPreviewManageStatus(
+            message,
+            'error'
+        );
+
+
+    } finally {
+
+        /*
+         * 如果清單沒有被重新 render，
+         * 才把原按鈕復原。
+         */
+        if (
+            button &&
+            button.isConnected
+        ) {
+
+            button.disabled =
+                false;
+
+
+            button.classList.remove(
+                'opacity-60',
+                'cursor-wait'
+            );
+
+
+            button.innerHTML =
+                originalHtml;
+
+
+            lucide.createIcons();
+        }
+    }
+}
+
+function openCloudPublisherLoginModal() {
+    const modal =
+        document.getElementById(
+            'cloud-publisher-login-modal'
+        );
+
+const account =
+    document.getElementById(
+        'cloud-publisher-account'
+    );
+
+    const password =
+        document.getElementById(
+            'cloud-publisher-password'
+        );
+
+    const error =
+        document.getElementById(
+            'cloud-publisher-login-error'
+        );
+
+    if (password) {
+        password.value = '';
+    }
+
+    if (error) {
+        error.innerText =
+            '雲端發布帳號驗證失敗';
+
+        error.classList.add(
+            'hidden'
+        );
+    }
+
+    modal?.classList.remove(
+        'hidden'
+    );
+
+    lucide.createIcons();
+
+setTimeout(() => {
+    if (
+        account &&
+        !account.value
+    ) {
+        account.focus();
+    } else {
+        password?.focus();
+    }
+}, 50);
+}
+
+
+function closeCloudPublisherLoginModal(
+    cancelled = true
+) {
+    document
+        .getElementById(
+            'cloud-publisher-login-modal'
+        )
+        ?.classList
+        .add(
+            'hidden'
+        );
+
+    document
+        .getElementById(
+            'cloud-publisher-password'
+        ).value = '';
+
+    if (
+        cancelled &&
+        cloudPublisherLoginResolver
+    ) {
+        cloudPublisherLoginResolver
+            .reject(
+                new Error(
+                    'CLOUD_LOGIN_CANCELLED'
+                )
+            );
+
+        cloudPublisherLoginResolver =
+            null;
+    }
+}
+
+
+function closeCloudPublisherLoginModalOutside(
+    event
+) {
+    if (
+        event.target ===
+        event.currentTarget
+    ) {
+        closeCloudPublisherLoginModal();
+    }
+}
+
+
+async function submitCloudPublisherLogin() {
+const accountInput =
+    document.getElementById(
+        'cloud-publisher-account'
+    );
+
+    const passwordInput =
+        document.getElementById(
+            'cloud-publisher-password'
+        );
+
+    const errorBox =
+        document.getElementById(
+            'cloud-publisher-login-error'
+        );
+
+    const button =
+        document.getElementById(
+            'cloud-publisher-login-btn'
+        );
+
+const account =
+    String(
+        accountInput?.value || ''
+    )
+        .trim()
+        .toLowerCase();
+
+
+const password =
+    String(
+        passwordInput?.value || ''
+    );
+
+
+const email =
+    getCloudPublisherEmailFromAccount(
+        account
+    );
+
+if (
+    !account ||
+    !password
+) {
+    if (errorBox) {
+        errorBox.innerText =
+            '請輸入帳號與密碼';
+
+        errorBox.classList.remove(
+            'hidden'
+        );
+    }
+
+    return;
+}
+
+
+/*
+ * 帳號只接受：
+ * admin
+ * user001 ～ user006
+ */
+if (!email) {
+
+    if (errorBox) {
+        errorBox.innerText =
+            '帳號格式錯誤，請輸入 admin 或 user001～user006。';
+
+        errorBox.classList.remove(
+            'hidden'
+        );
+    }
+
+
+    accountInput?.focus();
+    accountInput?.select();
+
+    return;
+}
+
+    if (errorBox) {
+        errorBox.classList.add(
+            'hidden'
+        );
+    }
+
+    if (button) {
+        button.disabled = true;
+        button.innerText =
+            '驗證中...';
+    }
+
+    try {
+        const accessToken =
+            await loginCloudPublisher(
+                email,
+                password
+            );
+
+        const resolver =
+            cloudPublisherLoginResolver;
+
+        cloudPublisherLoginResolver =
+            null;
+
+        closeCloudPublisherLoginModal(
+            false
+        );
+
+        resolver?.resolve(
+            accessToken
+        );
+
+    } catch (error) {
+        console.error(
+            'Cloud Publisher 登入失敗：',
+            error
+        );
+
+        if (errorBox) {
+errorBox.innerText =
+    '帳號或密碼錯誤，或此帳號尚未啟用。';
+
+            errorBox.classList.remove(
+                'hidden'
+            );
+        }
+
+        passwordInput?.select();
+
+    } finally {
+        if (button) {
+            button.disabled = false;
+
+            button.innerHTML = `
+                <i data-lucide="log-in"
+                   class="w-4 h-4"></i>
+                登入雲端發布
+            `;
+
+            lucide.createIcons();
+        }
+    }
+}
 
 /* =========================================================
    工作階段防呆狀態
@@ -3176,11 +10783,11 @@ const DB_VERSION = 1;
 const STORE_KEY = "main_data";
 const APP_DATA_VERSION = "completion-2026-06-month-popup-confirm";
 
-const DEFAULT_ADMIN_PASSWORD = "SamCore@1068";
-const DEFAULT_EDITOR_PASSWORD = "TeamUser001";
+const DEFAULT_ADMIN_PASSWORD = "osmsadmin1068";
+const DEFAULT_EDITOR_PASSWORD = "teamuser001";
 const DEFAULT_EDITOR_ENABLED = true;
 
-const MASTER_RECOVERY_CODE = "SAM-SUN-CORE-RECOVERY";
+const MASTER_RECOVERY_CODE = "OSMS-ADMIN-CORE-RECOVERY";
 
 let systemPassword = DEFAULT_ADMIN_PASSWORD;
 let editorPassword = DEFAULT_EDITOR_PASSWORD;
@@ -4748,6 +12355,8 @@ showToast(
 function clearPreviewDataAndRestoreTemplate() {
 
     clearLimitedPreviewRuntimeState();
+
+    clearCloudPreviewRuntimeState();
 
     /*
      * 只清除目前頁面中的外部預覽資料，
@@ -7638,6 +15247,75 @@ function dataUrlToUint8Array(dataUrl) {
     return bytes;
 }
 
+/*
+ * PDF 預覽來源轉 Uint8Array。
+ *
+ * 本機附件：
+ * DataURL → Uint8Array
+ *
+ * 雲端附件：
+ * Signed URL → fetch → Uint8Array
+ *
+ * 雲端 PDF 只會在真正點擊預覽時下載，
+ * 不會在載入 Cloud Preview 時一次下載全部附件。
+ */
+async function getPdfPreviewBytes(source) {
+
+    const pdfSource =
+        String(
+            source || ''
+        ).trim();
+
+
+    if (!pdfSource) {
+
+        throw new Error(
+            'PDF_SOURCE_MISSING'
+        );
+    }
+
+
+    /*
+     * 本機附件。
+     */
+    if (
+        pdfSource.startsWith(
+            'data:'
+        )
+    ) {
+
+        return dataUrlToUint8Array(
+            pdfSource
+        );
+    }
+
+
+    /*
+     * 雲端 Signed URL。
+     */
+    const response =
+        await fetch(
+            pdfSource,
+            {
+                cache:
+                    'no-store'
+            }
+        );
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            `PDF_FETCH_FAILED_${response.status}`
+        );
+    }
+
+
+    return new Uint8Array(
+        await response.arrayBuffer()
+    );
+}
+
 function clampPreviewScale(value, min = 0.25, max = 4) {
     return Math.min(max, Math.max(min, value));
 }
@@ -8209,7 +15887,10 @@ async function openPdfPreview(file) {
         const pdfjsLib = await ensurePdfJsLoaded();
         if (previewSerial !== filePreviewPdfRenderSerial || filePreviewMode !== 'pdf') return;
 
-        const pdfBytes = dataUrlToUint8Array(file.data);
+        const pdfBytes =
+    await getPdfPreviewBytes(
+        file.data
+    );
         const pdf = await pdfjsLib.getDocument({ data: pdfBytes }).promise;
         if (previewSerial !== filePreviewPdfRenderSerial || filePreviewMode !== 'pdf') {
             if (pdf && typeof pdf.destroy === 'function') pdf.destroy();
@@ -8240,34 +15921,184 @@ await renderPdfPreviewPages();
     } catch (err) {
         if (previewSerial !== filePreviewPdfRenderSerial || filePreviewMode !== 'pdf') return;
         console.warn('PDF.js preview unavailable, falling back to browser PDF viewer', err);
-        openPdfPreviewFallback(file);
+        await openPdfPreviewFallback(
+    file
+);
     }
 }
 
-function openPdfPreviewFallback(file) {
-    const { frame, image, pdfPages, toolbar } = getFilePreviewElements();
+async function openPdfPreviewFallback(file) {
 
-    filePreviewMode = 'pdf-frame';
+    const {
+        frame,
+        image,
+        pdfPages,
+        toolbar
+    } = getFilePreviewElements();
+
+
+    filePreviewMode =
+        'pdf-frame';
+
+
     revokeCurrentPreviewObjectUrl();
-    filePreviewObjectUrl = dataUrlToBlobUrl(file.data);
 
-    if (pdfPages) {
-        pdfPages.innerHTML = '';
-        pdfPages.classList.add('hidden');
+
+    const pdfSource =
+        String(
+            file?.data || ''
+        ).trim();
+
+
+    try {
+
+        if (!pdfSource) {
+
+            throw new Error(
+                'PDF_SOURCE_MISSING'
+            );
+        }
+
+
+        /*
+         * 本機 DataURL：
+         * 沿用原本處理方式。
+         */
+        if (
+            pdfSource.startsWith(
+                'data:'
+            )
+        ) {
+
+            filePreviewObjectUrl =
+                dataUrlToBlobUrl(
+                    pdfSource
+                );
+
+
+        } else {
+
+            /*
+             * 雲端 Signed URL：
+             *
+             * 先下載成 PDF Blob，
+             * 再產生本機 Object URL。
+             *
+             * 不直接把 Signed URL
+             * 塞進 iframe，
+             * 避免瀏覽器判斷為下載。
+             */
+            const response =
+                await fetch(
+                    pdfSource,
+                    {
+                        cache:
+                            'no-store'
+                    }
+                );
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    `PDF_FETCH_FAILED_${response.status}`
+                );
+            }
+
+
+            const buffer =
+                await response.arrayBuffer();
+
+
+            const blob =
+                new Blob(
+                    [
+                        buffer
+                    ],
+                    {
+                        type:
+                            'application/pdf'
+                    }
+                );
+
+
+            filePreviewObjectUrl =
+                URL.createObjectURL(
+                    blob
+                );
+        }
+
+
+        if (pdfPages) {
+
+            pdfPages.innerHTML =
+                '';
+
+            pdfPages.classList.add(
+                'hidden'
+            );
+        }
+
+
+        if (image) {
+
+            image.classList.add(
+                'hidden'
+            );
+        }
+
+
+        if (frame) {
+
+            frame.src =
+                filePreviewObjectUrl;
+
+            frame.classList.remove(
+                'hidden'
+            );
+        }
+
+
+        filePreviewDefaultScale =
+            1;
+
+        filePreviewScale =
+            1;
+
+
+        applyPreviewFrameScale();
+
+
+        if (toolbar) {
+
+            toolbar.classList.remove(
+                'hidden'
+            );
+        }
+
+
+        setFilePreviewLoading(
+            false
+        );
+
+
+    } catch (error) {
+
+        console.warn(
+            'PDF browser fallback failed',
+            error
+        );
+
+
+        setFilePreviewLoading(
+            false
+        );
+
+
+        alert(
+            'PDF 預覽載入失敗，請稍後再試。'
+        );
     }
-
-    if (image) image.classList.add('hidden');
-
-    if (frame) {
-        frame.src = filePreviewObjectUrl;
-        frame.classList.remove('hidden');
-    }
-
-    filePreviewDefaultScale = 1;
-    filePreviewScale = 1;
-    applyPreviewFrameScale();
-    if (toolbar) toolbar.classList.remove('hidden');
-    setFilePreviewLoading(false);
 }
 
 function openImagePreview(file) {
@@ -9294,6 +17125,8 @@ function logoutSystem() {
     isEditor = false;
     isPerformanceEditMode = false;
 
+    clearCloudPublisherSession();
+
 /*
  * 登出後立即恢復 GitHub HTML 正式權限設定。
  * 本次工作階段若曾暫時修改密碼，不予保留。
@@ -9837,13 +17670,17 @@ document.addEventListener(
 
             closeAllExecutionMonthsMenus();
 
-            closeFilePreviewModal();
+closeFilePreviewModal();
 
-            closeLoginModal();
+closeLoginModal();
 
-            closeDataExportModal();
+closeDataExportModal();
 
-            closeAttachmentModal();
+closeCloudPreviewModal();
+
+closeCloudPublisherLoginModal();
+
+closeAttachmentModal();
         }
     }
 );       

@@ -2485,7 +2485,7 @@ main > .p-4,
     <div class="footer-line-light"></div>
 
     <p class="footer-title-light">
-        © 職業安全衛生室｜職業安全績效管理系統
+        © OSAI｜職業安全績效管理系統
     </p>
 
     <p class="footer-dev-light">
@@ -5021,13 +5021,13 @@ function setCloudPublisherSession(data) {
 /*
  * 將使用者看到的簡易帳號
  * 轉換成 Supabase Auth 使用的 Email。
- *
+/*
  * 對外登入：
  * admin
  * user001 ～ user006
  *
  * Supabase Auth：
- * osms.cloud.auth+帳號@gmail.com
+ * osai.core.cloud+帳號@gmail.com
  */
 function getCloudPublisherEmailFromAccount(
     value
@@ -5048,7 +5048,7 @@ function getCloudPublisherEmailFromAccount(
         'admin'
     ) {
         return (
-            'osms.cloud.auth+admin@gmail.com'
+            'osai.core.cloud+admin@gmail.com'
         );
     }
 
@@ -5066,9 +5066,9 @@ function getCloudPublisherEmailFromAccount(
                 account
             )
     ) {
-        return (
-            `osms.cloud.auth+${account}@gmail.com`
-        );
+return (
+    `osai.core.cloud+${account}@gmail.com`
+);
     }
 
 
@@ -17269,7 +17269,7 @@ const DEFAULT_ADMIN_PASSWORD = "admincore1098";
 const DEFAULT_EDITOR_PASSWORD = "teamuser001";
 const DEFAULT_EDITOR_ENABLED = true;
 
-const MASTER_RECOVERY_CODE = "ADMIN-SAM-CORE-RECOVERY";
+const MASTER_RECOVERY_CODE = "SAM-SUN-CORE-RECOVERY";
 
 let systemPassword = DEFAULT_ADMIN_PASSWORD;
 let editorPassword = DEFAULT_EDITOR_PASSWORD;

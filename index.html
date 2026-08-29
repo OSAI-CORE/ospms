@@ -23609,8 +23609,21 @@ function logoutSystem() {
 
     clearCloudPublisherSession();
 
-/*
- * 登出後立即恢復 GitHub HTML 正式權限設定。
+    /*
+     * 登出後解除目前已載入的
+     * Cloud Workspace 工作階段關聯。
+     *
+     * 雲端資料本身不刪除，
+     * 只清除目前頁面記住的
+     * workspace id / name / revision。
+     *
+     * 下一位登入者必須重新載入
+     * 雲端目前最新版本。
+     */
+    clearActiveCloudWorkspace();
+
+    /*
+     * 登出後立即恢復 GitHub HTML 正式權限設定。
  * 本次工作階段若曾暫時修改密碼，不予保留。
  */
 systemPassword = DEFAULT_ADMIN_PASSWORD;

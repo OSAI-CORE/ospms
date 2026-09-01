@@ -788,6 +788,16 @@
 ========================================================= */
 .cloud-tooltip-btn {
     position: relative;
+
+    /*
+     * 雲端中心純圖示管理功能鈕：
+     * 保留原本圖示顏色與點擊範圍，
+     * 移除外框、底色與陰影。
+     */
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -840,6 +850,21 @@
             translateX(-50%)
             translateY(0);
     }
+
+/*
+ * 點擊純圖示功能鈕並開啟第二層視窗時，
+ * 強制隱藏原按鈕 Tooltip，
+ * 避免瀏覽器暫時保留 hover 狀態。
+ */
+.cloud-tooltip-btn.cloud-tooltip-suppressed::after {
+    opacity: 0 !important;
+    visibility: hidden !important;
+
+    transform:
+        translateX(-50%)
+        translateY(-2px) !important;
+}
+
 }
 
 /* 管理者操作欄：與報表其他欄位一致 */
@@ -2185,6 +2210,9 @@ main > .p-4,
 #cloud-preview-edit-max-views,
 #cloud-publisher-new-password,
 #cloud-publisher-confirm-password,
+#cloud-publisher-create-account,
+#cloud-publisher-create-password,
+#cloud-publisher-create-confirm-password,
 #cloud-workspace-rename-name {
     font-size: 16px !important;
 
@@ -2506,8 +2534,15 @@ main > .p-4,
      onpointerdown="closeLoginModalOutside(event)"
      class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
 
-    <div onclick="event.stopPropagation()"
-         class="w-full max-w-sm mx-4 overflow-hidden rounded-2xl bg-white shadow-xl border border-slate-200 scale-in-center">
+<div onclick="event.stopPropagation()"
+     class="bg-white
+            w-full max-w-sm mx-3
+            rounded-2xl
+            shadow-2xl
+            border border-slate-200
+            overflow-hidden
+            max-h-[calc(100svh-24px)]
+            overflow-y-auto">
 
         <!-- 登入視窗 -->
         <div id="login-view">
@@ -3707,6 +3742,7 @@ main > .p-4,
     </div>
 
 
+
     <!-- 帳號清單 -->
     <div id="cloud-publisher-accounts-list"
          class="space-y-2.5
@@ -3876,6 +3912,224 @@ main > .p-4,
                        class="w-4 h-4"></i>
 
                     <span>儲存</span>
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- =========================================================
+     Cloud Admin：新增發布帳號
+========================================================= -->
+<div id="cloud-publisher-create-modal"
+     onpointerdown="closeCloudPublisherCreateModalOutside(event)"
+     class="fixed inset-0
+            bg-slate-900/60 backdrop-blur-sm
+            z-[150]
+            hidden
+            flex items-center justify-center
+            p-4 no-print">
+
+<div onclick="event.stopPropagation()"
+     class="bg-white
+            w-full max-w-sm mx-3
+            rounded-2xl
+            shadow-2xl
+            border border-slate-200
+            overflow-hidden
+            max-h-[calc(100svh-24px)]
+            overflow-y-auto">
+
+        <!-- Header -->
+        <div class="relative
+                    bg-gradient-to-r
+                    from-slate-900
+                    via-slate-800
+                    to-indigo-900
+                    px-5 py-4
+                    text-white">
+
+            <button type="button"
+                    onclick="closeCloudPublisherCreateModal()"
+                    class="absolute right-3 top-3
+                           w-8 h-8 rounded-full
+                           bg-white/10 hover:bg-white/20
+                           text-slate-200 hover:text-white
+                           transition
+                           flex items-center justify-center"
+                    title="關閉"
+                    aria-label="關閉">
+
+                <i data-lucide="x"
+                   class="w-4 h-4"></i>
+
+            </button>
+
+
+            <div class="flex items-center gap-2.5">
+
+                <i data-lucide="user-plus"
+                   class="w-5 h-5 text-indigo-300"></i>
+
+                <h3 class="text-lg font-black">
+                    新增發布帳號
+                </h3>
+
+            </div>
+
+
+            <p class="mt-1
+                      text-[10px]
+                      text-slate-300
+                      tracking-[0.14em]
+                      font-semibold">
+                CREATE PUBLISHER ACCOUNT
+            </p>
+
+        </div>
+
+
+        <!-- Body -->
+        <div class="px-5 py-4 space-y-3">
+
+            <!-- 帳號 -->
+            <div>
+
+                <label for="cloud-publisher-create-account"
+                       class="block text-xs
+                              font-bold text-slate-600 mb-1">
+                    發布帳號
+                </label>
+
+                <select id="cloud-publisher-create-account"
+                        class="w-full h-11 px-4
+                               bg-slate-100
+                               border-none
+                               rounded-xl
+                               focus:ring-2
+                               focus:ring-indigo-500
+                               outline-none
+                               text-sm font-bold
+                               text-slate-700">
+
+                    <option value="">
+                        載入可用帳號中...
+                    </option>
+
+                </select>
+
+                <p class="mt-1
+                          text-[10px]
+                          text-slate-400
+                          leading-snug">
+                </p>
+
+            </div>
+
+
+            <!-- 初始密碼 -->
+            <div>
+
+                <label for="cloud-publisher-create-password"
+                       class="block text-xs
+                              font-bold text-slate-600 mb-1">
+                    初始密碼
+                </label>
+
+                <input type="password"
+                       id="cloud-publisher-create-password"
+                       autocomplete="new-password"
+                       minlength="8"
+                       maxlength="128"
+                       class="w-full h-11 px-4
+                              bg-slate-100
+                              border-none
+                              rounded-xl
+                              focus:ring-2
+                              focus:ring-indigo-500
+                              outline-none
+                              text-sm text-slate-700"
+                       placeholder="至少 8 個字元">
+
+            </div>
+
+
+            <!-- 確認密碼 -->
+            <div>
+
+                <label for="cloud-publisher-create-confirm-password"
+                       class="block text-xs
+                              font-bold text-slate-600 mb-1">
+                    再次輸入初始密碼
+                </label>
+
+                <input type="password"
+                       id="cloud-publisher-create-confirm-password"
+                       autocomplete="new-password"
+                       minlength="8"
+                       maxlength="128"
+                       onkeydown="if(event.key === 'Enter') submitCloudPublisherCreate()"
+                       class="w-full h-11 px-4
+                              bg-slate-100
+                              border-none
+                              rounded-xl
+                              focus:ring-2
+                              focus:ring-indigo-500
+                              outline-none
+                              text-sm text-slate-700">
+
+            </div>
+
+
+            <!-- 狀態 -->
+            <div id="cloud-publisher-create-status"
+                 class="hidden
+                        rounded-xl
+                        border px-3 py-2.5
+                        text-[11px]
+                        font-bold">
+            </div>
+
+
+            <!-- 操作 -->
+            <div class="grid grid-cols-2
+                        gap-2 pt-1">
+
+                <button type="button"
+                        onclick="closeCloudPublisherCreateModal()"
+                        class="h-10 rounded-xl
+                               bg-slate-100
+                               hover:bg-slate-200
+                               text-slate-600
+                               text-xs font-bold
+                               transition">
+
+                    取消
+
+                </button>
+
+
+                <button type="button"
+                        id="cloud-publisher-create-save-btn"
+                        onclick="submitCloudPublisherCreate()"
+                        class="h-10 rounded-xl
+                               bg-indigo-600
+                               hover:bg-indigo-700
+                               text-white
+                               text-xs font-black
+                               transition
+                               flex items-center
+                               justify-center gap-1.5">
+
+                    <i data-lucide="user-plus"
+                       class="w-4 h-4"></i>
+
+                    <span>建立帳號</span>
 
                 </button>
 
@@ -4978,6 +5232,14 @@ let cloudPublisherSession = {
 
 let cloudPublisherLoginResolver = null;
 
+/*
+ * 目前 Cloud Publisher 帳號清單。
+ *
+ * 只暫存在目前頁面記憶體，
+ * 用來判斷 user001 ～ user006
+ * 哪些帳號尚未建立。
+ */
+let cloudPublisherAccountsCache = [];
 
 /*
  * 清除 Cloud Publisher 登入狀態。
@@ -6668,8 +6930,9 @@ function closeCloudPreviewModal() {
 
     closeCloudPreviewPasswordResetModal();
 
-    closeCloudPublisherPasswordModal();
+    closeCloudPublisherCreateModal();
 
+    closeCloudPublisherPasswordModal();
 }
 
 
@@ -6794,8 +7057,8 @@ const accountsCard =
                 'shield-check'
             );
 
-            roleIcon.className =
-                'w-4 h-4 text-amber-600 shrink-0';
+roleIcon.className =
+    'w-4 h-4 text-indigo-600 shrink-0';
         }
 
         if (manageCard) {
@@ -6848,8 +7111,8 @@ if (accountsCard) {
                 'user-check'
             );
 
-            roleIcon.className =
-                'w-4 h-4 text-emerald-600 shrink-0';
+roleIcon.className =
+    'w-4 h-4 text-indigo-500 shrink-0';
         }
 
         if (manageCard) {
@@ -11461,11 +11724,11 @@ const hasNewerWorkspaceRevision =
                 cloud-tooltip-btn
                 w-7 h-7
                 rounded-lg
-                border border-sky-100
-                bg-sky-50
-                text-sky-600
-                hover:bg-sky-100
-                hover:border-sky-200
+border border-indigo-100
+bg-indigo-50
+text-sky-600
+hover:bg-indigo-100
+hover:border-indigo-200
                 transition
                 flex
                 items-center
@@ -13331,6 +13594,83 @@ function setCloudPublisherAccountsStatus(
         message;
 }
 
+/*
+ * =========================================================
+ * Cloud Publisher 可建立帳號空位
+ * =========================================================
+ */
+function getAvailableCloudPublisherAccounts() {
+
+    const reservedAccounts = [
+        'user001',
+        'user002',
+        'user003',
+        'user004',
+        'user005',
+        'user006'
+    ];
+
+
+    const usedAccounts =
+        new Set(
+            (
+                Array.isArray(
+                    cloudPublisherAccountsCache
+                )
+                    ? cloudPublisherAccountsCache
+                    : []
+            )
+                .map(
+                    publisher =>
+                        String(
+                            publisher?.account_name ||
+                            ''
+                        )
+                            .trim()
+                            .toLowerCase()
+                )
+                .filter(Boolean)
+        );
+
+
+    return reservedAccounts.filter(
+        account =>
+            !usedAccounts.has(
+                account
+            )
+    );
+}
+
+
+/*
+ * 依目前帳號空位更新
+ * 「新增帳號」按鈕。
+ */
+function updateCloudPublisherCreateButtonState() {
+
+    const button =
+        document.getElementById(
+            'cloud-publisher-create-btn'
+        );
+
+
+    if (!button) {
+        return;
+    }
+
+
+    const availableAccounts =
+        getAvailableCloudPublisherAccounts();
+
+
+    const hasAvailable =
+        availableAccounts.length > 0;
+
+
+    button.disabled =
+        !hasAvailable;
+
+}
 
 function renderCloudPublisherAccountsList(
     publishers
@@ -13346,7 +13686,20 @@ function renderCloudPublisherAccountsList(
     }
 
 
-    if (
+    /*
+     * 保存目前正式帳號清單，
+     * 供新增帳號視窗判斷
+     * 哪些 user00X 尚未使用。
+     */
+cloudPublisherAccountsCache =
+    Array.isArray(
+        publishers
+    )
+        ? publishers
+        : [];
+
+
+if (
         !Array.isArray(
             publishers
         ) ||
@@ -13584,6 +13937,40 @@ return `
                 }
 
 
+                ${
+                    isAdminAccount
+                        ? `
+                            <!-- 新增發布帳號 -->
+                            <button
+                                type="button"
+                                id="cloud-publisher-create-btn"
+                                onclick="this.classList.add('cloud-tooltip-suppressed'); this.blur(); openCloudPublisherCreateModal()"
+                                onpointerenter="this.classList.remove('cloud-tooltip-suppressed')"
+                                disabled
+                                class="
+                                    cloud-tooltip-btn
+                                    w-7 h-7
+                                    rounded-lg
+                                    text-indigo-600
+                                    transition
+                                    flex
+                                    items-center
+                                    justify-center
+                                    disabled:opacity-40
+                                    disabled:cursor-not-allowed
+                                "
+                                data-tooltip="新增帳號"
+                                aria-label="新增帳號">
+
+                                <i data-lucide="user-plus"
+                                   class="w-3.5 h-3.5"></i>
+
+                            </button>
+                        `
+                        : ''
+                }
+
+
                 <!-- 修改密碼 -->
                 <button
                     type="button"
@@ -13595,11 +13982,12 @@ return `
                         w-7 h-7
                         rounded-lg
                         border
-                        border-indigo-100
-                        bg-indigo-50
-                        text-indigo-600
-                        hover:bg-indigo-100
-                        transition
+border-indigo-100
+bg-indigo-50
+text-indigo-600
+hover:bg-indigo-100
+hover:border-indigo-200
+transition
                         flex
                         items-center
                         justify-center
@@ -13627,6 +14015,14 @@ return `
             );
 
 
+    /*
+     * admin 圖卡建立完成後，
+     * 再依 user001 ～ user006
+     * 的剩餘空位更新新增按鈕。
+     */
+    updateCloudPublisherCreateButtonState();
+
+
     lucide.createIcons();
 }
 
@@ -13637,6 +14033,23 @@ async function loadCloudPublisherAccountsList() {
         document.getElementById(
             'cloud-publisher-accounts-list'
         );
+
+
+    /*
+     * 清單尚未讀取完成前，
+     * 不允許建立帳號，
+     * 避免使用過期帳號狀態。
+     */
+    const createButton =
+        document.getElementById(
+            'cloud-publisher-create-btn'
+        );
+
+
+    if (createButton) {
+        createButton.disabled =
+            true;
+    }
 
 
     if (container) {
@@ -14022,6 +14435,536 @@ function setCloudPublisherPasswordStatus(
         message;
 }
 
+/*
+ * =========================================================
+ * Cloud Admin：新增發布帳號
+ * =========================================================
+ */
+function setCloudPublisherCreateStatus(
+    message,
+    type = 'error'
+) {
+    const box =
+        document.getElementById(
+            'cloud-publisher-create-status'
+        );
+
+
+    if (!box) {
+        return;
+    }
+
+
+    if (!message) {
+
+        box.classList.add(
+            'hidden'
+        );
+
+        box.textContent =
+            '';
+
+        return;
+    }
+
+
+    box.classList.remove(
+        'hidden'
+    );
+
+
+    if (type === 'success') {
+
+        box.className =
+            'rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2.5 text-[11px] font-bold text-emerald-700';
+
+    } else if (type === 'info') {
+
+        box.className =
+            'rounded-xl border border-indigo-100 bg-indigo-50 px-3 py-2.5 text-[11px] font-bold text-indigo-700';
+
+    } else {
+
+        box.className =
+            'rounded-xl border border-red-100 bg-red-50 px-3 py-2.5 text-[11px] font-bold text-red-600';
+    }
+
+
+    box.textContent =
+        message;
+}
+
+
+function openCloudPublisherCreateModal() {
+
+    if (!isAdmin) {
+
+        showToast(
+            '僅管理者可新增發布帳號。',
+            'error'
+        );
+
+        return;
+    }
+
+
+    const availableAccounts =
+        getAvailableCloudPublisherAccounts();
+
+
+    if (
+        availableAccounts.length === 0
+    ) {
+
+        setCloudPublisherAccountsStatus(
+            'user001 ～ user006 已全部建立，沒有可新增的帳號。',
+            'info'
+        );
+
+        return;
+    }
+
+
+    const modal =
+        document.getElementById(
+            'cloud-publisher-create-modal'
+        );
+
+
+    const accountSelect =
+        document.getElementById(
+            'cloud-publisher-create-account'
+        );
+
+
+    const passwordInput =
+        document.getElementById(
+            'cloud-publisher-create-password'
+        );
+
+
+    const confirmInput =
+        document.getElementById(
+            'cloud-publisher-create-confirm-password'
+        );
+
+
+    if (
+        !modal ||
+        !accountSelect
+    ) {
+        return;
+    }
+
+
+    /*
+     * 只列出尚未建立的帳號。
+     */
+    accountSelect.innerHTML =
+        availableAccounts
+            .map(
+                account =>
+                    `<option value="${account}">${account}</option>`
+            )
+            .join('');
+
+
+    accountSelect.value =
+        availableAccounts[0] ||
+        '';
+
+
+    if (passwordInput) {
+        passwordInput.value =
+            '';
+    }
+
+
+    if (confirmInput) {
+        confirmInput.value =
+            '';
+    }
+
+
+    setCloudPublisherCreateStatus(
+        ''
+    );
+
+
+    modal.classList.remove(
+        'hidden'
+    );
+
+
+    lucide.createIcons();
+
+
+    /*
+     * 帳號已自動選好，
+     * 直接將游標放到密碼欄位，
+     * 減少操作步驟。
+     */
+    setTimeout(
+        () => {
+            passwordInput?.focus();
+        },
+        50
+    );
+}
+
+
+function closeCloudPublisherCreateModal() {
+
+    const modal =
+        document.getElementById(
+            'cloud-publisher-create-modal'
+        );
+
+
+    modal?.classList.add(
+        'hidden'
+    );
+
+
+    const passwordInput =
+        document.getElementById(
+            'cloud-publisher-create-password'
+        );
+
+
+    const confirmInput =
+        document.getElementById(
+            'cloud-publisher-create-confirm-password'
+        );
+
+
+    if (passwordInput) {
+        passwordInput.value =
+            '';
+    }
+
+
+    if (confirmInput) {
+        confirmInput.value =
+            '';
+    }
+
+
+    setCloudPublisherCreateStatus(
+        ''
+    );
+}
+
+
+function closeCloudPublisherCreateModalOutside(
+    event
+) {
+    if (
+        event.target ===
+        event.currentTarget
+    ) {
+        closeCloudPublisherCreateModal();
+    }
+}
+
+
+async function submitCloudPublisherCreate() {
+
+    if (!isAdmin) {
+
+        showToast(
+            '僅管理者可新增發布帳號。',
+            'error'
+        );
+
+        return;
+    }
+
+
+    const accountSelect =
+        document.getElementById(
+            'cloud-publisher-create-account'
+        );
+
+
+    const passwordInput =
+        document.getElementById(
+            'cloud-publisher-create-password'
+        );
+
+
+    const confirmInput =
+        document.getElementById(
+            'cloud-publisher-create-confirm-password'
+        );
+
+
+    const saveButton =
+        document.getElementById(
+            'cloud-publisher-create-save-btn'
+        );
+
+
+    const accountName =
+        String(
+            accountSelect?.value ||
+            ''
+        )
+            .trim()
+            .toLowerCase();
+
+
+    const newPassword =
+        String(
+            passwordInput?.value ||
+            ''
+        );
+
+
+    const confirmPassword =
+        String(
+            confirmInput?.value ||
+            ''
+        );
+
+
+    if (
+        !/^user00[1-6]$/.test(
+            accountName
+        )
+    ) {
+
+        setCloudPublisherCreateStatus(
+            '請選擇有效的發布帳號。'
+        );
+
+        accountSelect?.focus();
+
+        return;
+    }
+
+
+    if (
+        newPassword.length < 8
+    ) {
+
+        setCloudPublisherCreateStatus(
+            '初始密碼至少需要 8 個字元。'
+        );
+
+        passwordInput?.focus();
+
+        return;
+    }
+
+
+    if (
+        newPassword.length > 128
+    ) {
+
+        setCloudPublisherCreateStatus(
+            '初始密碼長度不可超過 128 個字元。'
+        );
+
+        passwordInput?.focus();
+
+        return;
+    }
+
+
+    if (
+        newPassword !==
+        confirmPassword
+    ) {
+
+        setCloudPublisherCreateStatus(
+            '兩次輸入的初始密碼不一致。'
+        );
+
+        confirmInput?.focus();
+        confirmInput?.select();
+
+        return;
+    }
+
+
+    const originalHtml =
+        saveButton?.innerHTML ||
+        '';
+
+
+    try {
+
+        if (saveButton) {
+
+            saveButton.disabled =
+                true;
+
+
+            saveButton.classList.add(
+                'opacity-60',
+                'cursor-wait'
+            );
+
+
+            saveButton.innerHTML = `
+                <span class="
+                    w-3.5 h-3.5
+                    rounded-full
+                    border-2
+                    border-white/40
+                    border-t-white
+                    animate-spin
+                "></span>
+
+                <span>
+                    建立中
+                </span>
+            `;
+        }
+
+
+        await cloudAdminRequest({
+
+            action:
+                'create-publisher',
+
+            account_name:
+                accountName,
+
+            new_password:
+                newPassword
+        });
+
+
+        closeCloudPublisherCreateModal();
+
+
+        /*
+         * 建立完成後重新取得真正的
+         * server-side Publisher 清單。
+         */
+        await loadCloudPublisherAccountsList();
+
+
+        showToast(
+            `發布帳號「${accountName}」已建立。`,
+            'success'
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            '新增發布帳號失敗：',
+            error
+        );
+
+
+        let message =
+            '新增發布帳號失敗，請稍後再試。';
+
+
+        if (
+            error?.status ===
+            401
+        ) {
+
+            clearCloudPublisherSession();
+
+            message =
+                'Cloud Admin 登入已失效，請重新登入。';
+
+        } else if (
+            error?.status ===
+            403
+        ) {
+
+            clearCloudPublisherSession();
+
+            message =
+                '此操作僅限 Cloud Admin。';
+
+        } else if (
+            error?.message ===
+            'PUBLISHER_ACCOUNT_INVALID'
+        ) {
+
+            message =
+                '發布帳號格式不符合要求。';
+
+        } else if (
+            error?.message ===
+            'PUBLISHER_PASSWORD_INVALID'
+        ) {
+
+            message =
+                '初始密碼格式不符合要求。';
+
+        } else if (
+            error?.message ===
+            'PUBLISHER_ALREADY_EXISTS'
+        ) {
+
+            message =
+                '此發布帳號已經存在，請重新整理帳號清單。';
+
+        } else if (
+            error?.message ===
+            'PUBLISHER_CREATE_ROLLBACK_FAILED'
+        ) {
+
+            message =
+                '帳號建立未完整復原，請暫停再次建立並檢查 Supabase 帳號狀態。';
+
+        } else if (
+            error?.message ===
+            'PUBLISHER_AUTH_CREATE_FAILED' ||
+            error?.message ===
+            'PUBLISHER_AUTH_CREATE_INVALID' ||
+            error?.message ===
+            'PUBLISHER_AUTH_LIST_FAILED' ||
+            error?.message ===
+            'PUBLISHER_LOOKUP_FAILED' ||
+            error?.message ===
+            'PUBLISHER_CREATE_FAILED'
+        ) {
+
+            message =
+                '雲端帳號服務目前無法完成建立，請稍後再試。';
+        }
+
+
+        setCloudPublisherCreateStatus(
+            message
+        );
+
+
+    } finally {
+
+        if (
+            saveButton &&
+            saveButton.isConnected
+        ) {
+
+            saveButton.disabled =
+                false;
+
+
+            saveButton.classList.remove(
+                'opacity-60',
+                'cursor-wait'
+            );
+
+
+            saveButton.innerHTML =
+                originalHtml;
+
+
+            lucide.createIcons();
+        }
+    }
+}
 
 function openCloudPublisherPasswordModalFromButton(
     button
@@ -14782,11 +15725,11 @@ const toggleEnabledClass =
             shrink-0
             w-7 h-7
             rounded-lg
-            border border-violet-100
-            bg-violet-50
-            text-violet-600
-            hover:bg-violet-100
-            hover:border-violet-200
+border border-indigo-100
+bg-indigo-50
+text-indigo-600
+hover:bg-indigo-100
+hover:border-indigo-200
             transition
             flex items-center
             justify-center
@@ -14820,11 +15763,11 @@ const toggleEnabledClass =
                     cloud-tooltip-btn
                     w-7 h-7
                     rounded-lg
-                    border border-sky-100
-                    bg-sky-50
-                    text-sky-600
-                    hover:bg-sky-100
-                    hover:border-sky-200
+border border-indigo-100
+bg-indigo-50
+text-sky-600
+hover:bg-indigo-100
+hover:border-indigo-200
                     transition
                     flex items-center
                     justify-center

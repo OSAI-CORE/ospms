@@ -5507,6 +5507,58 @@ async function ensureCloudPublisherAccessToken() {
     );
 }
 
+/*
+ * =========================================================
+ * Cloud Center 第二層入口驗證。
+ *
+ * 規則：
+ * - 已有有效 Cloud Publisher Token：直接通過。
+ * - Token 可更新：自動更新後通過。
+ * - 尚未登入：先顯示 Cloud Publisher 登入視窗。
+ * - 使用者取消登入：停留在 Cloud Center 第一層。
+ *
+ * 只負責第二層入口驗證，
+ * 不取代後端真正的權限檢查。
+ * =========================================================
+ */
+async function ensureCloudPublisherSecondLevelAccess() {
+
+    try {
+
+        await ensureCloudPublisherAccessToken();
+
+        return true;
+
+
+    } catch (error) {
+
+        /*
+         * 使用者主動取消 Cloud Publisher 驗證時，
+         * 不顯示錯誤，也不切換第二層畫面。
+         */
+        if (
+            error?.message ===
+            'CLOUD_LOGIN_CANCELLED'
+        ) {
+            return false;
+        }
+
+
+        console.error(
+            'Cloud Publisher 第二層驗證失敗：',
+            error
+        );
+
+
+        showToast(
+            'Cloud Publisher 驗證失敗，請稍後再試。',
+            'error'
+        );
+
+
+        return false;
+    }
+}
 
 /*
  * 呼叫管理端 Edge Function。
@@ -7255,7 +7307,12 @@ function showCloudPreviewPublishView() {
 }
 
 
-function openCloudPreviewPublishView() {
+async function openCloudPreviewPublishView() {
+
+    /*
+     * 第一層：
+     * 本機系統權限與資料狀態檢查。
+     */
     if (
         !canExportReviewData() ||
         isPreviewDataMode
@@ -7268,6 +7325,7 @@ function openCloudPreviewPublishView() {
         return;
     }
 
+
     if (isAttachmentUploadBusy) {
         showToast(
             '附件仍在處理中，請稍後再發布。',
@@ -7277,7 +7335,10 @@ function openCloudPreviewPublishView() {
         return;
     }
 
-    if (hasUnsavedPerformanceChanges()) {
+
+    if (
+        hasUnsavedPerformanceChanges()
+    ) {
         showToast(
             '請先儲存目前的績效修改後再發布。',
             'error'
@@ -7286,16 +7347,42 @@ function openCloudPreviewPublishView() {
         return;
     }
 
+
+    /*
+     * 第二層：
+     * 先完成 Cloud Publisher 驗證，
+     * 驗證成功後才允許進入發布設定畫面。
+     */
+    const cloudAccessReady =
+        await ensureCloudPublisherSecondLevelAccess();
+
+
+    if (!cloudAccessReady) {
+        return;
+    }
+
+
+    /*
+     * Cloud Publisher 驗證完成後，
+     * 才初始化並顯示發布頁面。
+     */
     resetCloudPreviewPublishForm();
+
     showCloudPreviewPublishView();
 
-    setTimeout(() => {
-        document
-            .getElementById(
-                'cloud-preview-publish-name'
-            )
-            ?.focus();
-    }, 50);
+
+    setTimeout(
+        () => {
+
+            document
+                .getElementById(
+                    'cloud-preview-publish-name'
+                )
+                ?.focus();
+
+        },
+        50
+    );
 }
 
 /* =========================================================
@@ -13261,6 +13348,7 @@ async function openCloudWorkspaceView() {
 
 
     /*
+     * 第一層：
      * Viewer 不可使用 Workspace。
      */
     if (
@@ -13277,6 +13365,25 @@ async function openCloudWorkspaceView() {
     }
 
 
+    /*
+     * 第二層：
+     * 先完成 Cloud Publisher 驗證。
+     *
+     * 驗證成功以前，
+     * 不切換至 Workspace 畫面。
+     */
+    const cloudAccessReady =
+        await ensureCloudPublisherSecondLevelAccess();
+
+
+    if (!cloudAccessReady) {
+        return;
+    }
+
+
+    /*
+     * 驗證完成後才正式進入。
+     */
     showCloudWorkspaceView();
 
 
@@ -13380,6 +13487,10 @@ async function openCloudPreviewManageView() {
         getCurrentRole();
 
 
+    /*
+     * 第一層：
+     * 只有管理者 / 使用者可以查看。
+     */
     if (
         role !== 'admin' &&
         role !== 'editor'
@@ -13394,6 +13505,22 @@ async function openCloudPreviewManageView() {
     }
 
 
+    /*
+     * 第二層：
+     * 先完成 Cloud Publisher 驗證。
+     */
+    const cloudAccessReady =
+        await ensureCloudPublisherSecondLevelAccess();
+
+
+    if (!cloudAccessReady) {
+        return;
+    }
+
+
+    /*
+     * 驗證成功後才切換管理畫面。
+     */
     setCloudCenterHeader(
         'manage'
     );
@@ -13524,19 +13651,33 @@ async function openCloudPublisherAccountsView() {
     }
 
 
-/*
- * 發布帳號管理屬於 Cloud Admin 專用功能。
- *
- * 若目前已有有效的 Cloud Publisher Token，
- * 直接沿用，不重複要求輸入密碼。
- *
- * 真正權限仍由後端確認：
- * 只有 Cloud Admin 可以讀取與管理發布帳號。
- */
-showCloudPublisherAccountsView();
+    /*
+     * 第二層：
+     * 進入發布帳號管理以前，
+     * 先完成 Cloud Publisher 驗證。
+     *
+     * 若已有有效 Token，
+     * 則直接沿用，不重複要求密碼。
+     *
+     * 真正是否具有 Cloud Admin 權限，
+     * 仍由後端最終確認。
+     */
+    const cloudAccessReady =
+        await ensureCloudPublisherSecondLevelAccess();
 
 
-await loadCloudPublisherAccountsList();
+    if (!cloudAccessReady) {
+        return;
+    }
+
+
+    /*
+     * 驗證成功後才進入帳號管理畫面。
+     */
+    showCloudPublisherAccountsView();
+
+
+    await loadCloudPublisherAccountsList();
 }
 
 

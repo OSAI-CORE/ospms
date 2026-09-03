@@ -24299,13 +24299,19 @@ if (inputPwd === systemPassword) {
     isEditor = true;
     isPerformanceEditMode = false;
 
-    renderYearFolders();
-    updateUIState();
-    renderTable(currentTab);
+renderYearFolders();
+updateUIState();
+renderTable(currentTab);
 
-    showToast(
-        '已進入管理者模式'
-    );
+/*
+ * 登入只切換操作權限，
+ * 不代表績效資料已被修改。
+ */
+performanceDirty = false;
+
+showToast(
+    '已進入管理者模式'
+);
 
 if (pendingOpenPermissionSettings) {
             pendingOpenPermissionSettings = false;
@@ -24333,13 +24339,19 @@ if (
 
     closeLoginModal();
 
-    renderYearFolders();
-    updateUIState();
-    renderTable(currentTab);
+renderYearFolders();
+updateUIState();
+renderTable(currentTab);
 
-    showToast(
-        '已進入使用者模式'
-    );
+/*
+ * 登入只切換操作權限，
+ * 不代表績效資料已被修改。
+ */
+performanceDirty = false;
+
+showToast(
+    '已進入使用者模式'
+);
 setTimeout(function() {
             window.dispatchEvent(new Event('resize'));
         }, 100);

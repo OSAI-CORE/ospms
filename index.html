@@ -4869,7 +4869,7 @@ main > .p-4,
      aria-live="polite">
     點擊或拖放檔案至此處上傳
 </div>
-                <div class="attachment-upload-sub">支援 PDF, PNG, JPG（單檔最大 10MB）</div>
+                <div class="attachment-upload-sub">支援 PDF, PNG, JPG（單檔最大 5MB）</div>
             </div>
         </div>
 
@@ -7970,12 +7970,12 @@ async function uploadCloudPreviewAttachment(
         );
 
     /*
-     * 本績效系統仍維持原本單檔 10MB 限制。
+     * 本績效系統統一採用單檔 5MB 限制。
      */
     if (
         blob.size < 1 ||
         blob.size >
-            10 * 1024 * 1024
+            5 * 1024 * 1024
     ) {
         throw new Error(
             'CLOUD_FILE_SIZE_INVALID'
@@ -8387,7 +8387,7 @@ async function uploadCloudWorkspaceAttachment(
     if (
         blob.size < 1 ||
         blob.size >
-            10 * 1024 * 1024
+            5 * 1024 * 1024
     ) {
         throw new Error(
             'WORKSPACE_FILE_SIZE_INVALID'
@@ -9534,7 +9534,7 @@ try {
                 '附件格式不支援。',
 
             WORKSPACE_FILE_SIZE_INVALID:
-                '附件超過 10MB 上限。',
+                '附件超過 5MB 上限。',
 
             WORKSPACE_SIGNED_UPLOAD_FAILED:
                 '無法取得附件上傳權限。',
@@ -9791,7 +9791,7 @@ function getCloudPreviewPublishErrorMessage(
             '附件格式不支援。',
 
         CLOUD_FILE_SIZE_INVALID:
-            '附件超過 10MB 上限。',
+            '附件超過 5MB 上限。',
 
         CLOUD_FILE_ID_MISSING:
             '附件雲端資料建立失敗。',
@@ -13236,7 +13236,7 @@ const messages = {
                 '新附件格式不支援。',
 
             WORKSPACE_FILE_SIZE_INVALID:
-                '附件超過 10MB 上限。',
+                '附件超過 5MB 上限。',
 
             WORKSPACE_STORAGE_UPLOAD_FAILED:
                 '附件上傳失敗，請稍後重試。',
@@ -22566,7 +22566,7 @@ if (
     ];
 
     const tooLarge = validFiles.find(
-        file => file.size > 10 * 1024 * 1024
+        file => file.size > 5 * 1024 * 1024
     );
 
     const unsupported = validFiles.find(
@@ -22580,7 +22580,7 @@ if (
     }
 
     if (tooLarge) {
-        alert('檔案太大 (單檔限 10MB)');
+        alert('檔案太大 (單檔限 5MB)');
         resetAttachmentUploadStatus();
         return;
     }

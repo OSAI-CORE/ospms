@@ -16256,6 +16256,167 @@ return {
 };
 }
 
+/*
+ * 複製管理雲端預覽圖卡中的 Preview ID。
+ */
+async function copyCloudPreviewIdFromButton(
+    button
+) {
+    const previewId =
+        String(
+            button?.dataset?.previewId ||
+            ''
+        ).trim();
+
+
+    button?.classList.add(
+        'cloud-tooltip-suppressed'
+    );
+
+    button?.blur();
+
+
+    if (!previewId) {
+
+        showToast(
+            '找不到可複製的 Preview ID。',
+            'error'
+        );
+
+        return;
+    }
+
+
+    let copied =
+        false;
+
+
+    /*
+     * HTTPS 部署環境優先使用 Clipboard API。
+     */
+    if (
+        window.isSecureContext &&
+        navigator.clipboard &&
+        typeof navigator.clipboard.writeText ===
+            'function'
+    ) {
+
+        try {
+
+            await navigator.clipboard.writeText(
+                previewId
+            );
+
+            copied =
+                true;
+
+        } catch (error) {
+
+            console.warn(
+                'Clipboard API 複製失敗，改用相容模式：',
+                error
+            );
+        }
+    }
+
+
+    /*
+     * 本機 HTML 或不支援 Clipboard API
+     * 時使用相容模式。
+     */
+    if (!copied) {
+
+        const helper =
+            document.createElement(
+                'textarea'
+            );
+
+
+        helper.value =
+            previewId;
+
+        helper.setAttribute(
+            'readonly',
+            ''
+        );
+
+        helper.style.position =
+            'fixed';
+
+        helper.style.left =
+            '-9999px';
+
+        helper.style.top =
+            '0';
+
+        helper.style.opacity =
+            '0';
+
+        helper.style.pointerEvents =
+            'none';
+
+
+        try {
+
+            document.body.appendChild(
+                helper
+            );
+
+
+            try {
+
+                helper.focus({
+                    preventScroll: true
+                });
+
+            } catch (_) {
+
+                helper.focus();
+            }
+
+
+            helper.select();
+
+            helper.setSelectionRange(
+                0,
+                helper.value.length
+            );
+
+
+            copied =
+                document.execCommand(
+                    'copy'
+                ) === true;
+
+        } catch (error) {
+
+            console.warn(
+                '相容模式複製 Preview ID 失敗：',
+                error
+            );
+
+        } finally {
+
+            helper.remove();
+        }
+    }
+
+
+    if (copied) {
+
+        showToast(
+            'Preview ID 已複製。',
+            'success'
+        );
+
+    } else {
+
+        showToast(
+            '無法自動複製 Preview ID，請手動選取複製。',
+            'error'
+        );
+    }
+}
 
 function renderCloudPreviewManageList(
     previews
@@ -16634,6 +16795,64 @@ ${toggleEnabledIconHtml}
         ${previewId}
     </div>
 
+<!-- 複製 Preview ID -->
+<button
+    type="button"
+    data-preview-id="${previewId}"
+    onclick="
+        copyCloudPreviewIdFromButton(
+            this
+        )
+    "
+    onpointerenter="
+        this.classList.remove(
+            'cloud-tooltip-suppressed'
+        )
+    "
+    class="
+        cloud-tooltip-btn
+        shrink-0
+        w-6 h-6
+        rounded-md
+        border border-sky-100
+        bg-white/80
+        text-sky-600
+        hover:bg-sky-100
+        hover:border-sky-200
+        hover:text-sky-700
+        transition
+        flex
+        items-center
+        justify-center
+        focus-visible:outline-none
+        focus-visible:ring-2
+        focus-visible:ring-sky-300
+    "
+    data-tooltip="複製 ID"
+    aria-label="複製 Preview ID"
+>
+
+    <svg viewBox="0 0 24 24"
+         fill="none"
+         stroke="currentColor"
+         stroke-width="2"
+         stroke-linecap="round"
+         stroke-linejoin="round"
+         class="w-3.5 h-3.5"
+         aria-hidden="true">
+
+        <rect width="14"
+              height="14"
+              x="8"
+              y="8"
+              rx="2"
+              ry="2"></rect>
+
+        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path>
+
+    </svg>
+
+</button>    
 
 <div class="
     shrink-0

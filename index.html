@@ -693,14 +693,14 @@ html.performance-icons-ready #header-action-buttons {
 
 /* 列印：比照風險系統 slate-700 → slate-600 */
 .performance-print-icon-btn {
-    background: #334155;
-    border: 1px solid #334155;
+    background: #475569;
+    border: 1px solid #475569;
     color: #ffffff;
 }
 
 .performance-print-icon-btn:hover {
-    background: #475569;
-    border-color: #475569;
+    background: #334155;
+    border-color: #334155;
 }
 
 
@@ -2298,34 +2298,48 @@ main > .p-4,
 and (max-width: 768px)
 and (orientation: portrait) {
 
-    .mobile-sidebar-toggle {
-        width: 44px !important;
-        height: 44px !important;
+.mobile-sidebar-toggle {
+    width: 44px !important;
+    height: 44px !important;
 
-        border: none !important;
-        border-radius: 999px !important;
+    padding: 0 !important;
 
-        background: #2563eb !important;
-        color: #ffffff !important;
+    border: none !important;
+    border-radius: 999px !important;
 
-        box-shadow:
-            0 10px 25px
-            rgba(37, 99, 235, 0.35) !important;
-    }
+    background: #2563eb !important;
+    color: #ffffff !important;
+
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    box-shadow:
+        0 10px 25px
+        rgba(37, 99, 235, 0.35) !important;
+}
 
     .mobile-sidebar-toggle:hover {
         background: #2563eb !important;
         color: #ffffff !important;
     }
 
-    .mobile-sidebar-toggle i {
-        width: 22px !important;
-        height: 22px !important;
+.mobile-sidebar-toggle i,
+.mobile-sidebar-toggle svg {
+    width: 22px !important;
+    height: 22px !important;
 
-        color: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
 
-        stroke-width: 2.8px;
-    }
+    flex: 0 0 22px;
+
+    display: block;
+
+    color: #ffffff !important;
+
+    stroke-width: 2.8px;
+}
 }
 
         @media print {

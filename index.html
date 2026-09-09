@@ -607,45 +607,49 @@ html.performance-icons-ready #header-action-buttons {
 
         .admin-edit-cell { background-color: #fefce8 !important; border: 1px dashed #eab308 !important; color: #475569 !important; }
 
-/* 績效報表編輯／完成檢視雙態按鈕 */
-.performance-edit-toggle-btn {
-    min-width: 0;
+/* =========================================================
+   績效系統右上方功能按鈕
+
+   編輯／檢視、儲存：
+   完全比照風險評估系統矩陣功能按鈕。
+
+   列印：
+   使用風險評估系統列印按鈕色系。
+
+   三顆按鈕統一：
+   36 × 36px、10px 圓角、13px 圖示。
+========================================================= */
+
+.performance-header-icon-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    flex: 0 0 36px;
+
+    padding: 0;
+    border-radius: 10px;
+
     display: inline-flex;
     align-items: center;
     justify-content: center;
 
-    gap: 6px;
-
-    padding: 8px 12px;
-
-    border-radius: 12px;
-
-    font-size: 11px;
-    font-weight: 900;
-
-    white-space: nowrap;
+    font-size: 13px;
 
     transition:
         background-color 0.18s ease,
         border-color 0.18s ease,
-        color 0.18s ease;
+        color 0.18s ease,
+        transform 0.18s ease;
 
     box-shadow:
-        0 4px 6px -1px rgba(15, 23, 42, 0.10),
-        0 2px 4px -2px rgba(15, 23, 42, 0.10);
+        0 3px 8px
+        rgba(15, 23, 42, 0.16);
 }
 
-@media screen and (min-width: 640px) {
-    .performance-edit-toggle-btn {
-        gap: 8px;
-        padding: 10px 20px;
-        font-size: 12px;
-    }
-}
-
-.performance-edit-toggle-btn.hidden {
+.performance-header-icon-btn.hidden {
     display: none !important;
 }
+
 
 /* 尚未進入編輯模式 */
 .performance-edit-toggle-btn.is-view {
@@ -659,18 +663,125 @@ html.performance-icons-ready #header-action-buttons {
     border-color: #93c5fd;
 }
 
+
 /* 已進入編輯模式 */
 .performance-edit-toggle-btn.is-editing {
     background: #fffbeb;
     border: 1px solid #fbbf24;
     color: #b45309;
-    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.12);
 }
 
 .performance-edit-toggle-btn.is-editing:hover {
     background: #fef3c7;
     border-color: #f59e0b;
     color: #92400e;
+}
+
+
+/* 儲存記錄 */
+.performance-save-icon-btn {
+    background: #059669;
+    border: 1px solid #059669;
+    color: #ffffff;
+}
+
+.performance-save-icon-btn:hover {
+    background: #047857;
+    border-color: #047857;
+}
+
+
+/* 列印：比照風險系統 slate-700 → slate-600 */
+.performance-print-icon-btn {
+    background: #334155;
+    border: 1px solid #334155;
+    color: #ffffff;
+}
+
+.performance-print-icon-btn:hover {
+    background: #475569;
+    border-color: #475569;
+}
+
+
+.performance-header-icon-btn:active {
+    transform: scale(0.95);
+}
+
+.performance-header-icon-btn i {
+    width: auto;
+    height: auto;
+    margin: 0;
+
+    font-size: 13px;
+    line-height: 1;
+}
+
+
+/* =========================================================
+   系統功能按鈕 Tooltip
+   完全比照風險評估系統黑色提示框
+   僅桌機滑鼠裝置顯示
+========================================================= */
+
+.system-tooltip-btn {
+    position: relative;
+}
+
+@media (hover: hover) and (pointer: fine) {
+
+    .system-tooltip-btn::after {
+        content: attr(data-tooltip);
+
+        position: absolute;
+        z-index: 300;
+
+        left: 50%;
+        top: calc(100% + 6px);
+
+        transform:
+            translateX(-50%)
+            translateY(-2px);
+
+        padding: 4px 7px;
+        border-radius: 6px;
+
+        background: rgba(15, 23, 42, 0.94);
+        color: #ffffff;
+
+        font-size: 10px;
+        font-weight: 700;
+        line-height: 1.2;
+
+        white-space: nowrap;
+
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+
+        transition:
+            opacity 0.14s ease,
+            transform 0.14s ease,
+            visibility 0.14s ease;
+
+        box-shadow:
+            0 6px 16px
+            rgba(15, 23, 42, 0.18);
+    }
+
+    .system-tooltip-btn:hover::after {
+        opacity: 1;
+        visibility: visible;
+
+        transform:
+            translateX(-50%)
+            translateY(0);
+    }
+
+    .system-tooltip-btn:active::after {
+        opacity: 0;
+        visibility: hidden;
+    }
 }
 
         .year-input {
@@ -2144,6 +2255,79 @@ main > .p-4,
 
 }
 
+/* =========================================================
+   績效系統右上三顆功能鈕
+   桌機／手機直式／手機橫式全部固定為風險系統 36px
+========================================================= */
+
+#header-action-buttons
+.performance-header-icon-btn {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    flex: 0 0 36px !important;
+
+    padding: 0 !important;
+
+    border-radius: 10px !important;
+
+    font-size: 13px !important;
+
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+#header-action-buttons
+.performance-header-icon-btn i {
+    width: auto !important;
+    height: auto !important;
+
+    margin: 0 !important;
+
+    font-size: 13px !important;
+    line-height: 1 !important;
+}
+
+
+/* =========================================================
+   手機直式：
+   左側功能列展開按鈕比照標準程序系統
+========================================================= */
+
+@media screen
+and (max-width: 768px)
+and (orientation: portrait) {
+
+    .mobile-sidebar-toggle {
+        width: 44px !important;
+        height: 44px !important;
+
+        border: none !important;
+        border-radius: 999px !important;
+
+        background: #2563eb !important;
+        color: #ffffff !important;
+
+        box-shadow:
+            0 10px 25px
+            rgba(37, 99, 235, 0.35) !important;
+    }
+
+    .mobile-sidebar-toggle:hover {
+        background: #2563eb !important;
+        color: #ffffff !important;
+    }
+
+    .mobile-sidebar-toggle i {
+        width: 22px !important;
+        height: 22px !important;
+
+        color: #ffffff !important;
+
+        stroke-width: 2.8px;
+    }
+}
+
         @media print {
 @page {
     size: A4 landscape;
@@ -2600,37 +2784,60 @@ main > .p-4,
 </div>
 
 <div id="header-action-buttons"
-     class="flex items-center gap-3 no-print">
+     class="flex items-center gap-1.5 no-print">
 
-    <button id="performance-edit-toggle-btn"
-            type="button"
-            onclick="togglePerformanceEditMode()"
-            title="進入績效報表編輯模式"
-            aria-label="進入績效報表編輯模式"
-            class="hidden performance-edit-toggle-btn is-view">
-        <i data-lucide="square-pen" class="w-4 h-4"></i>
-        <span>編輯</span>
+    <!-- 編輯／檢視 -->
+    <button
+        id="performance-edit-toggle-btn"
+        type="button"
+        onclick="togglePerformanceEditMode()"
+        class="
+            hidden
+            performance-header-icon-btn
+            performance-edit-toggle-btn
+            is-view
+            system-tooltip-btn
+        "
+        data-tooltip="編輯模式"
+        aria-label="編輯模式"
+    >
+        <i class="fa-solid fa-pen-to-square"></i>
     </button>
 
-<button id="save-logout-btn"
+
+    <!-- 儲存記錄 -->
+    <button
+        id="save-logout-btn"
         type="button"
         onclick="savePerformanceData()"
-        title="儲存資料"
-        aria-label="儲存資料"
-        class="hidden flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-emerald-600 text-white rounded-xl text-[11px] sm:text-xs font-black transition-all shadow-md hover:bg-emerald-700">
-    <i data-lucide="save" class="w-4 h-4"></i>
-    <span>儲存</span>
-</button>
+        class="
+            hidden
+            performance-header-icon-btn
+            performance-save-icon-btn
+            system-tooltip-btn
+        "
+        data-tooltip="儲存記錄"
+        aria-label="儲存記錄"
+    >
+        <i class="fa-solid fa-floppy-disk"></i>
+    </button>
 
-<button type="button"
+
+    <!-- 列印 -->
+    <button
+        id="performance-print-btn"
+        type="button"
         onclick="printCurrentReport()"
-        title="列印報告"
+        class="
+            performance-header-icon-btn
+            performance-print-icon-btn
+            system-tooltip-btn
+        "
+        data-tooltip="列印報告"
         aria-label="列印報告"
-        class="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-white border border-slate-200 rounded-xl text-[11px] sm:text-xs font-black text-slate-700 transition-all shadow-md hover:bg-slate-50 hover:border-slate-300">
-    <i data-lucide="printer"
-       class="w-4 h-4 text-slate-600"></i>
-    <span>列印</span>
-</button>
+    >
+        <i class="fas fa-print"></i>
+    </button>
 
 </div>
         </header>
@@ -25619,30 +25826,39 @@ function applyPerformanceEditModeUI() {
         isPerformanceEditMode
     );
 
-    const iconName =
-        isPerformanceEditMode
-            ? 'circle-check-big'
-            : 'square-pen';
-
-    const label =
-        isPerformanceEditMode
-            ? '檢視'
-            : '編輯';
-
     editBtn.innerHTML = `
-        <i data-lucide="${iconName}"
-           class="w-4 h-4"></i>
-        <span>${label}</span>
+        <i class="fa-solid ${
+            isPerformanceEditMode
+                ? 'fa-circle-check'
+                : 'fa-pen-to-square'
+        }"></i>
     `;
 
-    editBtn.title =
+
+    const editTooltip =
         isPerformanceEditMode
-            ? '結束編輯並切換為檢視模式'
-            : '進入績效報表編輯模式';
+            ? '檢視模式'
+            : '編輯模式';
+
+
+    /*
+     * 移除瀏覽器原生 title，
+     * 改用與風險評估系統相同的黑色 Tooltip。
+     */
+    editBtn.removeAttribute(
+        'title'
+    );
+
+
+    editBtn.setAttribute(
+        'data-tooltip',
+        editTooltip
+    );
+
 
     editBtn.setAttribute(
         'aria-label',
-        editBtn.title
+        editTooltip
     );
 }
 

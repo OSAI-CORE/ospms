@@ -3230,13 +3230,27 @@ and (orientation: portrait) {
         <!-- 權限與密碼設定視窗：仍保留在同一個 Modal 內，由左側「權限與密碼設定」按鈕開啟 -->
         <div id="change-pwd-view" class="hidden">
             <div class="px-5 py-5">
-                <div class="flex flex-col items-center text-center mb-3">
-                    <div class="bg-yellow-50 p-2 rounded-full mb-2">
-                        <i data-lucide="key-round" class="w-6 h-6 text-yellow-600"></i>
-                    </div>
-                    <h3 class="text-lg font-black text-slate-900">權限與密碼設定</h3>
-                    <p class="text-xs text-slate-500 mt-1">僅管理者可修改密碼與使用者權限</p>
-                </div>
+<div class="flex flex-col items-center text-center mb-3">
+
+    <div class="bg-yellow-50 p-2 rounded-full mb-1.5">
+        <i data-lucide="key-round"
+           class="w-6 h-6 text-yellow-600"></i>
+    </div>
+
+<p class="mt-1
+          text-[11px]
+          text-slate-500
+          tracking-[0.14em]
+          font-semibold
+          mb-1.5">
+    ACCESS SETTINGS
+</p>
+
+    <h3 class="text-lg font-black text-slate-900">
+        權限與密碼設定
+    </h3>
+
+</div>
 
                 <div class="space-y-2">
                     <div>

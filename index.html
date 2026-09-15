@@ -21597,17 +21597,16 @@ normalizeAllExecutionMonths();
     reader.readAsText(file);
 }
 
-function updateJsonActionButtons() {
-
 /* =========================================================
    OSAI 管理平台入口
 ========================================================= */
 
 /*
- * 請填入正式部署後的 OSAI 管理平台網址。
- * 不與目前績效管理系統共用登入狀態。
+ * OSAI 管理平台正式網址。
+ * 與目前績效管理系統維持獨立權限及登入狀態。
  */
-const OSAI_PLATFORM_URL = 'https://osai-core.vercel.app/';
+const OSAI_PLATFORM_URL =
+    'https://osai-core.vercel.app/';
 
 function openOsaiPlatform() {
 
@@ -21623,18 +21622,19 @@ function openOsaiPlatform() {
         return;
     }
 
-    /*
-     * 使用固定視窗名稱 OSAI_PLATFORM。
-     *
-     * 瀏覽器允許時會優先使用同一個平台分頁；
-     * noopener / noreferrer 保留外部分頁安全隔離。
-     */
     window.open(
         url,
         'OSAI_PLATFORM',
         'noopener,noreferrer'
     );
 }
+
+
+/* =========================================================
+   JSON 操作按鈕狀態
+========================================================= */
+
+function updateJsonActionButtons() {
 
     const exitPreviewBtn =
         document.getElementById(

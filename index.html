@@ -2873,6 +2873,7 @@ and (orientation: portrait) {
 </button>  
             
 <div class="grid grid-cols-2 gap-2 mb-2">
+
     <button id="export-json-btn"
             onclick="openDataExportModal()"
             class="hidden bg-slate-700 text-slate-200 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-black hover:bg-slate-600 transition-all shadow-md flex items-center justify-center gap-1.5 sm:gap-2">
@@ -2896,6 +2897,54 @@ and (orientation: portrait) {
         <span>退出預覽</span>
     </button>
 
+    <!-- 雲端中心 -->
+    <button id="cloud-preview-entry-btn"
+            type="button"
+            onclick="openCloudPreviewModal()"
+            class="bg-sky-600
+                   hover:bg-sky-700
+                   text-white
+                   px-3 sm:px-5
+                   py-2 sm:py-2.5
+                   rounded-xl
+                   text-[11px] sm:text-xs
+                   font-black
+                   transition-all
+                   shadow-md
+                   flex items-center
+                   justify-center
+                   gap-1.5 sm:gap-2"
+            title="開啟雲端中心">
+
+        <i class="fas fa-cloud"></i>
+        <span>雲端中心</span>
+
+    </button>
+
+    <!-- OSAI 管理平台 -->
+    <button id="osai-platform-btn"
+            type="button"
+            onclick="openOsaiPlatform()"
+            class="bg-indigo-600
+                   hover:bg-indigo-700
+                   text-white
+                   px-3 sm:px-5
+                   py-2 sm:py-2.5
+                   rounded-xl
+                   text-[11px] sm:text-xs
+                   font-black
+                   transition-all
+                   shadow-md
+                   flex items-center
+                   justify-center
+                   gap-1.5 sm:gap-2"
+            title="切換至 OSAI 管理平台">
+
+        <i class="fas fa-layer-group"></i>
+        <span>OSAI 平台</span>
+
+    </button>
+
     <input type="file"
            id="preview-json-input"
            class="hidden"
@@ -2907,33 +2956,9 @@ and (orientation: portrait) {
            class="hidden"
            accept=".json"
            onchange="importJSON(event)">
+
 </div>
 
-<!-- 雲端預覽入口 -->
-<button id="cloud-preview-entry-btn"
-        type="button"
-        onclick="openCloudPreviewModal()"
-        class="w-full mb-2
-               bg-sky-600
-               hover:bg-sky-700
-               text-white
-               px-3 sm:px-5
-               py-2 sm:py-2.5
-               rounded-xl
-               text-[11px] sm:text-xs
-               font-black
-               transition-all
-               shadow-md
-               flex items-center
-               justify-center
-               gap-1.5 sm:gap-2"
-        title="開啟雲端中心">
-
-    <i class="fas fa-cloud text-white"></i>
-
-    <span>雲端中心</span>
-
-</button>
 
 <button class="w-full bg-blue-600 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-black flex items-center justify-center gap-1.5 sm:gap-2 hover:bg-blue-500 transition-all shadow-md" onclick="exportFullReport()">
     <i class="fas fa-file-export"></i>
@@ -3262,7 +3287,11 @@ and (orientation: portrait) {
 
                     <div class="flex space-x-2 pt-1">
                         <button onclick="togglePasswordView(false)" class="flex-1 py-1.5 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200 transition text-xs">取消</button>
-                        <button onclick="handleChangePassword()" class="flex-1 py-1.5 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition text-xs">儲存設定</button>
+                        <button onclick="handleChangePassword()"
+        class="flex-1 py-1.5 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition text-xs flex items-center justify-center gap-1.5">
+    <i class="fa-solid fa-floppy-disk"></i>
+    <span>儲存設定</span>
+</button>
                     </div>
 
                     <p id="pwd-change-error" class="text-center text-red-500 text-[10px] font-bold hidden"></p>
@@ -21569,6 +21598,44 @@ normalizeAllExecutionMonths();
 }
 
 function updateJsonActionButtons() {
+
+/* =========================================================
+   OSAI 管理平台入口
+========================================================= */
+
+/*
+ * 請填入正式部署後的 OSAI 管理平台網址。
+ * 不與目前績效管理系統共用登入狀態。
+ */
+const OSAI_PLATFORM_URL = 'https://osai-core.vercel.app/';
+
+function openOsaiPlatform() {
+
+    const url =
+        String(
+            OSAI_PLATFORM_URL || ''
+        ).trim();
+
+    if (!url) {
+        alert(
+            '尚未設定 OSAI 管理平台網址。'
+        );
+        return;
+    }
+
+    /*
+     * 使用固定視窗名稱 OSAI_PLATFORM。
+     *
+     * 瀏覽器允許時會優先使用同一個平台分頁；
+     * noopener / noreferrer 保留外部分頁安全隔離。
+     */
+    window.open(
+        url,
+        'OSAI_PLATFORM',
+        'noopener,noreferrer'
+    );
+}
+
     const exitPreviewBtn =
         document.getElementById(
             'exit-preview-btn'

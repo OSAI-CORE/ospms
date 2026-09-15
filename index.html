@@ -3210,6 +3210,7 @@ and (orientation: portrait) {
                         <i data-lucide="key-round" class="w-6 h-6 text-yellow-600"></i>
                     </div>
                     <h3 class="text-lg font-black text-slate-900">權限與密碼設定</h3>
+                    <p class="text-xs text-slate-500 mt-1">僅管理者可修改密碼與使用者權限</p>
                 </div>
 
                 <div class="space-y-2">
@@ -3255,8 +3256,12 @@ and (orientation: portrait) {
     </span>
 </label>
 
+                <p class="text-[11px] text-slate-400 leading-snug">
+                    使用者權限可編輯、上傳附件、儲存、載入與匯出資料；刪除與權限設定仍限管理者。
+                </p>
+
                     <div class="flex space-x-2 pt-1">
-                        <button onclick="togglePasswordView(false)" class="flex-1 py-1.5 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200 transition text-xs">返回</button>
+                        <button onclick="togglePasswordView(false)" class="flex-1 py-1.5 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200 transition text-xs">取消</button>
                         <button onclick="handleChangePassword()" class="flex-1 py-1.5 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition text-xs">儲存設定</button>
                     </div>
 

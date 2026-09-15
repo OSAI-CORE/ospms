@@ -1451,9 +1451,20 @@ html.performance-icons-ready #header-action-buttons {
     margin-bottom: 4px;
 
     background: transparent;
+
+    display: grid;
+    grid-template-columns: auto auto;
+
+    justify-content: center;
+    align-items: baseline;
+
+    column-gap: 72px;
 }
 
 .footer-line-light {
+    grid-column: 1 / -1;
+    justify-self: center;
+
     width: 80px;
     height: 1px;
 
@@ -1475,7 +1486,9 @@ html.performance-icons-ready #header-action-buttons {
 
     font-weight: 700;
 
-    margin-bottom: 8px;
+    margin: 0;
+
+    white-space: nowrap;
 }
 
 .footer-dev-light {
@@ -1485,6 +1498,10 @@ html.performance-icons-ready #header-action-buttons {
 
     font-style: italic;
     letter-spacing: 0.08em;
+
+    margin: 0;
+
+    white-space: nowrap;
 }
 
 /* 手機 / 桌機共用：附件檔案預覽視窗 */
@@ -1986,10 +2003,20 @@ header {
 }    
 
 .system-footer-light {
-    display: block;
+    display: grid;
+    grid-template-columns: auto auto;
+
+    justify-content: center;
+    align-items: baseline;
+
+    column-gap: 10px;
+
     flex-shrink: 0;
+
     padding: 4px 8px calc(6px + env(safe-area-inset-bottom)) 8px;
+
     margin: 0;
+
     background: #f8fafc;
 }
 
@@ -2002,7 +2029,8 @@ header {
     font-size: 9px;
     line-height: 1.2;
     letter-spacing: 0.08em;
-    margin-bottom: 3px;
+
+    margin-bottom: 0;
 }
 
 .footer-dev-light {
@@ -2315,14 +2343,14 @@ main > .p-4,
         display: none;
     }
 
-    .footer-title-light {
-        font-size: 8px;
-        margin-bottom: 1px;
-    }
+.footer-title-light {
+    font-size: 8px;
+    margin-bottom: 0;
+}
 
-    .footer-dev-light {
-        font-size: 8px;
-    }
+.footer-dev-light {
+    font-size: 8px;
+}
 
 }
 
@@ -3122,7 +3150,6 @@ and (orientation: portrait) {
                         <i data-lucide="key-round" class="w-6 h-6 text-yellow-600"></i>
                     </div>
                     <h3 class="text-lg font-black text-slate-900">權限與密碼設定</h3>
-                    <p class="text-xs text-slate-500 mt-1">僅管理者可修改密碼與使用者權限</p>
                 </div>
 
                 <div class="space-y-2">
@@ -3167,10 +3194,6 @@ and (orientation: portrait) {
         啟用使用者共用權限
     </span>
 </label>
-
-                    <p class="text-[11px] text-slate-400 leading-snug">
-                        使用者權限可編輯、上傳附件、儲存、載入與匯出資料；刪除與權限設定仍限管理者。
-                    </p>
 
                     <div class="flex space-x-2 pt-1">
                         <button onclick="togglePasswordView(false)" class="flex-1 py-1.5 bg-slate-100 text-slate-600 rounded-lg font-bold hover:bg-slate-200 transition text-xs">返回</button>

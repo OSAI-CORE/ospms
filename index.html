@@ -2262,24 +2262,45 @@ body.mobile-sidebar-open .mobile-sidebar-backdrop {
         min-height: 0;
     }
 
-    .sidebar {
-        overflow: hidden;
-    }
+/*
+ * 手機橫式：
+ * 左側功能列改為整體上下捲動。
+ *
+ * 避免螢幕高度較低時，
+ * 底部功能按鈕把「系統分類目錄」
+ * 壓縮成過小的獨立捲動區。
+ */
+.sidebar {
+    overflow-x: hidden;
+    overflow-y: auto;
 
-    .sidebar > .p-6,
-    .sidebar > .p-4 {
-        flex: 0 0 auto;
-    }
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
 
-    .sidebar nav {
-        flex: 1 1 auto;
-        min-height: 0;
+    touch-action: pan-y;
+}
 
-        overflow-y: auto;
 
-        -webkit-overflow-scrolling: touch;
-        overscroll-behavior: contain;
-    }
+/*
+ * 上方系統標頭、分類目錄、下方功能區
+ * 都依內容自然排列。
+ */
+.sidebar > .p-6,
+.sidebar > .p-4 {
+    flex: 0 0 auto;
+}
+
+
+/*
+ * 分類目錄不再自己形成第二層捲動區，
+ * 由整個 sidebar 統一負責上下捲動。
+ */
+.sidebar nav {
+    flex: 0 0 auto;
+    min-height: auto;
+
+    overflow: visible;
+}
 
     main {
         overflow: hidden;
@@ -2403,6 +2424,49 @@ main > .p-4,
     .sidebar .p-4 {
         padding: 12px !important;
     }
+
+/*
+ * 手機橫式：
+ * 左側底部功能按鈕統一高度。
+ *
+ * 避免 OSAI 平台因文字換行
+ * 將同列的雲端中心一起撐高。
+ */
+.sidebar .p-4 > button,
+.sidebar .p-4 .grid.grid-cols-2 > button {
+    height: 36px !important;
+    min-height: 36px !important;
+    max-height: 36px !important;
+
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+
+    font-size: 11px !important;
+    line-height: 1 !important;
+
+    white-space: nowrap !important;
+
+    box-sizing: border-box !important;
+}
+
+
+/* 所有按鈕文字固定單行 */
+.sidebar .p-4 > button span,
+.sidebar .p-4 .grid.grid-cols-2 > button span {
+    font-size: 11px !important;
+    line-height: 1 !important;
+
+    white-space: nowrap !important;
+}
+
+
+/* Font Awesome 圖示不參與壓縮 */
+.sidebar .p-4 .grid.grid-cols-2 > button i,
+.sidebar .p-4 > button i {
+    flex-shrink: 0 !important;
+}
 
     header {
         padding: 8px 12px !important;

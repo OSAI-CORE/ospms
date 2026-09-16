@@ -50,6 +50,40 @@ html.performance-icons-ready #header-action-buttons {
 
         .sidebar { width: 280px; flex-shrink: 0; }
 
+/* =========================================================
+   表頭權限登入／登出圖示
+   實心鎖頭，位置不變。
+   Hover 僅變色，不產生位移或懸浮效果。
+========================================================= */
+
+#admin-toggle-btn {
+    transition:
+        color 0.18s ease !important;
+
+    transform: none !important;
+}
+
+
+/* 滑鼠靠近：暗灰 → 亮白 */
+#admin-toggle-btn:hover {
+    transform: none !important;
+}
+
+
+/*
+ * 強制圖示跟隨角色原本顏色，
+ * Hover 時統一轉成亮白。
+ */
+#admin-toggle-btn:hover #auth-icon {
+    color: #ffffff !important;
+}
+
+
+/* 點擊時也不產生位移 */
+#admin-toggle-btn:active {
+    transform: none !important;
+}
+
 /* 左側功能列捲軸美化：深色融合版 */
 .sidebar nav {
     scrollbar-width: thin;
@@ -2815,9 +2849,12 @@ and (orientation: portrait) {
 </p>
                     </div>
                 </div>
-                <button id="admin-toggle-btn" onclick="handleAuthClick()" class="text-slate-500 hover:text-white transition-colors">
-                    <i data-lucide="lock" class="w-5 h-5" id="auth-icon"></i>
-                </button>
+<button id="admin-toggle-btn"
+        onclick="handleAuthClick()"
+        class="text-slate-500 transition-colors">
+    <i class="fa-solid fa-lock text-base leading-none"
+       id="auth-icon"></i>
+</button>
             </div>
             <p class="text-[12px] text-slate-300 font-bold mt-4"></p>
         </div>
@@ -26224,22 +26261,22 @@ function updateUIState() {
         );
     }
 
-    if (isAdmin) {
-        if (icon) {
-            icon.setAttribute('data-lucide', 'unlock');
-            icon.classList.add('text-yellow-500');
-        }
-    } else if (isEditor) {
-        if (icon) {
-            icon.setAttribute('data-lucide', 'unlock');
-            icon.classList.add('text-emerald-400');
-        }
-    } else {
-        if (icon) {
-            icon.setAttribute('data-lucide', 'lock');
-            icon.classList.add('text-slate-500');
-        }
+if (isAdmin) {
+    if (icon) {
+        icon.className =
+            'fa-solid fa-lock-open text-base leading-none text-yellow-500';
     }
+} else if (isEditor) {
+    if (icon) {
+        icon.className =
+            'fa-solid fa-lock-open text-base leading-none text-emerald-400';
+    }
+} else {
+    if (icon) {
+        icon.className =
+            'fa-solid fa-lock text-base leading-none text-slate-500';
+    }
+}
 
     if (saveBtn) {
         saveBtn.classList.toggle('hidden', !canEditData());

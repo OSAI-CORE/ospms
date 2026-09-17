@@ -40,13 +40,39 @@
    Lucide 圖示尚未完成轉換前先不顯示，
    避免文字先出現、圖示稍後補上的視覺斷層。
 ========================================================= */
-#header-action-buttons {
+/*
+ * 系統初始化完成前，
+ * 先隱藏右上功能鈕與左側底部功能鈕。
+ *
+ * 使用 visibility：
+ * 保留原本版面空間，
+ * 避免載入時產生位移。
+ */
+#header-action-buttons,
+.sidebar > .p-4 {
     visibility: hidden;
 }
 
-html.performance-icons-ready #header-action-buttons {
+
+/*
+ * 角色、圖示、字型全部完成後再一次顯示。
+ */
+html.performance-icons-ready #header-action-buttons,
+html.performance-icons-ready .sidebar > .p-4 {
     visibility: visible;
 }        
+
+/* =========================================================
+   系統分類目錄：
+   防止初始化時左側 Border 瞬間閃白
+========================================================= */
+
+#nav-tabs > button {
+    border-left-width: 4px;
+    border-left-style: solid;
+    border-left-color: transparent;
+}
+
 
         .sidebar { width: 280px; flex-shrink: 0; }
 
@@ -442,12 +468,12 @@ html.performance-icons-ready #header-action-buttons {
     color: #64748b !important;
 }
 
-        .completion-summary-cell {
-            text-align: center;
-            font-size: 11px;
-            font-weight: 900;
-            border-radius: 999px;
-            padding: 4px 2px;
+.completion-summary-cell {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 4px 2px;
             display: inline-block;
             min-width: 46px;
         }
@@ -732,7 +758,7 @@ html.performance-icons-ready #header-action-buttons {
     flex: 0 0 36px;
 
     padding: 0;
-    border-radius: 10px;
+    border-radius: 12px;
 
     display: inline-flex;
     align-items: center;
@@ -1312,6 +1338,11 @@ html.performance-icons-ready #header-action-buttons {
     margin: 0 auto;
 }
 
+.report-row-delete-btn i {
+    font-size: 12px;
+    line-height: 1;
+}
+
         /* 排序選單樣式 */
         .sort-menu {
             position: absolute;
@@ -1457,22 +1488,22 @@ html.performance-icons-ready #header-action-buttons {
 .year-folder-icon-btn {
     width: 24px;
     height: 24px;
-    border-radius: 8px;
-    color: #94a3b8;
+
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.18s ease;
 }
 
+
+/* Hover 僅變更圖示顏色，不產生底色或外框 */
 .year-folder-icon-btn:hover {
-    background: rgba(255, 255, 255, 0.12);
-    color: #ffffff;
-}
-
-.year-folder-icon-btn.danger:hover {
-    background: rgba(239, 68, 68, 0.14);
-    color: #f87171;
+    background: transparent;
+    box-shadow: none;
 }
 
 .system-footer-light {
@@ -2133,18 +2164,18 @@ body.mobile-sidebar-open .mobile-sidebar-backdrop {
         margin: 0 auto;
     }
 
-    .system-footer-light {
-        padding-top: 3px;
-        padding-bottom: calc(5px + env(safe-area-inset-bottom));
-    }
+.system-footer-light {
+    padding-top: 3px;
+    padding-bottom: calc(5px + env(safe-area-inset-bottom));
+}
 
-    .footer-title-light {
-        font-size: 8px;
-    }
+.footer-title-light {
+    font-size: 12px;
+}
 
-    .footer-dev-light {
-        font-size: 8px;
-    }
+.footer-dev-light {
+    font-size: 11px;
+}
 
 /* 手機直式表頭：
    年度靠左，編輯、儲存與列印圖示靠右 */
@@ -2492,22 +2523,22 @@ main > .p-4,
         display: none !important;
     }
 
-    .system-footer-light {
-        padding-top: 2px;
-        padding-bottom: calc(3px + env(safe-area-inset-bottom));
-    }
+.system-footer-light {
+    padding-top: 2px;
+    padding-bottom: calc(3px + env(safe-area-inset-bottom));
+}
 
-    .footer-line-light {
-        display: none;
-    }
+.footer-line-light {
+    display: none;
+}
 
 .footer-title-light {
-    font-size: 8px;
+    font-size: 12px;
     margin-bottom: 0;
 }
 
 .footer-dev-light {
-    font-size: 8px;
+    font-size: 11px;
 }
 
 }
@@ -2526,7 +2557,7 @@ main > .p-4,
 
     padding: 0 !important;
 
-    border-radius: 10px !important;
+    border-radius: 12px !important;
 
     font-size: 13px !important;
 
@@ -2826,6 +2857,110 @@ and (orientation: portrait) {
         }
 
 /* =========================================================
+   績效管理系統－左側底部功能按鈕
+
+   Viewer / Editor / Admin 三種角色統一
+
+   僅調整：
+   1. 按鈕高度
+   2. 文字大小
+   3. 文字粗細
+
+   不修改：
+   顏色／排列／寬度／圓角／陰影／圖示／權限／功能
+========================================================= */
+
+
+/* =========================================================
+   一、桌機
+========================================================= */
+
+@media screen and (min-width: 1025px) {
+
+    #permission-settings-btn,
+    #export-json-btn,
+    #import-json-btn,
+    #exit-preview-btn,
+    #cloud-preview-entry-btn,
+    #osai-platform-btn,
+    #export-full-report-btn {
+        height: 34px !important;
+        min-height: 34px !important;
+        max-height: 34px !important;
+
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        line-height: 1 !important;
+
+        box-sizing: border-box !important;
+    }
+
+
+    #permission-settings-btn span,
+    #export-json-btn span,
+    #import-json-btn span,
+    #exit-preview-btn span,
+    #cloud-preview-entry-btn span,
+    #osai-platform-btn span,
+    #export-full-report-btn span {
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        line-height: 1 !important;
+
+        white-space: nowrap !important;
+    }
+}
+
+
+/* =========================================================
+   二、手機橫式
+========================================================= */
+
+@media screen
+and (max-width: 1024px)
+and (orientation: landscape) {
+
+    #permission-settings-btn,
+    #export-json-btn,
+    #import-json-btn,
+    #exit-preview-btn,
+    #cloud-preview-entry-btn,
+    #osai-platform-btn,
+    #export-full-report-btn {
+        height: 34px !important;
+        min-height: 34px !important;
+        max-height: 34px !important;
+
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+
+        font-size: 12px !important;
+        font-weight: 700 !important;
+        line-height: 1 !important;
+
+        box-sizing: border-box !important;
+    }
+
+
+    #permission-settings-btn span,
+    #export-json-btn span,
+    #import-json-btn span,
+    #exit-preview-btn span,
+    #cloud-preview-entry-btn span,
+    #osai-platform-btn span,
+    #export-full-report-btn span {
+        font-size: 12px !important;
+        font-weight: 700 !important;
+        line-height: 1 !important;
+
+        white-space: nowrap !important;
+    }
+}
+        
+/* =========================================================
    手機及觸控平板：
    管理者／使用者編輯績效內容時
    防止 Safari 聚焦輸入框自動放大
@@ -3061,7 +3196,9 @@ and (orientation: portrait) {
 </div>
 
 
-<button class="w-full bg-blue-600 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-black flex items-center justify-center gap-1.5 sm:gap-2 hover:bg-blue-500 transition-all shadow-md" onclick="exportFullReport()">
+<button id="export-full-report-btn"
+        class="w-full bg-blue-600 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-black flex items-center justify-center gap-1.5 sm:gap-2 hover:bg-blue-500 transition-all shadow-md"
+        onclick="exportFullReport()">
     <i class="fas fa-file-export"></i>
     <span>匯出年度績效報表</span>
 </button>
@@ -23281,20 +23418,23 @@ if (canManageYearFolders() && !isPreviewDataMode) {
     const actions = document.createElement('span');
             actions.className = 'year-folder-actions';
 
-            actions.innerHTML = `
-                <button type="button"
-                        class="year-folder-icon-btn"
-                        title="編輯年度"
-                        onclick="renameYearFolder(event, '${folder.id}')">
-                    <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
-                </button>
-                <button type="button"
-                        class="year-folder-icon-btn danger"
-                        title="移除年度"
-                        onclick="removeYearFolder(event, '${folder.id}')">
-                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                </button>
-            `;
+actions.innerHTML = `
+    <button type="button"
+            class="year-folder-icon-btn system-tooltip-btn text-slate-400 hover:text-white transition"
+            data-tooltip="編輯年度"
+            aria-label="編輯年度"
+            onclick="renameYearFolder(event, '${folder.id}')">
+        <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+    </button>
+
+    <button type="button"
+            class="year-folder-icon-btn system-tooltip-btn text-slate-400 hover:text-red-600 transition"
+            data-tooltip="刪除年度"
+            aria-label="刪除年度"
+            onclick="removeYearFolder(event, '${folder.id}')">
+        <i class="fa-solid fa-trash"></i>
+    </button>
+`;
 
             row.appendChild(actions);
         }
@@ -23717,9 +23857,10 @@ if (
 <td class="admin-action-cell ${canDeleteInTable ? '' : 'hidden'} px-2 py-2 text-center">
     <button type="button"
             onclick="deleteRow(${rowIndex})"
-            class="attachment-file-remove report-row-delete-btn"
-            title="刪除此績效指標">
-        ${getAttachmentTrashIconHtml()}
+            class="system-tooltip-btn report-row-delete-btn text-slate-400 hover:text-red-600 transition"
+            data-tooltip="刪除此行"
+            aria-label="刪除此行">
+        <i class="fa-solid fa-trash"></i>
     </button>
 </td>
                 `;
@@ -26288,12 +26429,75 @@ function togglePerformanceEditMode() {
  * 等 Lucide 圖示完成建立後再一次顯示。
  */
 function showPerformanceHeaderActions() {
-    document.documentElement.classList.add(
-        'performance-icons-ready'
-    );
+
+    const html =
+        document.documentElement;
+
+    /*
+     * 已完成初始化就不重複處理。
+     */
+    if (
+        html.classList.contains(
+            'performance-icons-ready'
+        )
+    ) {
+        return;
+    }
+
+
+    /*
+     * 下一個完整畫面更新週期再顯示，
+     * 避免瀏覽器先畫出舊尺寸。
+     */
+    const revealActions = () => {
+
+        window.requestAnimationFrame(
+            () => {
+
+                html.classList.add(
+                    'performance-icons-ready'
+                );
+
+            }
+        );
+
+    };
+
+
+    /*
+     * 等正式字型載入完成後再顯示。
+     *
+     * 可避免：
+     * 系統字型 → Noto Sans TC
+     * 切換時造成按鈕文字與尺寸跳動。
+     */
+    if (
+        document.fonts &&
+        document.fonts.ready
+    ) {
+
+        document.fonts.ready
+            .then(revealActions)
+            .catch(revealActions);
+
+    } else {
+
+        revealActions();
+
+    }
 }
 
 function updateUIState() {
+
+    /*
+     * 僅提供 CSS 判斷目前是否為預覽者模式。
+     * 不修改任何權限與資料邏輯。
+     */
+    document.body.classList.toggle(
+        'performance-viewer-mode',
+        getCurrentRole() === 'viewer'
+    );
+
     const icon =
         document.getElementById(
             'auth-icon'

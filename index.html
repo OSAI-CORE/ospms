@@ -915,6 +915,64 @@ html.performance-icons-ready .sidebar > .p-4 {
     }
 }
 
+/* =========================================================
+   績效管理系統－管理者垃圾桶統一樣式
+
+   比照證照管理系統：
+   1. Font Awesome fa-trash
+   2. 圖示統一 12px
+   3. 平常 Slate 灰色
+   4. Hover 僅垃圾桶變紅
+   5. 無底色、無外框、無陰影
+========================================================= */
+
+.performance-trash-btn {
+    padding: 0 !important;
+
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #94a3b8;
+
+    transition:
+        color 0.18s ease !important;
+}
+
+
+/* 所有垃圾桶統一 12px */
+.performance-trash-btn .fa-trash {
+    font-size: 12px !important;
+    line-height: 1 !important;
+
+    color: #94a3b8;
+
+    transition:
+        color 0.18s ease !important;
+}
+
+
+/* 桌機滑鼠：
+   Hover 只讓垃圾桶圖示變紅 */
+@media (hover: hover) and (pointer: fine) {
+
+    .performance-trash-btn:hover {
+        border: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+
+        transform: none !important;
+    }
+
+    .performance-trash-btn:hover .fa-trash {
+        color: #dc2626 !important;
+    }
+}
+
         .year-input {
             background: #dbeafe;
             color: #1d4ed8;
@@ -6020,15 +6078,13 @@ gap-1.5">
 
 <button id="clear-month-attachments-btn"
         type="button"
-        class="attachment-file-remove attachment-header-remove"
-        title="清除該月所有附件"
+        class="attachment-file-remove attachment-header-remove performance-trash-btn"
+        aria-label="清除該月所有附件"
         onclick="clearCurrentMonthAttachments(event)">
-    <span class="attachment-symbol attachment-trash-symbol" aria-hidden="true">
-        <svg viewBox="0 0 24 24" focusable="false">
-            <path fill="currentColor" d="M9 3.5h6l.8 1.7H20a1 1 0 1 1 0 2H4a1 1 0 0 1 0-2h4.2L9 3.5Z"/>
-            <path fill="currentColor" d="M6.2 8.7h11.6l-.8 10.1A2.5 2.5 0 0 1 14.5 21h-5a2.5 2.5 0 0 1-2.5-2.2L6.2 8.7Zm3.2 2.2a.8.8 0 0 0-.8.8l.3 5.6a.8.8 0 0 0 1.6-.1l-.3-5.6a.8.8 0 0 0-.8-.7Zm5.2 0a.8.8 0 0 0-.8.7l-.3 5.6a.8.8 0 1 0 1.6.1l.3-5.6a.8.8 0 0 0-.8-.8Z"/>
-        </svg>
-    </span>
+
+    <i class="fa-solid fa-trash"
+       aria-hidden="true"></i>
+
 </button>
             </div>
 
@@ -13151,10 +13207,30 @@ ${toggleEnabledMarkup}
                     </button>
 
 
-                    <!-- 永久刪除 -->
-                    <button
-                        type="button"
-                        data-workspace-id="${id}"
+<!-- 永久刪除 -->
+<button
+    type="button"
+    data-workspace-id="${id}"
+    data-workspace-name="${name}"
+    onclick="deleteCloudWorkspaceFromButton(this)"
+    class="
+        cloud-tooltip-btn
+        system-tooltip-btn
+        performance-trash-btn
+        w-7 h-7
+        rounded-lg
+        transition
+        flex
+        items-center
+        justify-center
+    "
+    data-tooltip="刪除"
+    aria-label="刪除">
+
+    <i class="fa-solid fa-trash"
+       aria-hidden="true"></i>
+
+</button>
                         data-workspace-name="${name}"
                         onclick="deleteCloudWorkspaceFromButton(this)"
 class="
@@ -17634,41 +17710,28 @@ ${toggleEnabledIconHtml}
         </button>
 
 
-        <!-- 永久刪除 -->
-        <button type="button"
-                data-preview-id="${previewId}"
-                data-preview-name="${previewName}"
-                onclick="deleteCloudPreviewFromButton(this)"
-                class="
-                    cloud-tooltip-btn
-                    w-7 h-7
-                    rounded-lg
-                    border border-red-100
-                    bg-red-50
-                    text-red-500
-                    hover:bg-red-100
-                    hover:border-red-200
-                    hover:text-red-600
-                    transition
-                    flex items-center
-                    justify-center
-                "
-                data-tooltip="刪除"
-                aria-label="刪除">
+<!-- 永久刪除 -->
+<button type="button"
+        data-preview-id="${previewId}"
+        data-preview-name="${previewName}"
+        onclick="deleteCloudPreviewFromButton(this)"
+        class="
+            cloud-tooltip-btn
+            system-tooltip-btn
+            performance-trash-btn
+            w-7 h-7
+            rounded-lg
+            transition
+            flex items-center
+            justify-center
+        "
+        data-tooltip="刪除"
+        aria-label="刪除">
 
-<svg viewBox="0 0 24 24"
-     class="w-[17px] h-[17px]"
-     aria-hidden="true">
+    <i class="fa-solid fa-trash"
+       aria-hidden="true"></i>
 
-    <path fill="currentColor"
-          d="M9 3.5h6l.8 1.7H20a1 1 0 1 1 0 2H4a1 1 0 0 1 0-2h4.2L9 3.5Z"></path>
-
-    <path fill="currentColor"
-          d="M6.2 8.7h11.6l-.8 10.1A2.5 2.5 0 0 1 14.5 21h-5a2.5 2.5 0 0 1-2.5-2.2L6.2 8.7Zm3.2 2.2a.8.8 0 0 0-.8.8l.3 5.6a.8.8 0 0 0 1.6-.1l-.3-5.6a.8.8 0 0 0-.8-.7Zm5.2 0a.8.8 0 0 0-.8.7l-.3 5.6a.8.8 0 1 0 1.6.1l.3-5.6a.8.8 0 0 0-.8-.8Z"></path>
-
-</svg>
-
-        </button>
+</button>
 
     </div>
 
@@ -23427,13 +23490,14 @@ actions.innerHTML = `
         <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
     </button>
 
-    <button type="button"
-            class="year-folder-icon-btn system-tooltip-btn text-slate-400 hover:text-red-600 transition"
-            data-tooltip="刪除年度"
-            aria-label="刪除年度"
-            onclick="removeYearFolder(event, '${folder.id}')">
-        <i class="fa-solid fa-trash"></i>
-    </button>
+<button type="button"
+        class="year-folder-icon-btn performance-trash-btn system-tooltip-btn transition"
+        data-tooltip="刪除年度"
+        aria-label="刪除年度"
+        onclick="removeYearFolder(event, '${folder.id}')">
+    <i class="fa-solid fa-trash"
+       aria-hidden="true"></i>
+</button>
 `;
 
             row.appendChild(actions);
@@ -23855,13 +23919,14 @@ if (
                         <span class="completion-summary-cell ${executionClass}">${rowStat.statusLabel}</span>
                     </td>
 <td class="admin-action-cell ${canDeleteInTable ? '' : 'hidden'} px-2 py-2 text-center">
-    <button type="button"
-            onclick="deleteRow(${rowIndex})"
-            class="system-tooltip-btn report-row-delete-btn text-slate-400 hover:text-red-600 transition"
-            data-tooltip="刪除此行"
-            aria-label="刪除此行">
-        <i class="fa-solid fa-trash"></i>
-    </button>
+<button type="button"
+        onclick="deleteRow(${rowIndex})"
+        class="performance-trash-btn system-tooltip-btn report-row-delete-btn transition"
+        data-tooltip="刪除此行"
+        aria-label="刪除此行">
+    <i class="fa-solid fa-trash"
+       aria-hidden="true"></i>
+</button>
 </td>
                 `;
                 tbody.appendChild(row);
@@ -24013,12 +24078,10 @@ function getAttachmentFileIconHtml(file) {
 }
 
 function getAttachmentTrashIconHtml() {
-    return `<span class="attachment-symbol attachment-trash-symbol" aria-hidden="true">
-        <svg viewBox="0 0 24 24" focusable="false">
-            <path fill="currentColor" d="M9 3.5h6l.8 1.7H20a1 1 0 1 1 0 2H4a1 1 0 0 1 0-2h4.2L9 3.5Z"/>
-            <path fill="currentColor" d="M6.2 8.7h11.6l-.8 10.1A2.5 2.5 0 0 1 14.5 21h-5a2.5 2.5 0 0 1-2.5-2.2L6.2 8.7Zm3.2 2.2a.8.8 0 0 0-.8.8l.3 5.6a.8.8 0 0 0 1.6-.1l-.3-5.6a.8.8 0 0 0-.8-.7Zm5.2 0a.8.8 0 0 0-.8.7l-.3 5.6a.8.8 0 1 0 1.6.1l.3-5.6a.8.8 0 0 0-.8-.8Z"/>
-        </svg>
-    </span>`;
+    return `
+        <i class="fa-solid fa-trash"
+           aria-hidden="true"></i>
+    `;
 }
 
         function renderAttachmentFileList(files, previewOnly = false) {
@@ -24030,13 +24093,12 @@ function getAttachmentTrashIconHtml() {
         return;
     }
 
-    files.forEach((file, index) => {
-        const row = document.createElement('div');
-        row.className = 'attachment-file-row';
-        row.onclick = () => viewFileDirectly(file);
-        row.title = '點擊預覽附件';
+files.forEach((file, index) => {
+    const row = document.createElement('div');
+    row.className = 'attachment-file-row';
+    row.onclick = () => viewFileDirectly(file);
 
-        const info = document.createElement('div');
+    const info = document.createElement('div');
         info.className = 'attachment-file-info';
 
         const icon = document.createElement('div');
@@ -24065,11 +24127,18 @@ function getAttachmentTrashIconHtml() {
     canEditPerformanceNow() &&
     !previewOnly
 ) {
-            const removeBtn = document.createElement('button');
-            removeBtn.type = 'button';
-            removeBtn.className = 'attachment-file-remove';
-            removeBtn.innerHTML = getAttachmentTrashIconHtml();
-            removeBtn.title = '移除此檔案';
+const removeBtn = document.createElement('button');
+removeBtn.type = 'button';
+removeBtn.className =
+    'attachment-file-remove performance-trash-btn';
+
+removeBtn.innerHTML =
+    getAttachmentTrashIconHtml();
+
+removeBtn.setAttribute(
+    'aria-label',
+    '移除此檔案'
+);
             removeBtn.onclick = (event) => {
                 event.stopPropagation();
                 removeAttachmentFile(index);

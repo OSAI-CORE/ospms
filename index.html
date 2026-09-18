@@ -822,16 +822,36 @@ html.performance-icons-ready .sidebar > .p-4 {
 }
 
 
-/* 列印：比照風險系統 slate-700 → slate-600 */
+/* =========================================================
+   列印報告
+   比照證照管理系統列印 / PDF 暖灰棕色
+========================================================= */
+
 .performance-print-icon-btn {
-    background: #475569;
-    border: 1px solid #475569;
-    color: #ffffff;
+    background:
+        #57534e !important;
+
+    border:
+        1px solid #57534e !important;
+
+    color:
+        #ffffff !important;
 }
 
-.performance-print-icon-btn:hover {
-    background: #334155;
-    border-color: #334155;
+
+@media (hover: hover) and (pointer: fine) {
+
+    .performance-print-icon-btn:hover {
+        background:
+            #44403c !important;
+
+        border-color:
+            #44403c !important;
+
+        color:
+            #ffffff !important;
+    }
+
 }
 
 
@@ -1304,6 +1324,37 @@ html.performance-icons-ready .sidebar > .p-4 {
     background: transparent !important;
     box-shadow: none !important;
     padding: 0 !important;
+}
+
+/* =========================================================
+   Cloud Center 垃圾桶圖示尺寸
+   比照證照管理系統固定 12px
+========================================================= */
+
+.cloud-tooltip-btn > .fa-trash {
+    font-size:
+        12px !important;
+
+    line-height:
+        1 !important;
+
+    width:
+        12px !important;
+
+    height:
+        12px !important;
+
+    display:
+        inline-flex !important;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    flex:
+        0 0 12px;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -13229,33 +13280,7 @@ ${toggleEnabledMarkup}
        aria-hidden="true"></i>
 
 </button>
-                        data-workspace-name="${name}"
-                        onclick="deleteCloudWorkspaceFromButton(this)"
-class="
-    cloud-tooltip-btn
-    w-7 h-7
-    rounded-lg
-    text-red-500
-    hover:text-red-600
-    transition
-    flex
-    items-center
-    justify-center
-"
-                        data-tooltip="刪除"
-                        aria-label="刪除">
 
-<svg viewBox="0 0 24 24"
-     class="w-[17px] h-[17px]"
-     aria-hidden="true">
-    <path fill="currentColor"
-          d="M9 3.5h6l.8 1.7H20a1 1 0 1 1 0 2H4a1 1 0 0 1 0-2h4.2L9 3.5Z"></path>
-
-    <path fill="currentColor"
-          d="M6.2 8.7h11.6l-.8 10.1A2.5 2.5 0 0 1 14.5 21h-5a2.5 2.5 0 0 1-2.5-2.2L6.2 8.7Zm3.2 2.2a.8.8 0 0 0-.8.8l.3 5.6a.8.8 0 0 0 1.6-.1l-.3-5.6a.8.8 0 0 0-.8-.7Zm5.2 0a.8.8 0 0 0-.8.7l-.3 5.6a.8.8 0 1 0 1.6.1l.3-5.6a.8.8 0 0 0-.8-.8Z"></path>
-</svg>
-
-                    </button>
                 `
                 : ''
         }

@@ -7540,21 +7540,21 @@ function setCloudPreviewViewerBusy(
     button.disabled =
         busy;
 
-    if (busy) {
+if (busy) {
 
-        button.classList.add(
-            'cursor-wait'
-        );
+    button.classList.add(
+        'cursor-wait'
+    );
 
-        button.innerHTML = `
-            <i class="fas fa-spinner fa-spin"></i>
+    button.innerHTML = `
+        <i class="fas fa-cloud-arrow-down"></i>
 
-            <span>
-                正在載入...
-            </span>
-        `;
+        <span>
+            正在載入...
+        </span>
+    `;
 
-    } else {
+} else {
 
         button.classList.remove(
             'cursor-wait'

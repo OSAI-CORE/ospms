@@ -20831,7 +20831,7 @@ function triggerLoadPreviewJSON() {
 
 function triggerImportJSON() {
     if (!canImportData()) {
-        alert('請先登入使用者或管理者權限後再載入資料。');
+        alert('請先登入權限後再載入資料。');
         openLoginModal();
         return;
     }
@@ -20934,7 +20934,7 @@ function openDataExportModal() {
     ) {
 
         alert(
-            '請先登入使用者或管理者權限後再匯出資料。'
+            '請先登入權限後再匯出資料。'
         );
 
         openLoginModal();
@@ -21303,7 +21303,7 @@ function exportPreviewJSON() {
 
 function exportJSON() {
     if (!canExportReviewData()) {
-        alert('請先登入使用者或管理者權限後再匯出資料。');
+        alert('請先登入權限後再匯出資料。');
         openLoginModal();
         return;
     }
@@ -21959,7 +21959,7 @@ function confirmExitPreview() {
 
 async function importJSON(event) {
     if (!canImportData()) {
-        alert('請先登入使用者或管理者權限後再載入資料。');
+        alert('請先登入權限後再載入資料。');
         event.target.value = '';
         openLoginModal();
         return;
@@ -25979,7 +25979,7 @@ function scrollRowNearView(rowIndex) {
 async function savePerformanceData() {
     if (!canEditData()) {
         showToast(
-            '請先登入使用者或管理者權限後再儲存資料。',
+            '請先登入權限後再儲存資料。',
             'error'
         );
 
@@ -26592,7 +26592,7 @@ function applyPerformanceEditModeUI() {
 function togglePerformanceEditMode() {
     if (!canEditData()) {
         showToast(
-            '請先登入使用者或管理者權限後再進入編輯模式。',
+            '請先登入權限後再進入編輯模式。',
             'error'
         );
 
@@ -26873,7 +26873,7 @@ function addNewRow() {
     }
 
     if (!canEditData()) {
-        alert('請先登入使用者或管理者權限。');
+        alert('請先登入權限。');
         openLoginModal();
         return;
     }

@@ -1920,7 +1920,7 @@ html.performance-icons-ready .sidebar > .p-4 {
    OSPMS｜附件檔案預覽視窗捲動條（PDF 折衷版）
 
    設計目標：
-   1. 固定可見，方便長 PDF 拖曳定位
+   1. 有捲動條時維持清楚可辨，方便長 PDF 拖曳定位
    2. 顏色不突兀，與深色預覽背景協調
    3. Hover 時再稍微加強可視性
    4. 僅作用於附件預覽內容區
@@ -1942,7 +1942,7 @@ html.performance-icons-ready .sidebar > .p-4 {
 
 /*
  * Chrome、Edge、Safari：
- * 桌機版固定保留細捲動條，方便拖曳。
+ * 桌機版使用細捲動條樣式，方便拖曳。
  */
 .file-preview-body::-webkit-scrollbar {
     width:
@@ -3116,7 +3116,7 @@ and (orientation: portrait) {
 /* =========================================================
    績效管理系統－左側底部功能按鈕
 
-   Viewer / Editor / Admin 三種角色統一
+   Viewer / User / Admin 三種角色統一
 
    僅調整：
    1. 按鈕高度
@@ -4587,7 +4587,7 @@ class="hidden
 </div>
 
             <!-- =============================================
-                 Admin / Editor
+                 Admin / User
             ============================================== -->
             <div id="cloud-preview-publisher-home"
                  class="hidden">
@@ -6693,8 +6693,8 @@ let isPerformanceEditMode = false;
  * 3. 登入成功後，等 Modal 關閉／切換完成
  *    才恢復原始登入按鈕。
  *
- * 下一階段接入中央 osai-system-access 時
- * 直接沿用這套 Pending 架構。
+ * 已接入中央 osai-system-access，
+ * 登入期間沿用此 Pending 架構。
  */
 let isOsaiSystemAccessLoginPending =
     false;
@@ -7236,6 +7236,41 @@ function clearOsaiSystemAccessSession() {
     clearOsaiSystemAccessSettingsCache();
 }
 
+/*
+ * =========================================================
+ * OSPMS｜中央權限 Session 失效後同步降權
+ * =========================================================
+ *
+ * 中央 Session 已無效時，
+ * 目前頁面的 Admin / User 權限也必須立即撤銷。
+ *
+ * 這裡只處理角色與畫面狀態，
+ * 不呼叫 logoutSystem()，
+ * 不主動清除目前績效工作資料。
+ */
+function resetLocalRoleAfterOsaiSessionFailure() {
+
+    isAdmin =
+        false;
+
+    isEditor =
+        false;
+
+    isPerformanceEditMode =
+        false;
+
+
+    clearOsaiSystemAccessSession();
+
+
+    updateUIState();
+
+    renderYearFolders();
+
+    renderTable(
+        currentTab
+    );
+}
 
 /*
  * 儲存 Backend 登入成功後
@@ -9898,7 +9933,7 @@ if (accountsCard) {
 
     } else {
         /*
-         * Editor
+         * User
          */
         if (roleLabel) {
             roleLabel.textContent =
@@ -21482,22 +21517,10 @@ function markPerformanceDirty() {
     }
 }
 
-
-function markSessionNeedsExport() {
-    if (
-        canEditData() &&
-        !isPreviewDataMode
-    ) {
-        sessionNeedsExport = true;
-    }
-}
-
-
 function clearWorkProtectionState() {
     performanceDirty = false;
     sessionNeedsExport = false;
 }
-
 
 /*
  * F5、關閉分頁、關閉瀏覽器、
@@ -21765,33 +21788,6 @@ function syncCurrentYearFolderFromGlobals() {
             });
         }
 
-async function getConfig(key) {
-    const db = await openDB();
-
-    return new Promise((resolve) => {
-        const transaction = db.transaction(STORE_KEY, "readonly");
-        const store = transaction.objectStore(STORE_KEY);
-        const req = store.get(key);
-
-        req.onsuccess = () => resolve(req.result || null);
-        req.onerror = () => resolve(null);
-    });
-}
-
-async function setConfig(key, value) {
-    const db = await openDB();
-
-    return new Promise((resolve, reject) => {
-        const transaction = db.transaction(STORE_KEY, "readwrite");
-        const store = transaction.objectStore(STORE_KEY);
-
-        store.put(value, key);
-
-        transaction.oncomplete = () => resolve();
-        transaction.onerror = () => reject(transaction.error);
-    });
-}
-
 /*
  * =========================================================
  * OSPMS｜工作階段資料與舊版權限資料清理
@@ -21944,12 +21940,6 @@ updateUIState();
 initDragAndDrop();
             }
         }
-
-function isMobileStorageEnvironment() {
-    return window.matchMedia(
-        '(max-width: 900px)'
-    ).matches;
-}
 
 function writePerformanceDataToStore(store) {
     /*
@@ -23507,12 +23497,6 @@ function getStatusOptionsHTML(value) {
     }).join("");
 }
 
-function getCompletionStatusLabel(rate) {
-    if (rate >= 100) return "達標";
-    if (rate >= 80) return "追蹤";
-    return "異常";
-}
-
 function getScheduleOptionsHTML(value) {
     const current = value === undefined || value === null ? '' : String(value).trim();
     const options = ['', '月', '季', '半年', '年', '2年', '適時'];
@@ -24311,7 +24295,6 @@ function addOverviewSheet() {
     }, 0);
 
     const totalMonthCells = totalExecutableMonthCells;
-    const totalNotApplicableCount = Object.keys(titles).reduce((sum, key) => sum + getCategoryStats(key).noNeedCount, 0);
 
     const filledRate = totalExecutableMonthCells > 0
         ? `${Math.round((totalFilledValidMonthCount / totalExecutableMonthCells) * 100)}%`
@@ -28023,10 +28006,19 @@ async function openPermissionSettingsModal() {
             )
         ) {
 
-showToast(
-    '權限驗證工作階段已失效，請先登出後重新登入。',
-    'error'
-);
+            resetLocalRoleAfterOsaiSessionFailure();
+
+            pendingOpenPermissionSettings =
+                true;
+
+            togglePasswordView(
+                false
+            );
+
+            showToast(
+                '權限驗證工作階段已失效，請重新登入。',
+                'error'
+            );
 
 
         } else {
@@ -29152,16 +29144,19 @@ async function handleChangePassword() {
             )
         ) {
 
-            if (
-                err
-            ) {
-err.innerText =
-    '權限驗證工作階段已失效，請先登出後重新登入';
+            resetLocalRoleAfterOsaiSessionFailure();
 
-                err.classList.remove(
-                    'hidden'
-                );
-            }
+            pendingOpenPermissionSettings =
+                true;
+
+            togglePasswordView(
+                false
+            );
+
+            showToast(
+                '權限驗證工作階段已失效，請重新登入。',
+                'error'
+            );
 
 
         } else {
@@ -30138,10 +30133,6 @@ refreshRowSummary(row);
             updateExecutionMonthsDraftLabel(panel);
         }
 
-        function handleExecutionMonthCheckboxChange(checkbox) {
-            handleExecutionMonthDraftChange(checkbox);
-        }
-
         function applyTableFilters() {
             const scheduleFilter = document.getElementById('schedule-filter')?.value || '';
             const executionFilter = document.getElementById('execution-months-filter')?.value || '';
@@ -30158,16 +30149,6 @@ refreshRowSummary(row);
 
                 row.style.display = (matchSchedule && matchExecution) ? '' : 'none';
             });
-        }
-
-        function appendPercentage(input) {
-            let v = input.value.trim();
-            if (v !== "" && v !== "-" && v !== "N/A" && !isNaN(v)) { input.value = v + "%"; formatInput(input); }
-        }
-
-        function handleInputChange(input) {
-            let val = input.value.trim(); if (val.toUpperCase() === 'N') input.value = 'N/A';
-            formatInput(input);
         }
 
         function refreshRowSummary(row) {

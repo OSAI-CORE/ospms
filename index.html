@@ -2481,7 +2481,8 @@ body.file-preview-open {
     overflow: hidden;
 }
 
-@media screen and (max-width: 900px) {
+@media screen and (max-width: 900px),
+       screen and (orientation: landscape) and (max-width: 1024px) {
     .file-preview-modal {
         padding: 0;
         padding-top: env(safe-area-inset-top);

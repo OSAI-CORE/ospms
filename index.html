@@ -2483,19 +2483,32 @@ body.file-preview-open {
 
 @media screen and (max-width: 900px),
        screen and (orientation: landscape) and (max-width: 1024px) {
-    .file-preview-modal {
-        padding: 0;
-        padding-top: env(safe-area-inset-top);
-        padding-bottom: env(safe-area-inset-bottom);
-    }
+.file-preview-modal {
+    padding: 0;
 
-    .file-preview-shell {
-        width: 100%;
-        height: 100%;
-        border-radius: 0;
-        border-left: 0;
-        border-right: 0;
-    }
+    padding-top:
+        env(safe-area-inset-top);
+
+    padding-bottom:
+        env(safe-area-inset-bottom);
+}
+
+.file-preview-shell {
+    width:
+        100%;
+
+    height:
+        100%;
+
+    border-radius:
+        0;
+
+    border-left:
+        0;
+
+    border-right:
+        0;
+}
 
     .file-preview-header {
         min-height: 56px;
@@ -2539,6 +2552,53 @@ body.file-preview-open {
     #file-preview-image,
     #file-preview-frame {
         border-radius: 12px;
+    }
+}
+
+
+/* =========================================================
+   OSPMS｜附件預覽－手機橫式安全區
+
+   僅橫式套用：
+   - 避開 iPhone 瀏海／動態島／聽筒
+   - 左右保留 Safe Area
+   - 外框恢復適度圓角
+========================================================= */
+
+@media screen
+and (orientation: landscape)
+and (max-width: 1024px) {
+
+    .file-preview-modal {
+
+        padding-left:
+            max(
+                10px,
+                env(safe-area-inset-left)
+            );
+
+        padding-right:
+            max(
+                10px,
+                env(safe-area-inset-right)
+            );
+
+        box-sizing:
+            border-box;
+    }
+
+
+    .file-preview-shell {
+
+        border-radius:
+            14px;
+
+        border:
+            1px solid
+            rgba(148, 163, 184, 0.28);
+
+        overflow:
+            hidden;
     }
 }
 

@@ -380,12 +380,9 @@ html.performance-icons-ready .sidebar > .p-4 {
 /* =========================================================
    OSPMS｜桌機版績效報表捲動條
 
-   粗細：
-   比照風險評估系統最外圍 scrollbar。
-
    顏色：
-   維持瀏覽器／作業系統目前原生顏色，
-   不自訂 Track、Thumb、Hover 或圓角。
+   比照證照管理系統
+   「訓練項目人員統計」捲動條。
 
    同時作用：
    - 右側上下捲動條
@@ -401,12 +398,55 @@ html.performance-icons-ready .sidebar > .p-4 {
 
 @media screen and (min-width: 1025px) {
 
+    /*
+     * Firefox
+     */
     .table-container {
         scrollbar-width:
             thin;
 
         scrollbar-color:
-            auto;
+            #cbd5e1
+            #f8fafc;
+    }
+
+
+    /*
+     * Chrome、Edge、Safari
+     */
+    .table-container::-webkit-scrollbar {
+        width:
+            8px;
+
+        height:
+            8px;
+    }
+
+
+    .table-container::-webkit-scrollbar-track {
+        background:
+            #f8fafc;
+    }
+
+
+    .table-container::-webkit-scrollbar-thumb {
+        background:
+            #cbd5e1;
+
+        border-radius:
+            4px;
+    }
+
+
+    .table-container::-webkit-scrollbar-thumb:hover {
+        background:
+            #94a3b8;
+    }
+
+
+    .table-container::-webkit-scrollbar-corner {
+        background:
+            #f8fafc;
     }
 }        
 

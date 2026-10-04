@@ -21797,7 +21797,6 @@ function hasUnsavedPerformanceChanges() {
 function hasPendingSessionChanges() {
     return (
         performanceDirty ||
-        sessionNeedsExport ||
         isAttachmentUploadBusy
     );
 }
@@ -21820,6 +21819,15 @@ function clearWorkProtectionState() {
 /*
  * F5、關閉分頁、關閉瀏覽器、
  * 離開目前網站時的最後防呆。
+ *
+ * 僅在：
+ * - 尚有未儲存的績效修改
+ * - 附件仍在上傳／處理
+ *
+ * 時顯示瀏覽器離站確認。
+ *
+ * 已儲存但尚未匯出 JSON
+ * 不阻止使用者離開網站。
  */
 window.addEventListener(
     'beforeunload',
@@ -28307,45 +28315,76 @@ const editorEnabledSettingRow =
 isOsaiSystemAccessSettingsReady =
     false;
 
-
-isOsaiSystemAccessSettingsReady =
-    false;
-
-
 /*
  * -----------------------------------------------------
- * User Enabled 安全初始狀態
+ * User Enabled 初始顯示狀態
  * -----------------------------------------------------
  *
- * 權限設定視窗每次開啟時，
- * 不直接使用 Cache 顯示 Checkbox。
+ * 有新鮮 Cache：
+ * 先套用正式值，再顯示。
  *
- * 一律等待本次中央 get-settings
- * 取得正式最新值後才顯示，
- * 避免：
- *
- * - unchecked → checked
- * - checked → unchecked
- * - 舊 Cache → 最新中央值
- *
- * 的短暫視覺切換。
+ * 沒有新鮮 Cache：
+ * 維持整列 invisible，
+ * 避免 Checkbox 暫時以 unchecked 狀態出現。
  */
+const hasFreshSettingsCache =
+    hasFreshOsaiSystemAccessSettingsCache();
+
+
 if (
+    editorEnabledCheckbox &&
+    hasFreshSettingsCache
+) {
+
+    /*
+     * 一定先設定正式值，
+     * 再讓畫面出現。
+     */
+    editorEnabledCheckbox.checked =
+        osaiSystemAccessSettingsCache
+            .editorEnabled;
+
+
+    editorEnabledCheckbox.disabled =
+        false;
+
+
+    if (
+        editorEnabledSettingRow
+    ) {
+        editorEnabledSettingRow
+            .classList
+            .remove(
+                'invisible'
+            );
+    }
+
+
+    isOsaiSystemAccessSettingsReady =
+        true;
+
+
+} else if (
     editorEnabledCheckbox
 ) {
+
     editorEnabledCheckbox.disabled =
         true;
-}
 
 
-if (
-    editorEnabledSettingRow
-) {
-    editorEnabledSettingRow
-        .classList
-        .add(
-            'invisible'
-        );
+    /*
+     * 尚未知道中央正式值，
+     * 不顯示假的 unchecked 狀態。
+     */
+    if (
+        editorEnabledSettingRow
+    ) {
+        editorEnabledSettingRow
+            .classList
+            .add(
+                'invisible'
+            );
+    }
 }
 
 
@@ -28415,36 +28454,26 @@ if (
 
 
 /*
- * 中央正式設定讀取失敗：
+ * 若已有新鮮 Cache，
+ * 可以繼續使用 Cache。
  *
- * 不使用 Cache 當成可操作的正式狀態。
- *
- * Checkbox 維持鎖定，
- * 整列保持不可見，
- * 並禁止儲存權限設定。
+ * 完全沒有 Cache 才鎖住 Checkbox。
  */
-isOsaiSystemAccessSettingsReady =
-    false;
-
-
 if (
-    editorEnabledCheckbox
+    !hasFreshOsaiSystemAccessSettingsCache()
 ) {
-    editorEnabledCheckbox.disabled =
-        true;
+
+    isOsaiSystemAccessSettingsReady =
+        false;
+
+
+    if (
+        editorEnabledCheckbox
+    ) {
+        editorEnabledCheckbox.disabled =
+            true;
+    }
 }
-
-
-if (
-    editorEnabledSettingRow
-) {
-    editorEnabledSettingRow
-        .classList
-        .add(
-            'invisible'
-        );
-}
-
 
         if (
             isOsaiSystemAccessSessionError(

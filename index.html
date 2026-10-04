@@ -2002,7 +2002,7 @@ html.performance-icons-ready .sidebar > .p-4 {
 .file-preview-modal {
     position: fixed;
     inset: 0;
-    z-index: 130;
+    z-index: 700;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2188,17 +2188,34 @@ html.performance-icons-ready .sidebar > .p-4 {
     min-height: 0;
     overflow: auto;
     padding: 18px;
+
     background:
         linear-gradient(45deg, rgba(148, 163, 184, 0.05) 25%, transparent 25%),
         linear-gradient(-45deg, rgba(148, 163, 184, 0.05) 25%, transparent 25%),
         linear-gradient(45deg, transparent 75%, rgba(148, 163, 184, 0.05) 75%),
         linear-gradient(-45deg, transparent 75%, rgba(148, 163, 184, 0.05) 75%),
         rgba(2, 6, 23, 0.28);
+
     background-size: 26px 26px;
     background-position: 0 0, 0 13px, 13px -13px, -13px 0;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
-    touch-action: manipulation;
+
+    -webkit-overflow-scrolling:
+        touch;
+
+    overscroll-behavior-x:
+        contain;
+
+    overscroll-behavior-y:
+        contain;
+
+    /*
+     * 單指交由瀏覽器原生處理水平／垂直捲動。
+     *
+     * 雙指縮放繼續交由既有
+     * touchstart / touchmove 程式處理。
+     */
+    touch-action:
+        pan-x pan-y;
 }
 
 /* =========================================================
@@ -2283,34 +2300,91 @@ html.performance-icons-ready .sidebar > .p-4 {
 }
 
 
-/*
- * 手機／觸控裝置：
- * 稍微再細一點，避免太佔空間。
- */
+/* =========================================================
+   OSPMS｜附件預覽手機捲動統一
+
+   手機直式／橫式共用：
+   - 相同捲動機制
+   - 相同 Scrollbar 寬度
+   - 相同 Scrollbar 高度
+   - 相同 Track / Thumb
+========================================================= */
+
 @media screen and (max-width: 950px),
        (hover: none) and (pointer: coarse) {
 
     .file-preview-body {
+
         scrollbar-width:
             thin;
+
+        scrollbar-color:
+            rgba(148, 163, 184, 0.50)
+            rgba(15, 23, 42, 0.16);
+
+        -webkit-overflow-scrolling:
+            touch;
+
+        overscroll-behavior-x:
+            contain;
+
+        overscroll-behavior-y:
+            contain;
+
+        touch-action:
+            pan-x pan-y;
     }
 
+
+    /*
+     * width  = 右側上下捲動條
+     * height = 下方左右捲動條
+     */
     .file-preview-body::-webkit-scrollbar {
+
         width:
+            7px;
+
+        height:
             7px;
     }
 
+
     .file-preview-body::-webkit-scrollbar-track {
+
         background:
             rgba(15, 23, 42, 0.16);
+
+        border-radius:
+            999px;
     }
 
+
     .file-preview-body::-webkit-scrollbar-thumb {
+
         background:
-            rgba(148, 163, 184, 0.46);
+            rgba(148, 163, 184, 0.50);
+
+        border-radius:
+            999px;
 
         border:
-            1px solid rgba(15, 23, 42, 0.06);
+            1px solid
+            rgba(15, 23, 42, 0.06);
+    }
+
+
+    .file-preview-body::-webkit-scrollbar-thumb:active {
+
+        background:
+            rgba(147, 197, 253, 0.78);
+    }
+
+
+    .file-preview-body::-webkit-scrollbar-corner {
+
+        background:
+            rgba(15, 23, 42, 0.16);
     }
 }
 
@@ -2599,15 +2673,7 @@ header {
 
     #main-table {
         min-width: 1442px;
-    }
-
-.file-preview-header {
-    height: auto;
-}
-
-.file-preview-body {
-    padding-bottom: calc(10px + env(safe-area-inset-bottom));
-}    
+    }  
 
 .system-footer-light {
     display: grid;

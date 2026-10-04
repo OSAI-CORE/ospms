@@ -1081,27 +1081,152 @@ html.performance-icons-ready .sidebar > .p-4 {
             cursor: pointer;
         }
 
-        .attachment-btn {
-            position: absolute;
-            bottom: 2px;
-            right: 2px;
-            transition: all 0.2s ease-in-out;
-            cursor: pointer;
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 14px;
-            height: 14px;
-        }
-        .attachment-btn i { 
-            width: 10px; 
-            height: 10px; 
-            stroke-width: 2.5px; 
-        }
-        .attachment-btn.has-file { color: #3b82f6; opacity: 1; }
-        .attachment-btn.no-file { color: #d1d5db; opacity: 0.4; }
-        .attachment-btn:hover { opacity: 1; transform: scale(1.2); }
+/* =========================================================
+   OSPMS｜績效報表附件資料夾
+
+   無附件：
+   - 開啟資料夾
+   - 淡灰色
+
+   有附件：
+   - 關閉資料夾
+   - Blue 藍色
+
+   非編輯模式：
+   - 空資料夾不可點擊
+   - 游標維持一般箭頭
+   - 不產生 Hover 反應
+
+   編輯模式：
+   - Admin / User 可點擊空資料夾新增附件
+
+   有附件：
+   - 三種角色皆可開啟
+========================================================= */
+
+.attachment-btn {
+    position:
+        absolute;
+
+    right:
+        2px;
+
+    bottom:
+        2px;
+
+    z-index:
+        10;
+
+    /*
+     * 點擊區維持原尺寸，
+     * 只縮小裡面的實際圖示。
+     */
+    width:
+        14px;
+
+    height:
+        14px;
+
+    padding:
+        0;
+
+    border:
+        0;
+
+    background:
+        transparent;
+
+    box-shadow:
+        none;
+
+    display:
+        inline-flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    cursor:
+        default;
+
+    opacity:
+        1;
+
+    transition:
+        color 0.18s ease;
+}
+
+
+/* 可以操作時才顯示手型游標 */
+.attachment-btn.is-actionable {
+    cursor:
+        pointer;
+}
+
+
+/* 無附件：改成較淡的 Slate */
+.attachment-btn.no-file {
+    color:
+        #94a3b8;
+}
+
+
+/* 有附件：維持正式藍色 */
+.attachment-btn.has-file {
+    color:
+        #2563eb;
+}
+
+
+/* 實際資料夾圖示再縮成 12px */
+.attachment-btn i {
+    width:
+        12px;
+
+    height:
+        12px;
+
+    font-size:
+        12px;
+
+    line-height:
+        12px;
+
+    display:
+        inline-flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+}
+
+
+/* 不可操作的空資料夾 */
+.attachment-btn.is-disabled {
+    cursor:
+        default;
+}
+
+
+/* 桌機 Hover：
+   只有真正可以操作的資料夾才變色 */
+@media (hover: hover) and (pointer: fine) {
+
+    .attachment-btn.no-file.is-actionable:hover {
+        color:
+            #64748b;
+    }
+
+
+    .attachment-btn.has-file.is-actionable:hover {
+        color:
+            #1d4ed8;
+    }
+}
 
         #upload-status-box.drag-over {
             border-color: #3b82f6;
@@ -1160,6 +1285,102 @@ html.performance-icons-ready .sidebar > .p-4 {
     color: #475569;
 }
 
+/* =========================================================
+   OSPMS｜附件上傳圖示
+
+   顏色與虛線外框完全同步：
+   正常    #bfdbfe
+   Hover   #60a5fa
+   處理中  #93c5fd
+
+   並將圖示稍微往下調整，
+   讓整個上傳區的視覺重心更置中。
+========================================================= */
+
+.attachment-upload-icon-wrap {
+
+    width:
+        44px;
+
+    height:
+        44px;
+
+    border-radius:
+        999px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    /*
+     * 比原本 mb-3 更靠近文字，
+     * 整體視覺位置會稍微往下。
+     */
+    margin:
+        4px auto 2px auto;
+
+    background:
+        #f8fafc;
+
+    transition:
+        background-color 0.2s ease;
+}
+
+
+.attachment-upload-icon {
+
+    width:
+        20px;
+
+    height:
+        20px;
+
+    color:
+        #bfdbfe;
+
+    transition:
+        color 0.2s ease;
+}
+
+
+/* Hover：
+   圖示與虛線同步變成 #60a5fa */
+.attachment-upload-zone:hover
+.attachment-upload-icon,
+
+#upload-status-box.drag-over
+.attachment-upload-icon {
+
+    color:
+        #60a5fa;
+}
+
+
+/* Hover 背景同步使用柔和藍色 */
+.attachment-upload-zone:hover
+.attachment-upload-icon-wrap,
+
+#upload-status-box.drag-over
+.attachment-upload-icon-wrap {
+
+    background:
+        #eff6ff;
+}
+
+
+/* 處理附件時與處理中虛線同步 */
+.attachment-upload-zone.is-processing
+.attachment-upload-icon {
+
+    color:
+        #93c5fd;
+}
+
 .attachment-upload-zone {
     border: 2px dashed #bfdbfe;
     background: #f8fbff;
@@ -1182,9 +1403,17 @@ html.performance-icons-ready .sidebar > .p-4 {
 }
 
 .attachment-upload-main {
-    color: #2563eb;
-    font-size: 14px;
-    font-weight: 700;
+    color:
+        #2563eb;
+
+    font-size:
+        13px;
+
+    font-weight:
+        700;
+
+    line-height:
+        1.3;
 }
 
 .attachment-upload-sub {
@@ -1342,15 +1571,32 @@ html.performance-icons-ready .sidebar > .p-4 {
 }
 
 .attachment-title-folder-icon {
-    width: 28px;
-    height: 28px;
-    color: #2563eb;
-}
+    width:
+        18px;
 
-.attachment-upload-symbol {
-    width: 44px;
-    height: 44px;
-    color: #60a5fa;
+    height:
+        18px;
+
+    font-size:
+        18px;
+
+    line-height:
+        18px;
+
+    display:
+        inline-flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    flex:
+        0 0 18px;
+
+    color:
+        #2563eb;
 }
 
 .attachment-file-type-symbol {
@@ -1376,7 +1622,6 @@ html.performance-icons-ready .sidebar > .p-4 {
     height: 16px;
 }
 
-#upload-icon-status svg,
 .attachment-symbol svg {
     width: 100%;
     height: 100%;
@@ -4062,16 +4307,20 @@ and (max-width: 950px) {
                                autocomplete="new-password">
                     </div>
 
-<label class="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+<label id="editor-enabled-setting-row"
+       class="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 invisible">
+
     <input
         type="checkbox"
         id="editor-enabled-checkbox"
         class="w-4 h-4 accent-indigo-600"
         disabled
     >
+
     <span class="text-sm font-bold text-slate-700">
         啟用使用者共用權限
     </span>
+
 </label>
 
                 <p class="text-[11px] text-slate-400 leading-snug">
@@ -6500,8 +6749,12 @@ gap-1.5">
     <div onclick="event.stopPropagation()" class="attachment-panel">
         <div class="attachment-panel-header">
             <div class="attachment-panel-title">
-<i data-lucide="paperclip" class="w-6 h-6 text-blue-600"></i>
-<h3 id="attachment-modal-title">附件資料管理</h3>
+<i class="fa-solid fa-folder-open attachment-title-folder-icon"
+   aria-hidden="true"></i>
+
+<h3 id="attachment-modal-title">
+    附件資料管理
+</h3>
 <span id="attachment-context-label"></span>
 
 <button id="clear-month-attachments-btn"
@@ -6522,15 +6775,17 @@ gap-1.5">
         </div>
 
         <div id="attachment-upload-section">
-            <div id="upload-status-box"
-                 onclick="document.getElementById('file-input').click()"
-                 class="attachment-upload-zone">
-                <span id="upload-icon-status" class="attachment-symbol attachment-upload-symbol" aria-hidden="true">
-                    <svg viewBox="0 0 48 48" focusable="false">
-                        <path fill="currentColor" d="M18.2 36.5h18.1c5.3 0 9.4-3.8 9.4-8.7 0-4.5-3.5-8.1-8.2-8.6C36.3 13.1 31 8.5 24.7 8.5c-5.6 0-10.4 3.7-12 8.8C6.8 18 2.3 22 2.3 27.1c0 5.3 4.8 9.4 10.8 9.4h5.1Z"/>
-                        <path fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M24 31V18m0 0-6 6m6-6 6 6"/>
-                    </svg>
-                </span>
+<div id="upload-status-box"
+     onclick="document.getElementById('file-input').click()"
+     class="attachment-upload-zone group">
+<div id="upload-icon-status"
+     class="attachment-upload-icon-wrap"
+     aria-hidden="true">
+
+    <i data-lucide="upload-cloud"
+       class="attachment-upload-icon"></i>
+
+</div>
                 <div id="upload-text-status"
      class="attachment-upload-main"
      aria-live="polite">
@@ -25279,8 +25534,50 @@ if (
                 let monthCells = "";
                 for (let i = 1; i <= 12; i++) {
                     const val = rowSaved[i+1] !== undefined ? rowSaved[i+1] : "";
-                    const hasAttach = getAttachmentFiles(attachmentsStore[type]?.[rowIndex]?.[i]).length > 0;
-                    const btnClass = hasAttach ? 'has-file' : 'no-file';
+const hasAttach =
+    getAttachmentFiles(
+        attachmentsStore[type]?.[rowIndex]?.[i]
+    ).length > 0;
+
+
+const btnClass =
+    hasAttach
+        ? 'has-file'
+        : 'no-file';
+
+
+/*
+ * 附件資料夾開啟規則：
+ *
+ * 1. 已有附件：
+ *    Viewer / User / Admin 都可以開啟。
+ *
+ * 2. 沒有附件：
+ *    只有目前真的處於編輯模式的
+ *    Admin / User 可以開啟並新增附件。
+ *
+ * 3. 非編輯模式的空資料夾：
+ *    完全不可點擊。
+ */
+const canOpenAttachment =
+    hasAttach ||
+    canWriteInTable;
+
+
+const attachmentClickAttr =
+    canOpenAttachment
+        ? `onclick="handleAttachmentClick(${rowIndex}, ${i})"`
+        : '';
+
+
+/*
+ * Tooltip 只有「已有附件」才顯示。
+ * 空資料夾不顯示任何提示框。
+ */
+const attachmentTooltipAttr =
+    hasAttach
+        ? 'data-tooltip="管理附件"'
+        : '';
 
                     const statusVal = normalizeStatusValue(val);
                     const statusClass = getStatusClass(statusVal);
@@ -25291,9 +25588,29 @@ if (
                                 onchange="handleStatusChange(this)">
                             ${getStatusOptionsHTML(statusVal)}
                         </select>
-                        <span class="attachment-btn ${btnClass}" onclick="handleAttachmentClick(${rowIndex}, ${i})">
-                            <i data-lucide="paperclip"></i>
-                        </span>
+<span
+    class="
+        attachment-btn
+        ${btnClass}
+        ${canOpenAttachment ? 'is-actionable' : 'is-disabled'}
+        ${hasAttach ? 'system-tooltip-btn' : ''}
+    "
+
+    ${attachmentClickAttr}
+
+    ${attachmentTooltipAttr}
+
+    aria-label="${hasAttach ? '管理附件' : '尚無附件'}"
+>
+    <i
+        class="fa-solid ${
+            hasAttach
+                ? 'fa-folder'
+                : 'fa-folder-open'
+        }"
+        aria-hidden="true"
+    ></i>
+</span>
                     </td>`;
                 }
 
@@ -25711,7 +26028,8 @@ function getAttachmentTrashIconHtml() {
     list.innerHTML = '';
 
     if (!files.length) {
-        list.innerHTML = '<p class="text-center text-slate-400 text-sm font-bold py-4">目前尚未上傳附件</p>';
+        list.innerHTML =
+    '<p class="text-center text-slate-400 text-xs font-bold py-4">目前尚未上傳附件</p>';
         return;
     }
 
@@ -25889,17 +26207,62 @@ function handleAttachmentClick(
     rowIndex,
     monthIndex
 ) {
-    if (canEditPerformanceNow()) {
+
+    const files =
+        getAttachmentFiles(
+            attachmentsStore[
+                currentTab
+            ]?.[
+                rowIndex
+            ]?.[
+                monthIndex
+            ]
+        );
+
+
+    const hasAttachments =
+        files.length > 0;
+
+
+    /*
+     * 非編輯模式 + 沒有附件：
+     *
+     * Viewer / User / Admin
+     * 全部不執行任何動作。
+     */
+    if (
+        !hasAttachments &&
+        !canEditPerformanceNow()
+    ) {
+        return;
+    }
+
+
+    /*
+     * Admin / User 編輯模式：
+     * 可進入正式附件管理視窗，
+     * 即使目前尚無附件也可以新增。
+     */
+    if (
+        canEditPerformanceNow()
+    ) {
         openAttachmentModal(
             rowIndex,
             monthIndex
         );
-    } else {
-        openAttachmentPreviewModal(
-            rowIndex,
-            monthIndex
-        );
+
+        return;
     }
+
+
+    /*
+     * 非編輯模式：
+     * 只有已存在附件才會走到這裡。
+     */
+    openAttachmentPreviewModal(
+        rowIndex,
+        monthIndex
+    );
 }
 
 function openAttachmentPreviewModal(rowIndex, monthIndex) {
@@ -27826,6 +28189,11 @@ async function openPermissionSettingsModal() {
             'editor-enabled-checkbox'
         );
 
+const editorEnabledSettingRow =
+    document.getElementById(
+        'editor-enabled-setting-row'
+    );        
+
 
     /*
      * -----------------------------------------------------
@@ -27936,41 +28304,49 @@ async function openPermissionSettingsModal() {
     }
 
 
-    isOsaiSystemAccessSettingsReady =
-        false;
+isOsaiSystemAccessSettingsReady =
+    false;
 
 
-    /*
-     * -----------------------------------------------------
-     * 若 Admin Login 預抓已有新鮮 Cache，
-     * Checkbox 可以立即使用。
-     * -----------------------------------------------------
-     */
-    if (
-        editorEnabledCheckbox &&
-        hasFreshOsaiSystemAccessSettingsCache()
-    ) {
-
-        editorEnabledCheckbox.checked =
-            osaiSystemAccessSettingsCache
-                .editorEnabled;
+isOsaiSystemAccessSettingsReady =
+    false;
 
 
-        editorEnabledCheckbox.disabled =
-            false;
+/*
+ * -----------------------------------------------------
+ * User Enabled 安全初始狀態
+ * -----------------------------------------------------
+ *
+ * 權限設定視窗每次開啟時，
+ * 不直接使用 Cache 顯示 Checkbox。
+ *
+ * 一律等待本次中央 get-settings
+ * 取得正式最新值後才顯示，
+ * 避免：
+ *
+ * - unchecked → checked
+ * - checked → unchecked
+ * - 舊 Cache → 最新中央值
+ *
+ * 的短暫視覺切換。
+ */
+if (
+    editorEnabledCheckbox
+) {
+    editorEnabledCheckbox.disabled =
+        true;
+}
 
 
-        isOsaiSystemAccessSettingsReady =
-            true;
-
-
-    } else if (
-        editorEnabledCheckbox
-    ) {
-
-        editorEnabledCheckbox.disabled =
-            true;
-    }
+if (
+    editorEnabledSettingRow
+) {
+    editorEnabledSettingRow
+        .classList
+        .add(
+            'invisible'
+        );
+}
 
 
     isOsaiSystemAccessSettingsPending =
@@ -27988,19 +28364,40 @@ async function openPermissionSettingsModal() {
             await refreshOsaiSystemAccessSettingsCache();
 
 
-        if (
-            editorEnabledCheckbox
-        ) {
+if (
+    editorEnabledCheckbox
+) {
 
-            editorEnabledCheckbox.checked =
-                settings
-                    ?.editor_enabled ===
-                true;
+    /*
+     * 先寫入中央正式值。
+     */
+    editorEnabledCheckbox.checked =
+        settings
+            ?.editor_enabled ===
+        true;
 
 
-            editorEnabledCheckbox.disabled =
-                false;
-        }
+    editorEnabledCheckbox.disabled =
+        false;
+
+
+    /*
+     * 正式值已經套用完成後，
+     * 才讓整列顯示。
+     *
+     * 避免 unchecked → checked
+     * 的短暫視覺閃爍。
+     */
+    if (
+        editorEnabledSettingRow
+    ) {
+        editorEnabledSettingRow
+            .classList
+            .remove(
+                'invisible'
+            );
+    }
+}
 
 
         isOsaiSystemAccessSettingsReady =
@@ -28017,27 +28414,36 @@ async function openPermissionSettingsModal() {
         );
 
 
-        /*
-         * 若已有新鮮 Cache，
-         * 可以繼續使用 Cache。
-         *
-         * 完全沒有 Cache 才鎖住 Checkbox。
-         */
-        if (
-            !hasFreshOsaiSystemAccessSettingsCache()
-        ) {
+/*
+ * 中央正式設定讀取失敗：
+ *
+ * 不使用 Cache 當成可操作的正式狀態。
+ *
+ * Checkbox 維持鎖定，
+ * 整列保持不可見，
+ * 並禁止儲存權限設定。
+ */
+isOsaiSystemAccessSettingsReady =
+    false;
 
-            isOsaiSystemAccessSettingsReady =
-                false;
+
+if (
+    editorEnabledCheckbox
+) {
+    editorEnabledCheckbox.disabled =
+        true;
+}
 
 
-            if (
-                editorEnabledCheckbox
-            ) {
-                editorEnabledCheckbox.disabled =
-                    true;
-            }
-        }
+if (
+    editorEnabledSettingRow
+) {
+    editorEnabledSettingRow
+        .classList
+        .add(
+            'invisible'
+        );
+}
 
 
         if (
@@ -28130,6 +28536,10 @@ function closeLoginModal() {
             'editor-enabled-checkbox'
         );
 
+const editorEnabledSettingRow =
+    document.getElementById(
+        'editor-enabled-setting-row'
+    );        
 
     /*
      * 關閉 Modal。
@@ -28222,16 +28632,34 @@ function closeLoginModal() {
      * 必須重新經由 Cache / get-settings
      * 確認正式中央狀態後才可操作。
      */
-    if (
-        editorEnabledCheckbox
-    ) {
-        editorEnabledCheckbox.disabled =
-            true;
-    }
+if (
+    editorEnabledCheckbox
+) {
+    editorEnabledCheckbox.disabled =
+        true;
+}
 
 
-    isOsaiSystemAccessSettingsReady =
-        false;
+/*
+ * 關閉後恢復安全初始狀態。
+ *
+ * 下一次開啟時：
+ * - 有 Cache → 立即填值後顯示
+ * - 無 Cache → 等中央正式值後再顯示
+ */
+if (
+    editorEnabledSettingRow
+) {
+    editorEnabledSettingRow
+        .classList
+        .add(
+            'invisible'
+        );
+}
+
+
+isOsaiSystemAccessSettingsReady =
+    false;
 
 
     /*

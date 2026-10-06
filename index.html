@@ -400,6 +400,9 @@ html.performance-icons-ready .sidebar > .p-4 {
 
     /*
      * Firefox
+     *
+     * Firefox 無法指定精確 px，
+     * 因此仍使用 thin。
      */
     .table-container {
         scrollbar-width:
@@ -413,14 +416,33 @@ html.performance-icons-ready .sidebar > .p-4 {
 
     /*
      * Chrome、Edge、Safari
+     *
+     * 先取消標準 scrollbar-width / color 接管，
+     * 讓下方 ::-webkit-scrollbar 的 10px
+     * 可以真正生效。
      */
-    .table-container::-webkit-scrollbar {
-        width:
-            8px;
+    @supports selector(::-webkit-scrollbar) {
 
-        height:
-            8px;
+        .table-container {
+            scrollbar-width:
+                auto;
+
+            scrollbar-color:
+                auto;
+        }
     }
+
+
+    /*
+     * Chrome、Edge、Safari
+     */
+.table-container::-webkit-scrollbar {
+    width:
+        9px;
+
+    height:
+        9px;
+}
 
 
     .table-container::-webkit-scrollbar-track {
@@ -1452,6 +1474,188 @@ html.performance-icons-ready .sidebar > .p-4 {
     gap: 10px;
     max-height: 300px;
     overflow-y: auto;
+}
+
+/* =========================================================
+   OSPMS｜桌機版附件資料管理 Scrollbar
+   維持較細的 8px
+========================================================= */
+
+@media screen and (min-width: 1025px) {
+
+    .attachment-panel,
+    .attachment-file-list {
+        scrollbar-width:
+            thin;
+
+        scrollbar-color:
+            #cbd5e1
+            #f8fafc;
+    }
+
+
+    .attachment-panel::-webkit-scrollbar,
+    .attachment-file-list::-webkit-scrollbar {
+        width:
+            8px;
+    }
+
+
+    .attachment-panel::-webkit-scrollbar-track,
+    .attachment-file-list::-webkit-scrollbar-track {
+        background:
+            #f8fafc;
+    }
+
+
+    .attachment-panel::-webkit-scrollbar-thumb,
+    .attachment-file-list::-webkit-scrollbar-thumb {
+        background:
+            #cbd5e1;
+
+        border-radius:
+            4px;
+    }
+
+
+    .attachment-panel::-webkit-scrollbar-thumb:hover,
+    .attachment-file-list::-webkit-scrollbar-thumb:hover {
+        background:
+            #94a3b8;
+    }
+}
+
+/* =========================================================
+   OSPMS｜桌機版報表欄位 Scrollbar
+
+   績效指標名稱／績效內容欄位
+   粗細比照附件資料管理：8px
+
+   不影響手機。
+========================================================= */
+
+@media screen and (min-width: 1025px) {
+
+    #main-table .admin-name-input,
+    #main-table .admin-content-input {
+        scrollbar-width:
+            thin;
+
+        scrollbar-color:
+            #cbd5e1
+            #f8fafc;
+    }
+
+
+    #main-table
+    .admin-name-input::-webkit-scrollbar,
+
+    #main-table
+    .admin-content-input::-webkit-scrollbar {
+        width:
+            8px;
+    }
+
+
+    #main-table
+    .admin-name-input::-webkit-scrollbar-track,
+
+    #main-table
+    .admin-content-input::-webkit-scrollbar-track {
+        background:
+            #f8fafc;
+    }
+
+
+    #main-table
+    .admin-name-input::-webkit-scrollbar-thumb,
+
+    #main-table
+    .admin-content-input::-webkit-scrollbar-thumb {
+        background:
+            #cbd5e1;
+
+        border-radius:
+            4px;
+    }
+
+
+    #main-table
+    .admin-name-input::-webkit-scrollbar-thumb:hover,
+
+    #main-table
+    .admin-content-input::-webkit-scrollbar-thumb:hover {
+        background:
+            #94a3b8;
+    }
+}
+
+/* =========================================================
+   OSPMS｜附件資料管理 Scrollbar
+
+   完全比照桌機版績效報表 .table-container：
+   - Firefox：thin
+   - Chrome / Edge / Safari：8px
+   - Track：#f8fafc
+   - Thumb：#cbd5e1
+   - Hover：#94a3b8
+   - Radius：4px
+
+   僅調整附件資料管理視窗，
+   不影響附件檔案預覽 .file-preview-body。
+========================================================= */
+
+@media screen and (min-width: 1025px) {
+
+    /* Firefox */
+    .attachment-panel,
+    .attachment-file-list {
+        scrollbar-width:
+            thin;
+
+        scrollbar-color:
+            #cbd5e1
+            #f8fafc;
+    }
+
+
+    /* Chrome、Edge、Safari */
+    .attachment-panel::-webkit-scrollbar,
+    .attachment-file-list::-webkit-scrollbar {
+        width:
+            8px;
+    }
+
+
+    .attachment-panel::-webkit-scrollbar-track,
+    .attachment-file-list::-webkit-scrollbar-track {
+        background:
+            #f8fafc;
+    }
+
+
+    .attachment-panel::-webkit-scrollbar-thumb,
+    .attachment-file-list::-webkit-scrollbar-thumb {
+        background:
+            #cbd5e1;
+
+        border-radius:
+            4px;
+    }
+
+
+    .attachment-panel::-webkit-scrollbar-thumb:hover,
+    .attachment-file-list::-webkit-scrollbar-thumb:hover {
+        background:
+            #94a3b8;
+    }
+
+
+    .attachment-panel::-webkit-scrollbar-corner,
+    .attachment-file-list::-webkit-scrollbar-corner {
+        background:
+            #f8fafc;
+    }
 }
 
 .attachment-file-row {

@@ -117,7 +117,7 @@ html.performance-icons-ready .sidebar > .p-4 {
 }
 
 .sidebar nav::-webkit-scrollbar {
-    width: 8px;
+    width: 10px;
 }
 
 .sidebar nav::-webkit-scrollbar-track {
@@ -142,6 +142,253 @@ html.performance-icons-ready .sidebar > .p-4 {
         rgba(71, 85, 105, 0.95)
     );
 }  
+
+/* =========================================================
+   OSPMS｜系統內部 Scrollbar 統一規格
+
+   原則：
+   - 系統內部所有 Scrollbar：取消頭尾箭頭
+   - 系統最外圍 html / body：完全不介入
+   - 一般內部 Scrollbar 基準：8px
+   - 各區域原本若已有自己的寬度，繼續優先保留
+   - 不破壞既有 Track / Thumb / Hover / Radius
+
+   Chrome / Edge：
+   解除標準 scrollbar-width / scrollbar-color 接管，
+   改由 ::-webkit-scrollbar 系列統一控制。
+========================================================= */
+
+@supports selector(::-webkit-scrollbar) {
+
+    /*
+     * 僅處理 body 裡面的內部元素。
+     *
+     * 不包含：
+     * html
+     * body
+     *
+     * 因此最外圍原生 Scrollbar 不受影響。
+     */
+    :where(body *) {
+        scrollbar-width:
+            auto !important;
+
+        scrollbar-color:
+            auto !important;
+    }
+
+
+    /*
+     * 系統內部 Scrollbar 基準尺寸。
+     *
+     * 使用 :where() 降低 specificity，
+     * 所以後面各區域原本的：
+     *
+     * 7px / 8px / 9px / 10px
+     *
+     * 都可以正常覆蓋這裡。
+     */
+    :where(body *)::-webkit-scrollbar {
+        width:
+            8px;
+
+        height:
+            8px;
+    }
+
+
+    /*
+     * 系統內部一般淺色 Scrollbar 基準。
+     *
+     * 原本已有專屬顏色的區域，
+     * 例如：
+     * - 左側功能列
+     * - 附件預覽
+     * - Cloud Center
+     *
+     * 會由它們自己的 selector 優先覆蓋。
+     */
+    :where(body *)::-webkit-scrollbar-track {
+        background:
+            #f8fafc;
+    }
+
+
+    :where(body *)::-webkit-scrollbar-thumb {
+        background:
+            #cbd5e1;
+
+        border-radius:
+            4px;
+    }
+
+
+    :where(body *)::-webkit-scrollbar-thumb:hover {
+        background:
+            #94a3b8;
+    }
+
+
+    /*
+     * =====================================================
+     * 取消所有系統內部 Scrollbar 頭尾箭頭
+     * =====================================================
+     */
+
+    :where(body *)::-webkit-scrollbar-button {
+        -webkit-appearance:
+            none !important;
+
+        appearance:
+            none !important;
+
+        display:
+            none !important;
+
+        width:
+            0 !important;
+
+        height:
+            0 !important;
+
+        min-width:
+            0 !important;
+
+        min-height:
+            0 !important;
+
+        margin:
+            0 !important;
+
+        padding:
+            0 !important;
+
+        border:
+            0 !important;
+
+        background:
+            transparent !important;
+    }
+
+
+    /*
+     * 垂直 Scrollbar：
+     * 上／下箭頭。
+     */
+    :where(body *)::-webkit-scrollbar-button:vertical:decrement,
+    :where(body *)::-webkit-scrollbar-button:vertical:increment {
+        display:
+            none !important;
+
+        width:
+            0 !important;
+
+        height:
+            0 !important;
+
+        -webkit-appearance:
+            none !important;
+
+        background:
+            transparent !important;
+    }
+
+
+    /*
+     * 水平 Scrollbar：
+     * 左／右箭頭。
+     */
+    :where(body *)::-webkit-scrollbar-button:horizontal:decrement,
+    :where(body *)::-webkit-scrollbar-button:horizontal:increment {
+        display:
+            none !important;
+
+        width:
+            0 !important;
+
+        height:
+            0 !important;
+
+        -webkit-appearance:
+            none !important;
+
+        background:
+            transparent !important;
+    }
+}
+
+/* =========================================================
+   OSPMS｜內部 Scrollbar Thumb 視覺寬度
+
+   分級原則：
+
+   1. 績效主報表：
+      - 保留原本較粗的 9px
+      - 不再做 Thumb 內縮
+
+   2. Cloud Center／附件資料管理／報表欄位：
+      - Scrollbar 操作區維持 8px
+      - Thumb 左右只內縮 1px
+      - 比目前版本稍寬
+      - 接近移除箭頭前的適中視覺
+
+   3. 左側功能列：
+      - 維持原本較細樣式
+
+   4. 附件預覽：
+      - 維持既有專屬樣式
+========================================================= */
+
+@supports selector(::-webkit-scrollbar) {
+
+    /*
+     * Cloud Center
+     *
+     * Track：#f1f5f9
+     *
+     * 8px 操作區
+     * 左右各內縮 1px
+     * 實際 Thumb 約 6px
+     */
+    #cloud-preview-publish-view::-webkit-scrollbar-thumb,
+    #cloud-workspace-list::-webkit-scrollbar-thumb,
+    #cloud-preview-manage-list::-webkit-scrollbar-thumb,
+    #cloud-publisher-accounts-list::-webkit-scrollbar-thumb {
+
+        border:
+            1px solid #f1f5f9;
+
+        background-clip:
+            padding-box;
+    }
+
+
+    /*
+     * 附件資料管理
+     * 報表內欄位
+     *
+     * Track：#f8fafc
+     *
+     * 8px 操作區
+     * 左右各內縮 1px
+     * 實際 Thumb 約 6px
+     */
+    .attachment-panel::-webkit-scrollbar-thumb,
+    .attachment-file-list::-webkit-scrollbar-thumb,
+
+    #main-table
+    .admin-name-input::-webkit-scrollbar-thumb,
+
+    #main-table
+    .admin-content-input::-webkit-scrollbar-thumb {
+
+        border:
+            1px solid #f8fafc;
+
+        background-clip:
+            padding-box;
+    }
+}
 
 /* =========================================================
    雲端中心固定框架與清單捲動機制
@@ -1627,21 +1874,30 @@ html.performance-icons-ready .sidebar > .p-4 {
     }
 
 
-    .attachment-panel::-webkit-scrollbar-track,
-    .attachment-file-list::-webkit-scrollbar-track {
-        background:
-            #f8fafc;
-    }
+.attachment-panel::-webkit-scrollbar-track,
+.attachment-file-list::-webkit-scrollbar-track {
+    background:
+        transparent;
+
+    border-radius:
+        999px;
+}
 
 
-    .attachment-panel::-webkit-scrollbar-thumb,
-    .attachment-file-list::-webkit-scrollbar-thumb {
-        background:
-            #cbd5e1;
+.attachment-panel::-webkit-scrollbar-thumb,
+.attachment-file-list::-webkit-scrollbar-thumb {
+    background:
+        #cbd5e1;
 
-        border-radius:
-            4px;
-    }
+    border-radius:
+        999px;
+
+    border:
+        1px solid transparent;
+
+    background-clip:
+        padding-box;
+}
 
 
     .attachment-panel::-webkit-scrollbar-thumb:hover,
@@ -1651,11 +1907,11 @@ html.performance-icons-ready .sidebar > .p-4 {
     }
 
 
-    .attachment-panel::-webkit-scrollbar-corner,
-    .attachment-file-list::-webkit-scrollbar-corner {
-        background:
-            #f8fafc;
-    }
+.attachment-panel::-webkit-scrollbar-corner,
+.attachment-file-list::-webkit-scrollbar-corner {
+    background:
+        transparent;
+}
 }
 
 .attachment-file-row {

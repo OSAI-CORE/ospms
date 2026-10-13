@@ -4354,7 +4354,7 @@ and (max-width: 950px) {
 /* 桌機滑鼠移入 */
 @media (hover: hover) and (pointer: fine) {
 
-    #cloud-workspace-create-btn:not(:disabled):hover {
+    #cloud-workspace-create-btn:hover {
         background: #115e59 !important;
         color: #ffffff !important;
 
@@ -12590,6 +12590,12 @@ setCloudWorkspaceStatus(
 );
 
 
+setCloudWorkspaceCreateBusy(
+    true,
+    '上傳中'
+);
+
+
             } catch (error) {
 
                 if (
@@ -12972,13 +12978,19 @@ async function createCloudWorkspaceFromCurrentData() {
             0
         ) {
 
-            setCloudWorkspaceStatus(
-                `準備上傳 ${uniqueAttachments.length} 個附件...`,
-                'info'
-            );
+setCloudWorkspaceStatus(
+    `準備上傳 ${uniqueAttachments.length} 個附件...`,
+    'info'
+);
 
 
-            await uploadCloudWorkspaceAttachmentsWithConcurrency(
+setCloudWorkspaceCreateBusy(
+    true,
+    '上傳中'
+);
+
+
+await uploadCloudWorkspaceAttachmentsWithConcurrency(
                 workspaceId,
                 uniqueAttachments,
                 cloudFileIdMap
@@ -12986,23 +12998,29 @@ async function createCloudWorkspaceFromCurrentData() {
         }
 
 
-/*
- * 第三步：
- * DataURL → cloud_file_id。
- *
- * 原本本機資料不會被改掉。
- */
-setCloudWorkspaceStatus(
-    '正在完成雲端工作資料...',
-    'info'
-);
+        /*
+         * 第三步：
+         * DataURL → cloud_file_id。
+         *
+         * 原本本機資料不會被改掉。
+         */
+        setCloudWorkspaceStatus(
+            '正在完成雲端工作資料...',
+            'info'
+        );
 
 
-const cloudPayload =
-    buildCloudPerformancePayload(
-        localPayload,
-        cloudFileIdMap
-    );
+        setCloudWorkspaceCreateBusy(
+            true,
+            '正在完成...'
+        );
+
+
+        const cloudPayload =
+            buildCloudPerformancePayload(
+                localPayload,
+                cloudFileIdMap
+            );
 
 
 /*
@@ -13252,78 +13270,6 @@ try {
         setCloudWorkspaceCreateBusy(
             false
         );
-
-
-        /*
-         * Cloud Workspace 建立完成提示。
-         *
-         * 使用原有 creationCompleted 判斷，
-         * 不修改雲端儲存及 Rollback 邏輯。
-         */
-if (creationCompleted) {
-
-    const button =
-        document.getElementById(
-            'cloud-workspace-create-btn'
-        );
-
-
-    if (button) {
-
-        button.disabled = true;
-
-                /*
-                 * 將按鈕改為打勾圖示
-                 * 與建立完成文字。
-                 */
-                button.innerHTML = `
-                    <svg viewBox="0 0 24 24"
-                         fill="none"
-                         stroke="currentColor"
-                         stroke-width="2"
-                         stroke-linecap="round"
-                         stroke-linejoin="round"
-                         class="w-3.5 h-3.5 shrink-0"
-                         aria-hidden="true">
-
-                        <path d="M5 12l4 4L19 6"></path>
-
-                    </svg>
-
-                    <span>
-                        建立完成
-                    </span>
-                `;
-
-
-                /*
-                 * 記錄本次完成提示的文字元素。
-                 * 避免下一次操作時，
-                 * 舊計時器覆蓋新的按鈕狀態。
-                 */
-                const completeLabel =
-                    button.querySelector('span');
-
-
-                /*
-                 * 完成提示顯示 1.8 秒，
-                 * 然後恢復原本的建立按鈕。
-                 */
-                setTimeout(() => {
-
-if (
-    button.disabled &&
-    button.querySelector('span') === completeLabel
-) {
-
-    setCloudWorkspaceCreateBusy(false);
-
-}
-
-                }, 1800);
-
-            }
-        }
     }
 }
 
@@ -14354,21 +14300,21 @@ button.className =
      shadow-sm`;
 
 
-button.innerHTML = `
-    <span class="
-        w-3.5 h-3.5
-        shrink-0
-        rounded-full
-        border-2
-        border-white/40
-        border-t-white
-        animate-spin
-    "></span>
+        button.innerHTML = `
+            <span class="
+                w-3.5 h-3.5
+                shrink-0
+                rounded-full
+                border-2
+                border-white/40
+                border-t-white
+                animate-spin
+            "></span>
 
-    <span>
-        上傳中...
-    </span>
-`;
+            <span>
+                ${text || '正在建立...'}
+            </span>
+        `;
 
     } else {
 
@@ -15778,7 +15724,7 @@ ${
             ? `
                 <button type="button"
                         data-workspace-id="${id}"
-                        onclick="loadCloudWorkspaceIntoSystem('${id}')"
+                        onclick="loadCloudWorkspaceIntoSystem('${id}', this)"
                         class="
                             w-full h-8
                             rounded-lg
@@ -15862,7 +15808,7 @@ class="
             : `
                 <button type="button"
                         data-workspace-id="${id}"
-                        onclick="loadCloudWorkspaceIntoSystem('${id}')"
+                        onclick="loadCloudWorkspaceIntoSystem('${id}', this)"
 class="
     w-full h-8
     rounded-lg
@@ -15880,7 +15826,7 @@ class="
     gap-1.5
     transition-colors
     duration-150
-"
+">
 
 <i class="fas fa-cloud-arrow-down text-[13px] leading-none"
    aria-hidden="true"></i>
@@ -16343,7 +16289,8 @@ async function loadCloudWorkspaceSignedFiles(
  * =========================================================
  */
 async function loadCloudWorkspaceIntoSystem(
-    workspaceId
+    workspaceId,
+    sourceButton = null
 ) {
     const role =
         getCurrentRole();
@@ -16400,6 +16347,41 @@ async function loadCloudWorkspaceIntoSystem(
         )
     ) {
         return;
+    }
+
+
+    /*
+     * 保存按鈕原本內容。
+     * 載入結束後可以完整還原。
+     */
+    const originalLoadButtonHTML =
+        sourceButton
+            ? sourceButton.innerHTML
+            : '';
+
+
+    /*
+     * 使用者確認後，
+     * 才啟動載入動畫。
+     */
+    if (sourceButton) {
+
+        sourceButton.disabled =
+            true;
+
+        sourceButton.innerHTML = `
+            <i class="
+                fas fa-spinner
+                fa-spin
+                text-[13px]
+                leading-none
+            "
+               aria-hidden="true"></i>
+
+            <span>
+                載入中
+            </span>
+        `;
     }
 
 
@@ -16680,6 +16662,21 @@ const messages = {
             '載入雲端工作資料失敗。',
             'error'
         );
+
+    } finally {
+
+        /*
+         * 不論載入成功或失敗，
+         * 都恢復原本按鈕。
+         */
+        if (sourceButton) {
+
+            sourceButton.innerHTML =
+                originalLoadButtonHTML;
+
+            sourceButton.disabled =
+                false;
+        }
     }
 }
 

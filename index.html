@@ -7611,6 +7611,13 @@ let activeCloudWorkspaceId = '';
 let activeCloudWorkspaceName = '';
 let activeCloudWorkspaceRevision = 0;
 
+// true：僅選擇儲存目標，未載入雲端內容
+let activeCloudWorkspaceTargetOnly = false;
+
+// 防止非同步操作重疊
+let cloudWorkspaceSelectionPending = false;
+let cloudWorkspaceSavePending = false;
+
 /*
  * 目前 Workspace 已成功上傳的 DataURL 附件對照。
  *
@@ -7714,6 +7721,8 @@ function clearActiveCloudWorkspace() {
 
     activeCloudWorkspaceRevision =
         0;
+
+    activeCloudWorkspaceTargetOnly = false;        
 
     /*
      * 解除 Workspace 綁定時，
@@ -10456,12 +10465,12 @@ const configs = {
         title:
             getCurrentRole() === 'admin'
                 ? '管理雲端預覽'
-                : '我的發布預覽',
+                : '我的雲端預覽',
 
         subtitle:
             getCurrentRole() === 'admin'
                 ? 'MANAGE PREVIEWS'
-                : 'MY PREVIEWS',
+                : 'MY CLOUD PREVIEWS',
 
         color: 'text-indigo-300'
     },
@@ -10891,13 +10900,13 @@ roleIcon.className =
 
         if (manageCardTitle) {
             manageCardTitle.textContent =
-                '我的發布預覽';
+                '我的雲端預覽';
         }
 
 
         if (manageCardSubtitle) {
             manageCardSubtitle.textContent =
-                'MY PREVIEWS';
+                'MY CLOUD PREVIEWS';
         }
 
 if (accountsCard) {
@@ -13230,6 +13239,17 @@ setCloudWorkspaceStatus(
  */
 async function createCloudWorkspaceFromCurrentData() {
 
+    if (
+        cloudWorkspaceSavePending ||
+        cloudWorkspaceSelectionPending
+    ) {
+        setCloudWorkspaceStatus(
+            '目前正在處理雲端資料，請完成後再操作。',
+            'info'
+        );
+        return;
+    }
+
     const role =
         getCurrentRole();
 
@@ -13549,6 +13569,8 @@ activeCloudWorkspaceRevision =
     Number(
         savedWorkspace.revision
     ) || 1;
+
+activeCloudWorkspaceTargetOnly = false;    
 
 /*
  * Workspace 正式建立成功後，
@@ -15851,6 +15873,121 @@ if (
     }
 }
 
+async function selectCloudWorkspaceAsSaveTarget(
+    workspaceId,
+    card,
+    event
+) {
+    if (event?.target?.closest('button')) return;
+
+    if (
+        cloudWorkspaceSelectionPending ||
+        cloudWorkspaceSavePending
+    ) {
+        return;
+    }
+
+    const role = getCurrentRole();
+
+    if (role !== 'admin' && role !== 'editor') {
+        return;
+    }
+
+    if (isPreviewDataMode) {
+        setCloudWorkspaceStatus(
+            '預覽資料不能綁定雲端工作資料。',
+            'error'
+        );
+        return;
+    }
+
+    if (card?.dataset?.workspaceEnabled !== 'true') {
+        return;
+    }
+
+    workspaceId = String(workspaceId || '').trim();
+
+    if (!workspaceId) return;
+
+    if (activeCloudWorkspaceId === workspaceId) {
+        setCloudWorkspaceStatus(
+            '這份工作資料已是目前的雲端儲存目標。',
+            'success'
+        );
+        return;
+    }
+
+    const workspaceName =
+        card?.dataset?.workspaceName ||
+        '雲端工作資料';
+
+    /*
+     * 直接使用圖卡記錄的 Revision，
+     * 不開啟確認視窗、不重新讀取 Workspace。
+     */
+    const revision = Number(
+        card?.dataset?.workspaceRevision
+    );
+
+    if (
+        !Number.isInteger(revision) ||
+        revision < 1
+    ) {
+        setCloudWorkspaceStatus(
+            '工作資料版本資訊無效，請重新整理雲端清單。',
+            'error'
+        );
+        return;
+    }
+
+    /*
+     * 僅建立雲端儲存目標關聯。
+     * 不載入、不覆蓋目前 JSON 工作資料。
+     */
+    activeCloudWorkspaceId = workspaceId;
+    activeCloudWorkspaceName = workspaceName;
+    activeCloudWorkspaceRevision = revision;
+    activeCloudWorkspaceTargetOnly = true;
+
+    /*
+     * 更換儲存目標時，
+     * 不沿用其他 Workspace 的附件 ID 快取。
+     */
+    activeCloudWorkspaceUploadedDataUrlMap.clear();
+
+    /*
+     * 直接修改目前圖卡顏色。
+     * 不重新讀取或繪製雲端工作資料清單。
+     */
+    document.querySelectorAll(
+        '#cloud-workspace-list > [data-workspace-id]'
+    ).forEach(item => {
+
+        const selected = item === card;
+
+        item.classList.toggle(
+            'bg-sky-100',
+            selected
+        );
+
+        item.classList.toggle(
+            'bg-sky-50',
+            !selected
+        );
+
+    });
+
+    /*
+     * 立即啟用「儲存至雲端」按鈕。
+     */
+    updateActiveCloudWorkspaceUI();
+
+    setCloudWorkspaceStatus(
+        `已選擇「${workspaceName}」作為儲存目標。`,
+        'success'
+    );
+}
+
 function renderCloudWorkspaceList(
     workspaces
 ) {
@@ -16041,13 +16178,25 @@ const hasNewerWorkspaceRevision =
 
 
                     return `
-                        <div class="
-                            rounded-xl
-                            border border-sky-100
-                            bg-sky-50
-                            px-3.5 py-3
-                            shadow-sm
-                        ">
+                        <div
+                            data-workspace-id="${id}"
+                            data-workspace-name="${name}"
+                            data-workspace-revision="${revision}"
+                            data-workspace-enabled="${enabled ? 'true' : 'false'}"
+                            onclick="selectCloudWorkspaceAsSaveTarget('${id}', this, event)"
+                            onkeydown="if(event.target === this && (event.key === 'Enter' || event.key === ' ')){event.preventDefault();selectCloudWorkspaceAsSaveTarget('${id}', this, event);}"
+                            tabindex="${enabled ? '0' : '-1'}"
+                            aria-label="選擇${name}作為雲端儲存目標"
+                            class="
+                                rounded-xl
+                                border border-sky-100
+                                ${isSameWorkspace ? 'bg-sky-100' : 'bg-sky-50'}
+                                px-3.5 py-3
+                                shadow-sm
+                                ${enabled ? 'cursor-pointer' : 'cursor-default'}
+                                transition-colors
+                                duration-150
+                            ">
 
 <div class="min-w-0">
 
@@ -16332,7 +16481,7 @@ ${
             `
 
 
-        : isCurrentWorkspace
+        : isCurrentWorkspace && !activeCloudWorkspaceTargetOnly
             ? `
                 <button type="button"
                         disabled
@@ -16367,7 +16516,9 @@ class="
 </svg>
 
                     <span>
-                        目前已載入
+                        ${activeCloudWorkspaceTargetOnly
+                            ? '已選擇儲存目標'
+                            : '目前已載入'}
                     </span>
 
                 </button>
@@ -16858,6 +17009,18 @@ async function loadCloudWorkspaceIntoSystem(
     workspaceId,
     sourceButton = null
 ) {
+
+    if (
+        cloudWorkspaceSavePending ||
+        cloudWorkspaceSelectionPending
+    ) {
+        setCloudWorkspaceStatus(
+            '目前正在處理雲端資料，請完成後再操作。',
+            'info'
+        );
+        return;
+    }
+
     const role =
         getCurrentRole();
 
@@ -17135,6 +17298,8 @@ const hydratedPayload =
                 workspace.revision
             ) || 1;
 
+        activeCloudWorkspaceTargetOnly = false;
+
 /*
  * 載入 Workspace 後，
  * 清除上一份工作資料的 DataURL 對照。
@@ -17253,11 +17418,199 @@ const messages = {
     }
 }
 
+async function getWorkspaceAttachmentFingerprint(blob) {
+    const buffer = await blob.arrayBuffer();
+
+    const digest = await crypto.subtle.digest(
+        'SHA-256',
+        buffer
+    );
+
+    const hash = Array.from(
+        new Uint8Array(digest),
+        byte => byte.toString(16).padStart(2, '0')
+    ).join('');
+
+    return `${blob.size}:${hash}`;
+}
+
+/*
+ * 比對目前工作區附件與目標 Workspace。
+ *
+ * 相同內容：重用 cloud_file_id
+ * 不同內容：列入上傳
+ *
+ * 也避免本次不同 DataURL 對應相同檔案時，
+ * 重複上傳。
+ */
+async function matchExistingCloudWorkspaceAttachments(
+    workspace,
+    attachmentMap,
+    cloudFileIdMap
+) {
+    const metadata = new Map(
+        (workspace.files || [])
+            .filter(file => file?.id)
+            .map(file => [String(file.id), file])
+    );
+
+    const existingReferences = new Map();
+
+    function collectReferences(value) {
+        if (!value || typeof value !== 'object') return;
+
+        if (!Array.isArray(value) && value.cloud_file_id) {
+            const id = String(value.cloud_file_id);
+            const info = metadata.get(id) || {};
+
+            if (!existingReferences.has(id)) {
+                existingReferences.set(id, {
+                    id,
+                    size: Number(
+                        value.size || info.file_size || 0
+                    )
+                });
+            }
+            return;
+        }
+
+        const children = Array.isArray(value)
+            ? value
+            : Object.values(value);
+
+        children.forEach(collectReferences);
+    }
+
+    collectReferences(workspace.payload);
+
+    const references =
+        Array.from(existingReferences.values());
+
+    const remoteFingerprintCache = new Map();
+    const localFingerprintCache = new Map();
+    const duplicateKeys = new Map();
+    const attachmentsToUpload = [];
+
+    let signedFileMap = null;
+
+    for (const [key, file] of attachmentMap) {
+        if (cloudFileIdMap.has(key)) continue;
+
+        const blob = await getCloudTransferBlob(file);
+
+        const fingerprint =
+            await getWorkspaceAttachmentFingerprint(blob);
+
+        const localMatch =
+            localFingerprintCache.get(fingerprint);
+
+        if (localMatch) {
+            if (localMatch.fileId) {
+                cloudFileIdMap.set(key, localMatch.fileId);
+            } else {
+                duplicateKeys.set(key, localMatch.key);
+            }
+            continue;
+        }
+
+        let matchedFileId = '';
+
+        for (const remoteFile of references) {
+            if (
+                remoteFile.size > 0 &&
+                remoteFile.size !== blob.size
+            ) {
+                continue;
+            }
+
+            if (!signedFileMap) {
+                signedFileMap =
+                    await loadCloudWorkspaceSignedFiles(
+                        String(workspace.id),
+                        references.map(item => ({
+                            id: item.id
+                        }))
+                    );
+            }
+
+            let remoteFingerprint =
+                remoteFingerprintCache.get(remoteFile.id);
+
+            if (!remoteFingerprint) {
+                try {
+                    const signedUrl =
+                        signedFileMap.get(remoteFile.id)?.signed_url;
+
+                    if (!signedUrl) {
+                        throw new Error('SIGNED_URL_MISSING');
+                    }
+
+                    const response = await fetch(signedUrl, {
+                        cache: 'no-store'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('ATTACHMENT_READ_FAILED');
+                    }
+
+                    const remoteBlob = await response.blob();
+
+                    remoteFingerprint =
+                        await getWorkspaceAttachmentFingerprint(
+                            remoteBlob
+                        );
+
+                    remoteFingerprintCache.set(
+                        remoteFile.id,
+                        remoteFingerprint
+                    );
+
+                } catch (error) {
+                    throw new Error(
+                        'WORKSPACE_DEDUP_CHECK_FAILED'
+                    );
+                }
+            }
+
+            if (fingerprint === remoteFingerprint) {
+                matchedFileId = remoteFile.id;
+                break;
+            }
+        }
+
+        if (matchedFileId) {
+            cloudFileIdMap.set(key, matchedFileId);
+
+            localFingerprintCache.set(fingerprint, {
+                fileId: matchedFileId
+            });
+
+        } else {
+            attachmentsToUpload.push(file);
+
+            localFingerprintCache.set(fingerprint, {
+                key
+            });
+        }
+    }
+
+    return {
+        attachmentsToUpload,
+        duplicateKeys
+    };
+}
+
 async function saveCurrentCloudWorkspace() {
 
     const role =
         getCurrentRole();
 
+    if (
+        cloudWorkspaceSelectionPending ||
+        cloudWorkspaceSavePending
+    ) {
+        return;
+    }        
 
     if (
         role !== 'admin' &&
@@ -17308,6 +17661,7 @@ async function saveCurrentCloudWorkspace() {
         return;
     }
 
+    cloudWorkspaceSavePending = true;
 
     const button =
         document.getElementById(
@@ -17388,19 +17742,6 @@ const attachmentMap =
  * 其他 Workspace 的附件，
  * 仍依照原本流程重新轉移。
  */
-const uniqueAttachments =
-    Array.from(
-        attachmentMap.entries()
-    )
-        .filter(
-            ([key]) =>
-                !activeCloudWorkspaceUploadedDataUrlMap.has(
-                    key
-                )
-        )
-        .map(
-            ([, file]) => file
-        );
 
 /*
  * 先帶入已成功上傳過的附件 ID。
@@ -17413,6 +17754,48 @@ const newCloudFileIdMap =
         activeCloudWorkspaceUploadedDataUrlMap
     );
 
+/*
+ * 上傳前先確認雲端最新版。
+ * 若其他人已更新，立即停止，
+ * 避免白白上傳附件。
+ */
+setCloudWorkspaceStatus(
+    '正在確認雲端版本及比對附件...',
+    'info'
+);
+
+const latestResult = await cloudWorkspaceRequest({
+    action: 'load',
+    system_type: OSH_CLOUD_SYSTEM_TYPE,
+    workspace_id: activeCloudWorkspaceId
+});
+
+const latestWorkspace = latestResult?.workspace;
+
+if (!latestWorkspace?.id) {
+    throw new Error('WORKSPACE_LOAD_INVALID');
+}
+
+if (
+    Number(latestWorkspace.revision) !==
+    Number(activeCloudWorkspaceRevision)
+) {
+    throw new Error('WORKSPACE_REVISION_CONFLICT');
+}
+
+/*
+ * 同內容附件重用既有 ID。
+ * 只有缺少的附件才真正上傳。
+ */
+const dedupResult =
+    await matchExistingCloudWorkspaceAttachments(
+        latestWorkspace,
+        attachmentMap,
+        newCloudFileIdMap
+    );
+
+const uniqueAttachments =
+    dedupResult.attachmentsToUpload;
 
 /*
  * 新附件才需要上傳。
@@ -17439,6 +17822,26 @@ if (
     );
 }
 
+/*
+ * 同一批新增附件若內容完全相同，
+ * 共用第一次上傳取得的 cloud_file_id。
+ */
+for (
+    const [duplicateKey, originalKey]
+    of dedupResult.duplicateKeys
+) {
+    const fileId =
+        newCloudFileIdMap.get(originalKey);
+
+    if (!fileId) {
+        throw new Error('WORKSPACE_FILE_ID_MISSING');
+    }
+
+    newCloudFileIdMap.set(
+        duplicateKey,
+        fileId
+    );
+}
 
         /*
          * 建立正式雲端 Payload。
@@ -17546,6 +17949,8 @@ activeCloudWorkspaceUploadedDataUrlMap =
                 ]
             )
     );
+
+        activeCloudWorkspaceTargetOnly = false;
 
         updateActiveCloudWorkspaceUI();
 
@@ -17711,6 +18116,9 @@ const messages = {
             WORKSPACE_REVISION_CONFLICT:
                 '此雲端工作資料已被其他使用者更新，請重新載入最新版本後再繼續。',
 
+            WORKSPACE_DEDUP_CHECK_FAILED:
+                '無法確認既有雲端附件內容，已停止更新，避免重複上傳。',
+
             WORKSPACE_FILE_TYPE_NOT_ALLOWED:
                 '新附件格式不支援。',
 
@@ -17794,6 +18202,8 @@ clearActiveCloudWorkspace();
 
 
     } finally {
+
+        cloudWorkspaceSavePending = false;
 
         if (button) {
 
@@ -20477,6 +20887,10 @@ function renderCloudPreviewManageList(
     const showAdminActions =
         getCurrentRole() === 'admin';
 
+    const showPreviewManageActions =
+        showAdminActions ||
+        getCurrentRole() === 'editor';
+
 
     if (
         !Array.isArray(previews) ||
@@ -20706,7 +21120,7 @@ hover:border-indigo-200
     <!-- 右側：管理操作 -->
     <div class="
         shrink-0
-        ${showAdminActions ? 'flex' : 'hidden'}
+                ${showPreviewManageActions ? 'flex' : 'hidden'}
         items-center
         gap-1
     ">
@@ -21706,12 +22120,14 @@ function openCloudPreviewEditModalFromButton(
     /*
      * 介面層僅允許管理者。
      */
+    const role = getCurrentRole();
+
     if (
-        getCurrentRole() !==
-        'admin'
+        role !== 'admin' &&
+        role !== 'editor'
     ) {
         showToast(
-            '僅管理者可編輯雲端預覽。',
+            '目前權限無法編輯雲端預覽。',
             'error'
         );
 
@@ -21932,12 +22348,14 @@ function closeCloudPreviewEditModalOutside(
 
 async function submitCloudPreviewEdit() {
 
+    const role = getCurrentRole();
+
     if (
-        getCurrentRole() !==
-        'admin'
+        role !== 'admin' &&
+        role !== 'editor'
     ) {
         showToast(
-            '僅管理者可編輯雲端預覽。',
+            '目前權限無法編輯雲端預覽。',
             'error'
         );
 
@@ -22352,13 +22770,14 @@ async function toggleCloudPreviewEnabledFromButton(
     /*
      * 介面層只允許管理者操作。
      */
-    if (
-        getCurrentRole() !==
-        'admin'
-    ) {
+    const role = getCurrentRole();
 
+    if (
+        role !== 'admin' &&
+        role !== 'editor'
+    ) {
         showToast(
-            '僅管理者可變更雲端預覽狀態。',
+            '目前權限無法變更雲端預覽狀態。',
             'error'
         );
 
@@ -22602,13 +23021,14 @@ async function deleteCloudPreviewFromButton(
     /*
      * 介面層只允許管理者操作。
      */
-    if (
-        getCurrentRole() !==
-        'admin'
-    ) {
+    const role = getCurrentRole();
 
+    if (
+        role !== 'admin' &&
+        role !== 'editor'
+    ) {
         showToast(
-            '僅管理者可刪除雲端預覽。',
+            '目前權限無法刪除雲端預覽。',
             'error'
         );
 
@@ -28893,8 +29313,12 @@ function openImagePreview(file) {
     if (!image) return;
 
     setFilePreviewLoading(true, '圖片載入中...');
-    image.classList.remove('hidden');
-image.onload = () => {
+
+    // 圖片完成尺寸計算前保持隱藏
+    image.classList.add('hidden');
+
+    image.onload = () => {
+        if (filePreviewMode !== 'image') return;
     const baseImageScale = getImageFitPreviewScale(image);
     const isDesktopPreview = window.matchMedia('(min-width: 901px)').matches;
 
@@ -28910,6 +29334,10 @@ image.onload = () => {
         : baseImageScale;
 
     applyPreviewImageScale();
+
+    // 寬度、高度及旋轉角度確定後才顯示
+    image.classList.remove('hidden');
+
     setFilePreviewLoading(false);
 };
     image.onerror = () => {

@@ -4984,7 +4984,8 @@ and (max-width: 950px) {
                 <div class="grid grid-cols-2 gap-3">
 
                     <!-- 正式資料 -->
-                    <button onclick="exportFormalDataFromModal()"
+                    <button id="formal-json-export-btn"
+        onclick="exportFormalDataFromModal()"
                             class="min-h-[124px] rounded-xl border border-indigo-100 bg-indigo-50/60 hover:bg-indigo-50 hover:border-indigo-200 transition p-3 flex flex-col items-center justify-center text-center">
 
                         <div class="w-9 h-9 rounded-full bg-white border border-indigo-100 flex items-center justify-center mb-2 shadow-sm">
@@ -14815,15 +14816,13 @@ button.className =
 
 
         button.innerHTML = `
-            <span class="
-                w-3.5 h-3.5
-                shrink-0
-                rounded-full
-                border-2
-                border-white/40
-                border-t-white
-                animate-spin
-            "></span>
+<i class="
+    fas fa-spinner
+    fa-spin
+    text-[13px]
+    leading-none
+"
+   aria-hidden="true"></i>
 
             <span>
                 ${text || '正在建立...'}
@@ -17685,15 +17684,13 @@ button.classList.add(
 );
 
             button.innerHTML = `
-                <span class="
-                    w-3.5 h-3.5
-                    shrink-0
-                    rounded-full
-                    border-2
-                    border-white/40
-                    border-t-white
-                    animate-spin
-                "></span>
+<i class="
+    fas fa-spinner
+    fa-spin
+    text-[13px]
+    leading-none
+"
+   aria-hidden="true"></i>
 
                 <span>
                     正在儲存...
@@ -24267,6 +24264,10 @@ function openDataExportModal() {
 
 function closeDataExportModal() {
 
+    if (formalJsonExportBusy) {
+        return;
+    }    
+
     document
         .getElementById(
             'data-export-modal'
@@ -24360,9 +24361,6 @@ function backToDataExportChoice() {
  * 正式資料仍完全沿用原本 exportJSON()。
  */
 function exportFormalDataFromModal() {
-
-    closeDataExportModal();
-
     exportJSON();
 }
 
@@ -24412,28 +24410,6 @@ function exportPreviewJSON() {
 
         return;
     }
-
-
-    /*
-     * 尚未按綠色「儲存」時，
-     * 不允許產生預覽資料。
-     */
-    if (
-        hasUnsavedPerformanceChanges()
-    ) {
-
-        closeDataExportModal();
-
-
-        alert(
-            '目前仍有尚未儲存的績效修改。\n\n' +
-            '請先按下綠色「儲存」後再產生預覽資料。'
-        );
-
-
-        return;
-    }
-
 
     const expiryHours =
         Number(
@@ -24587,7 +24563,351 @@ function exportPreviewJSON() {
     );
 }
 
-function exportJSON() {
+/*
+ * 正式 JSON 專用：
+ * 將 Blob 轉成完整 DataURL。
+ */
+function readFormalJsonBlobAsDataURL(blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = () => {
+            const result = String(reader.result || '');
+
+            if (!result.startsWith('data:')) {
+                reject(
+                    new Error(
+                        'FORMAL_JSON_ATTACHMENT_READ_FAILED'
+                    )
+                );
+                return;
+            }
+
+            resolve(result);
+        };
+
+        reader.onerror = () => {
+            reject(
+                new Error(
+                    'FORMAL_JSON_ATTACHMENT_READ_FAILED'
+                )
+            );
+        };
+
+        reader.readAsDataURL(blob);
+    });
+}
+
+
+/*
+ * =========================================================
+ * 正式 JSON 完整附件備份
+ *
+ * 本機附件：
+ * 直接保留 DataURL。
+ *
+ * 雲端附件：
+ * 重新取得有效 Signed URL，
+ * 下載完整檔案並轉成 DataURL。
+ *
+ * 同一雲端附件只下載一次。
+ * 僅修改匯出快照，不影響目前工作區。
+ *
+ * 任一附件失敗，不產生不完整 JSON。
+ * =========================================================
+ */
+async function completeFormalJsonAttachmentData(
+    exportData,
+    onProgress = () => {}
+) {
+    const remoteAttachments = new Map();
+    const scanned = new WeakSet();
+
+    function isAttachmentRecord(value) {
+        return (
+            value &&
+            typeof value === 'object' &&
+            !Array.isArray(value) &&
+            typeof value.name === 'string' &&
+            typeof value.type === 'string' &&
+            (
+                Object.prototype.hasOwnProperty.call(
+                    value,
+                    'data'
+                ) ||
+                Object.prototype.hasOwnProperty.call(
+                    value,
+                    'cloud_file_id'
+                )
+            )
+        );
+    }
+
+    function visit(value) {
+        if (
+            !value ||
+            typeof value !== 'object' ||
+            scanned.has(value)
+        ) {
+            return;
+        }
+
+        scanned.add(value);
+
+        if (isAttachmentRecord(value)) {
+            if (
+                typeof value.data === 'string' &&
+                value.data.startsWith('data:')
+            ) {
+                return;
+            }
+
+            const workspaceId =
+                String(
+                    value.cloud_workspace_id || ''
+                ).trim();
+
+            const fileId =
+                String(
+                    value.cloud_file_id || ''
+                ).trim();
+
+            if (!workspaceId || !fileId) {
+                throw new Error(
+                    'FORMAL_JSON_ATTACHMENT_SOURCE_MISSING'
+                );
+            }
+
+            const key =
+                `workspace:${workspaceId}:${fileId}`;
+
+            if (!remoteAttachments.has(key)) {
+                remoteAttachments.set(
+                    key,
+                    value
+                );
+            }
+
+            return;
+        }
+
+        if (Array.isArray(value)) {
+            value.forEach(visit);
+        } else {
+            Object.values(value).forEach(visit);
+        }
+    }
+
+    visit(exportData);
+
+    const downloadedDataUrls = new Map();
+    const total = remoteAttachments.size;
+    let completed = 0;
+
+    if (total > 0) {
+        onProgress(completed, total);
+    }
+
+    /*
+     * 先取得全部雲端附件。
+     * 此階段不修改匯出資料。
+     */
+    /*
+     * 正式 JSON 附件下載：
+     * 最多兩筆並行。
+     */
+    const attachmentEntries =
+        Array.from(remoteAttachments.entries());
+
+    let nextAttachmentIndex = 0;
+    let firstError = null;
+
+    async function downloadWorker() {
+        while (
+            nextAttachmentIndex <
+                attachmentEntries.length &&
+            !firstError
+        ) {
+            const [key, file] =
+                attachmentEntries[nextAttachmentIndex++];
+
+            try {
+                const blob =
+                    await getCloudTransferBlob(file);
+
+                if (!blob || blob.size < 1) {
+                    throw new Error(
+                        'FORMAL_JSON_ATTACHMENT_DOWNLOAD_FAILED'
+                    );
+                }
+
+                const declaredSize =
+                    Number(file.size || 0);
+
+                if (
+                    declaredSize > 0 &&
+                    blob.size !== declaredSize
+                ) {
+                    throw new Error(
+                        'FORMAL_JSON_ATTACHMENT_SIZE_MISMATCH'
+                    );
+                }
+
+                const type =
+                    String(
+                        file.type || blob.type || ''
+                    ).toLowerCase();
+
+                const mimeType =
+                    type === 'image/jpg'
+                        ? 'image/jpeg'
+                        : type;
+
+                if (
+                    ![
+                        'application/pdf',
+                        'image/png',
+                        'image/jpeg'
+                    ].includes(mimeType)
+                ) {
+                    throw new Error(
+                        'FORMAL_JSON_ATTACHMENT_TYPE_INVALID'
+                    );
+                }
+
+                const typedBlob = new Blob(
+                    [blob],
+                    { type: mimeType }
+                );
+
+                const dataUrl =
+                    await readFormalJsonBlobAsDataURL(
+                        typedBlob
+                    );
+
+                downloadedDataUrls.set(
+                    key,
+                    dataUrl
+                );
+
+                completed++;
+                onProgress(completed, total);
+
+            } catch (error) {
+                if (!firstError) {
+                    firstError = error;
+                }
+
+                return;
+            }
+        }
+    }
+
+    const workerCount =
+        Math.min(2, total);
+
+    const workers = Array.from(
+        { length: workerCount },
+        () => downloadWorker()
+    );
+
+    /*
+     * 一筆失敗時不再啟動新下載，
+     * 但等待已經執行中的工作結束。
+     */
+    await Promise.allSettled(workers);
+
+    if (firstError) {
+        throw firstError;
+    }
+
+    /*
+     * 全部下載完成後，
+     * 才修改正式 JSON 的附件內容。
+     */
+    const converted = new WeakSet();
+
+    function replaceReferences(value) {
+        if (
+            !value ||
+            typeof value !== 'object' ||
+            converted.has(value)
+        ) {
+            return;
+        }
+
+        converted.add(value);
+
+        if (isAttachmentRecord(value)) {
+            if (
+                typeof value.data !== 'string' ||
+                !value.data.startsWith('data:')
+            ) {
+                const workspaceId =
+                    String(
+                        value.cloud_workspace_id || ''
+                    ).trim();
+
+                const fileId =
+                    String(
+                        value.cloud_file_id || ''
+                    ).trim();
+
+                const key =
+                    `workspace:${workspaceId}:${fileId}`;
+
+                const dataUrl =
+                    downloadedDataUrls.get(key);
+
+                if (!dataUrl) {
+                    throw new Error(
+                        'FORMAL_JSON_ATTACHMENT_DOWNLOAD_FAILED'
+                    );
+                }
+
+                value.data = dataUrl;
+            }
+
+            /*
+             * 正式 JSON 已經包含附件本體，
+             * 不需要保留原 Workspace 的
+             * 雲端附件識別。
+             *
+             * 只處理匯出副本。
+             */
+            delete value.cloud_file_id;
+            delete value.cloud_workspace_id;
+            delete value.is_cloud_file;
+
+            return;
+        }
+
+        if (Array.isArray(value)) {
+            value.forEach(replaceReferences);
+        } else {
+            Object.values(value).forEach(
+                replaceReferences
+            );
+        }
+    }
+
+    replaceReferences(exportData);
+
+    return total;
+}
+
+/*
+ * 防止正式 JSON 附件整理期間
+ * 重複啟動匯出。
+ */
+let formalJsonExportBusy = false;
+
+
+async function exportJSON() {
+    if (formalJsonExportBusy) {
+        return;
+    }
+
     if (!canExportReviewData()) {
         alert('請先登入權限後再匯出資料。');
         openLoginModal();
@@ -24595,60 +24915,208 @@ function exportJSON() {
     }
 
     if (isPreviewDataMode) {
-        alert('目前為預覽資料模式，請先以使用者或管理者身分正式載入資料後再匯出資料檔案。');
+        alert(
+            '目前為預覽資料模式，請先以使用者或管理者身分正式載入資料後再匯出資料檔案。'
+        );
         return;
     }
 
-if (isAttachmentUploadBusy) {
-    alert(
-        '附件正在上傳，請待完成後再匯出資料檔案。'
-    );
+    if (isAttachmentUploadBusy) {
+        alert(
+            '附件正在上傳，請待完成後再匯出資料檔案。'
+        );
+        return;
+    }
 
-    return;
-}
+    formalJsonExportBusy = true;
 
-if (
-    hasUnsavedPerformanceChanges()
-) {
-    alert(
-        '目前仍有尚未儲存的績效修改。\n\n' +
-        '請先按下綠色「儲存」後再匯出資料檔案。'
-    );
+    const exportButton =
+        document.getElementById(
+            'formal-json-export-btn'
+        ) ||
+        document.getElementById(
+            'export-json-btn'
+        );
 
-    return;
-}    
+    const originalButtonHtml =
+        exportButton
+            ? exportButton.innerHTML
+            : '';
 
-    const exportDate = new Date().toISOString().slice(0, 10);
-    const dataToExport = buildPerformanceExportData();
+    const originalButtonDisabled =
+        exportButton
+            ? exportButton.disabled
+            : false;
 
-    const blob = new Blob([JSON.stringify(dataToExport, null, 2)], {
-        type: "application/json"
-    });
+    /*
+     * 附件整理期間顯示 Spinner。
+     */
+    function setExportButtonProgress(
+        completed,
+        total
+    ) {
+        if (!exportButton) {
+            return;
+        }
 
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
+        exportButton.disabled = true;
 
-    a.href = url;
-    a.download = `職安績效管理PMS_${exportDate}.json`;
+        exportButton.innerHTML =
+            '<i class="fas fa-spinner fa-spin"></i>' +
+            (
+                total > 0
+                    ? `<span>備份附件 ${completed}/${total}</span>`
+                    : '<span>正在整理備份資料...</span>'
+            );
+    }
 
-document.body.appendChild(
-    a
-);
+    let exportSucceeded = false;
 
-a.click();
+    setExportButtonProgress(0, 0);
 
-document.body.removeChild(
-    a
-);
+    try {
+        /*
+         * 先讓瀏覽器顯示處理中動畫，
+         * 再執行大型資料快照。
+         */
+        await new Promise(resolve =>
+            requestAnimationFrame(() =>
+                requestAnimationFrame(resolve)
+            )
+        );
+        /*
+         * 只複製目前資料快照。
+         * 不修改正在使用中的 Workspace。
+         */
+        const dataToExport =
+            structuredClone(
+                buildPerformanceExportData()
+            );
 
-/*
- * 最新工作階段已完成 JSON 匯出。
- */
-sessionNeedsExport = false;
+        /*
+         * 記錄匯出當下的資料版本。
+         * 避免匯出期間的新修改
+         * 被誤判成已完成備份。
+         */
+        const changeSerialAtSnapshot =
+            performanceChangeSerial;
 
-URL.revokeObjectURL(
-    url
-);
+        /*
+         * 將所有雲端附件轉成完整 DataURL。
+         *
+         * 任一附件失敗會直接 throw，
+         * 不會執行下方的 JSON 下載。
+         */
+        await completeFormalJsonAttachmentData(
+            dataToExport,
+            setExportButtonProgress
+        );
+
+        const exportDate =
+            new Date()
+                .toISOString()
+                .slice(0, 10);
+
+        const blob = new Blob(
+            [
+                JSON.stringify(
+                    dataToExport,
+                    null,
+                    2
+                )
+            ],
+            {
+                type: 'application/json'
+            }
+        );
+
+        const url =
+            URL.createObjectURL(blob);
+
+        const a =
+            document.createElement('a');
+
+        a.href = url;
+
+        a.download =
+            `職安績效管理PMS_${exportDate}.json`;
+
+        document.body.appendChild(a);
+
+        a.click();
+
+        document.body.removeChild(a);
+
+                /*
+         * 稍後釋放下載網址，
+         * 避免過早回收影響瀏覽器下載。
+         */
+        setTimeout(
+            () => URL.revokeObjectURL(url),
+            10000
+        );
+
+        exportSucceeded = true;
+
+        /*
+         * 匯出期間沒有其他新修改，
+         * 才能解除未完成 JSON 備份提示。
+         */
+        if (
+            performanceChangeSerial ===
+            changeSerialAtSnapshot
+        ) {
+            sessionNeedsExport = false;
+            performanceDirty = false;
+        }
+
+    } catch (error) {
+        console.error(
+            '正式 JSON 完整附件匯出失敗：',
+            error
+        );
+
+        const code =
+            String(
+                error?.message || ''
+            );
+
+        const message =
+            code ===
+                'FORMAL_JSON_ATTACHMENT_SOURCE_MISSING'
+                ? '部分附件缺少原始雲端工作資料識別，無法取得完整附件。'
+                : code ===
+                    'CLOUD_LOGIN_CANCELLED'
+                ? '已取消雲端驗證，未產生備份。'
+                : '有雲端附件無法完整讀取，可能是來源資料已刪除、權限不足或網路中斷。';
+
+        alert(
+            `正式 JSON 匯出失敗：${message}\n\n` +
+            '為避免產生缺少附件的資料，這次沒有匯出 JSON。'
+        );
+
+    } finally {
+        /*
+         * 不論成功或失敗，
+         * 都恢復原本按鈕與匯出狀態。
+         */
+        formalJsonExportBusy = false;
+
+        if (exportButton) {
+            exportButton.innerHTML =
+                originalButtonHtml;
+
+            exportButton.disabled =
+                originalButtonDisabled;
+        }
+
+        if (exportSucceeded) {
+            closeDataExportModal();
+        } else {
+            lucide.createIcons();
+        }
+
+    }
 }
 
 function applyImportedPerformanceData(imported) {

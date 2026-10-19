@@ -4097,6 +4097,14 @@ and (orientation: landscape) {
 @media screen and (max-width: 900px),
        (hover: none) and (pointer: coarse) {
 
+    /* 年份輸入框：防止手機聚焦時自動放大 */
+    #year-input-field {
+        font-size: 16px !important;
+
+        -webkit-text-size-adjust: 100% !important;
+        text-size-adjust: 100% !important;
+    }
+
     /* 績效指標內容、完成標準 */
     #main-table .admin-name-input,
     #main-table .admin-content-input {
@@ -29112,11 +29120,11 @@ function getImageFitPreviewScale(image) {
     const { body } = getFilePreviewElements();
     const naturalWidth = image?.naturalWidth || 1;
     const naturalHeight = image?.naturalHeight || 1;
-    const availableWidth = Math.max(260, (body?.clientWidth || window.innerWidth) - 36);
-    const availableHeight = Math.max(260, (body?.clientHeight || window.innerHeight) - 36);
+    const availableWidth = Math.max(1, (body?.clientWidth || window.innerWidth) - 36);
+    const availableHeight = Math.max(1, (body?.clientHeight || window.innerHeight) - 36);
     const fitScale = Math.min(availableWidth / naturalWidth, availableHeight / naturalHeight, 1);
 
-    return clampPreviewScale(fitScale, 0.15, 1);
+    return clampPreviewScale(fitScale, 0.01, 1);
 }
 
 function applyPreviewImageScale() {
@@ -29228,7 +29236,7 @@ function getFilePreviewScaleLimits() {
 
     const isMobile =
         window.matchMedia(
-            '(max-width: 900px)'
+            '(max-width: 900px), (hover: none) and (pointer: coarse)'
         ).matches;
 
     if (!isMobile) {
@@ -29244,7 +29252,7 @@ function getFilePreviewScaleLimits() {
      */
     return {
         min: Math.max(
-            0.05,
+            0.01,
             baseScale * 0.5
         ),
 
@@ -29254,8 +29262,22 @@ function getFilePreviewScaleLimits() {
 }
 
 function setFilePreviewScale(nextScale) {
+
+    /*
+     * 圖片預覽使用已設定的縮放限制。
+     * PDF 保留原本 0.25 至 4 倍的範圍。
+     */
+    const limits =
+        filePreviewMode === 'image'
+            ? getFilePreviewScaleLimits()
+            : { min: 0.25, max: 4 };
+
     filePreviewScale =
-        clampPreviewScale(nextScale);
+        clampPreviewScale(
+            nextScale,
+            limits.min,
+            limits.max
+        );
 
     if (filePreviewMode === 'image') {
         applyPreviewImageScale();

@@ -3759,6 +3759,25 @@ and (orientation: portrait) {
 }
 }
 
+/* =========================================================
+   OSPMS｜報表年份純顯示設定
+
+   保留原本：
+   - 字體大小
+   - 底色與外框
+   - 寬度與位置
+
+   取消：
+   - 滑鼠與觸控操作
+   - 輸入焦點
+   - Hover 互動
+========================================================= */
+
+#year-input-field {
+    cursor: default !important;
+    pointer-events: none !important;
+}
+
         @media print {
 @page {
     size: A4 landscape;
@@ -4096,14 +4115,6 @@ and (orientation: landscape) {
 ========================================================= */
 @media screen and (max-width: 900px),
        (hover: none) and (pointer: coarse) {
-
-    /* 年份輸入框：防止手機聚焦時自動放大 */
-    #year-input-field {
-        font-size: 16px !important;
-
-        -webkit-text-size-adjust: 100% !important;
-        text-size-adjust: 100% !important;
-    }
 
     /* 績效指標內容、完成標準 */
     #main-table .admin-name-input,
@@ -4602,12 +4613,17 @@ and (max-width: 950px) {
 
     <div class="min-w-0">
         <h2 id="current-category-title" class="text-xl font-black text-slate-900 tracking-tight leading-none">載入中...</h2>
-                <div class="flex items-center mt-2">
-                    <input type="text" id="year-input-field" class="year-input" value="2026年度 (115年)" 
-                           onclick="this.select()" 
-                           onblur="handleYearFormat(this)"
-                           onkeydown="if(event.key === 'Enter') handleYearFormat(this)">
-                </div>
+<div class="flex items-center mt-2">
+    <input
+        type="text"
+        id="year-input-field"
+        class="year-input"
+        value="2026年度 (115年)"
+        readonly
+        tabindex="-1"
+        aria-label="目前報表年度"
+    >
+</div>
     </div>
 </div>
 
@@ -32372,29 +32388,24 @@ if (permissionSettingsBtn) {
 }
 
 /*
- * 年度名稱修改限管理者。
+ * 報表表頭年度僅供顯示。
  *
- * 使用者仍可依既有權限新增年度，
- * 但既有年度改名／刪除仍限管理者。
+ * 年度名稱修改統一由左側年度資料夾處理。
+ * 保留原本年度自動同步與資料讀取機制。
  */
 if (yearInput) {
 
-    const canEditYear =
-        canManageYearFolders() &&
-        !isPreviewDataMode;
+    // 永久唯讀
+    yearInput.readOnly = true;
 
-    yearInput.readOnly =
-        !canEditYear;
+    // 不接受鍵盤焦點
+    yearInput.tabIndex = -1;
 
-    yearInput.style.cursor =
-        canEditYear
-            ? 'pointer'
-            : 'default';
+    // 維持一般箭頭游標
+    yearInput.style.cursor = 'default';
 
-    yearInput.title =
-        canEditYear
-            ? '點擊可修改年度'
-            : '僅管理者可修改年度';
+    // 移除滑鼠靠近時的註解小黑框
+    yearInput.removeAttribute('title');
 }
 
 applyPerformanceEditModeUI();

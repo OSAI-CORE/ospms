@@ -29069,6 +29069,16 @@ function revokeCurrentPreviewObjectUrl() {
 function resetFilePreviewContent() {
     const { frame, image, pdfPages, toolbar } = getFilePreviewElements();
 
+    // 關閉預覽時取消尚未執行的圖片比例重算
+    if (filePreviewImageViewportTimer !== null) {
+
+        clearTimeout(
+            filePreviewImageViewportTimer
+        );
+
+        filePreviewImageViewportTimer = null;
+    }
+
     filePreviewPdfRenderSerial++;
     if (filePreviewPdfRenderTimer) {
         clearTimeout(filePreviewPdfRenderTimer);
@@ -29247,33 +29257,31 @@ function schedulePreviewPdfScaleApply() {
 }
 
 function getFilePreviewScaleLimits() {
+
+    // 圖片縮放限制以適合畫面比例為基準，
+    // 避免大型 JPEG 被固定的 0.25 下限強制放大。
+
     const baseScale =
-        filePreviewDefaultScale || 1;
+        Math.max(
+            0.01,
+            filePreviewDefaultScale || 1
+        );
 
     const isMobile =
         window.matchMedia(
             '(max-width: 900px), (hover: none) and (pointer: coarse)'
         ).matches;
 
-    if (!isMobile) {
-        return {
-            min: 0.25,
-            max: 4
-        };
-    }
-
-    /*
-     * 手機最小縮至適合畫面的 50%。
-     * 手機最大放至適合畫面的 200%。
-     */
     return {
         min: Math.max(
-            0.01,
+            0.005,
             baseScale * 0.5
         ),
 
-        max:
-            baseScale * 2
+        max: Math.min(
+            4,
+            baseScale * (isMobile ? 2 : 4)
+        )
     };
 }
 
@@ -29805,6 +29813,58 @@ async function openPdfPreviewFallback(file) {
     }
 }
 
+// 每次開啟圖片或視窗方向、大小變更時，
+// 重新計算目前預覽區域的適合畫面比例。
+
+function refreshImagePreviewForViewport() {
+
+    if (filePreviewMode !== 'image') {
+        return;
+    }
+
+    const {
+        modal,
+        image,
+        body
+    } = getFilePreviewElements();
+
+    if (
+        !modal ||
+        modal.classList.contains('hidden') ||
+        !image ||
+        !image.naturalWidth ||
+        !image.naturalHeight
+    ) {
+        return;
+    }
+
+    const baseScale =
+        getImageFitPreviewScale(image);
+
+    // 只有具備滑鼠精細指標的寬螢幕才使用桌機設定。
+    // 手機橫式即使超過 900px，也不套用桌機 125%。
+
+    const isDesktopPreview =
+        window.matchMedia(
+            '(min-width: 901px) and (hover: hover) and (pointer: fine)'
+        ).matches;
+
+    filePreviewDefaultScale =
+        baseScale;
+
+    filePreviewScale =
+        isDesktopPreview
+            ? Math.min(baseScale * 1.25, 1.25)
+            : baseScale;
+
+    applyPreviewImageScale();
+
+    if (body) {
+        body.scrollTop = 0;
+        body.scrollLeft = 0;
+    }
+}
+
 function openImagePreview(file) {
     const { frame, image, pdfPages, toolbar } = getFilePreviewElements();
 
@@ -29824,28 +29884,19 @@ function openImagePreview(file) {
     image.classList.add('hidden');
 
     image.onload = () => {
-        if (filePreviewMode !== 'image') return;
-    const baseImageScale = getImageFitPreviewScale(image);
-    const isDesktopPreview = window.matchMedia('(min-width: 901px)').matches;
 
-    /*
-     * 附件圖片預覽初始比例：
-     * 1. 手機版：維持適合畫面。
-     * 2. 桌機版：保留略放大，避免圖片太小。
-     * 3. 限制最高 125%，避免圖片開啟後跳到 160% 以上。
-     */
-    filePreviewDefaultScale = baseImageScale;
-    filePreviewScale = isDesktopPreview
-        ? Math.min(baseImageScale * 1.25, 1.25)
-        : baseImageScale;
+        if (filePreviewMode !== 'image') {
+            return;
+        }
 
-    applyPreviewImageScale();
+        // 使用共用函式計算圖片適合比例
+        refreshImagePreviewForViewport();
 
-    // 寬度、高度及旋轉角度確定後才顯示
-    image.classList.remove('hidden');
+        // 比例計算完成後才顯示圖片
+        image.classList.remove('hidden');
 
-    setFilePreviewLoading(false);
-};
+        setFilePreviewLoading(false);
+    };
     image.onerror = () => {
         setFilePreviewLoading(false);
         alert('圖片預覽載入失敗，請確認檔案是否完整。');
@@ -32996,6 +33047,55 @@ closeAttachmentModal();
     }
 );       
 
+// =========================================================
+// 附件圖片預覽：手機旋轉及視窗大小變更時重新適合畫面
+// 僅處理圖片，不影響 PDF 預覽
+// =========================================================
+
+let filePreviewImageViewportTimer = null;
+
+function scheduleImagePreviewViewportFit() {
+
+    if (filePreviewMode !== 'image') {
+        return;
+    }
+
+    clearTimeout(
+        filePreviewImageViewportTimer
+    );
+
+    filePreviewImageViewportTimer =
+        setTimeout(() => {
+
+            filePreviewImageViewportTimer = null;
+
+            requestAnimationFrame(() => {
+
+                if (filePreviewMode === 'image') {
+                    refreshImagePreviewForViewport();
+                }
+
+            });
+
+        }, 180);
+}
+
+// 瀏覽器視窗尺寸改變
+window.addEventListener(
+    'resize',
+    scheduleImagePreviewViewportFit,
+    { passive: true }
+);
+
+// 手機直式、橫式切換
+window.addEventListener(
+    'orientationchange',
+    scheduleImagePreviewViewportFit,
+    { passive: true }
+);
+
+
+// 保留原本手機介面調整機制
 let mobileViewportResizeTimer = null;
 
 function stabilizeMobileViewportLayout() {

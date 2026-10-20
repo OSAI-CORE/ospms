@@ -497,6 +497,66 @@ html.performance-icons-ready .sidebar > .p-4 {
         #f1f5f9;
 }
 
+
+/* =========================================================
+   雲端中心｜2026/10/20 跨系統統一配色
+   比照職業安全風險評估系統最新基準版
+
+   僅調整：
+   1. 雲端工作資料圖卡
+   2. 管理雲端預覽資訊文字
+   3. 管理者與使用者權限標籤
+
+   不影響其他設定、規則與功能
+========================================================= */
+
+
+/* 雲端工作資料：選取圖卡底色 */
+#cloud-workspace-list > [data-workspace-id].bg-sky-100 {
+    background-color: #EEE9E1;
+}
+
+
+/* 雲端工作資料：所有圖卡的最近更新時間統一文字顏色 */
+#cloud-workspace-list > [data-workspace-id] p.text-slate-400 {
+    color: #475569;
+}
+
+
+/* 管理雲端預覽：Preview ID 文字清晰度 */
+#cloud-preview-manage-list .font-mono.text-slate-400 {
+    color: #64748B;
+}
+
+
+/* 管理雲端預覽：開啟次數與有效期限標題 */
+#cloud-preview-manage-list .grid.grid-cols-2 > .bg-slate-50 > .text-slate-400 {
+    color: #64748B;
+}
+
+
+/* 雲端工作資料：選取圖卡分隔線顏色 */
+#cloud-workspace-list > [data-workspace-id].bg-sky-100 > .border-t {
+    border-top-color: #D6D3D1;
+}
+
+
+/* 雲端中心：管理者權限標籤 */
+#cloud-preview-role-label.bg-amber-100 {
+    background-color: #F5E8E3;
+    color: #8A4B3F;
+    box-shadow: inset 0 0 0 1px #E8CEC5;
+}
+
+
+/* 雲端中心：使用者權限標籤 */
+#cloud-preview-role-label.bg-emerald-100 {
+    background-color: #E4F0EB;
+    color: #2F6951;
+    box-shadow: inset 0 0 0 1px #C9DED3;
+}
+
+
 /*
  * Chrome、Edge、Safari：
  * 比照風險評估系統捲動條。

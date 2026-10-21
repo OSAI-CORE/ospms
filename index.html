@@ -4064,6 +4064,67 @@ and (orientation: portrait) {
             }
         }
 
+/* OSPMS｜附件專用列印：不影響原有績效報表 */
+#file-preview-print-btn.hidden {
+    display: none !important;
+}
+
+#ospms-attachment-print-root {
+    display: none;
+}
+
+@media print {
+
+    body.ospms-attachment-print > :not(#ospms-attachment-print-root) {
+        display: none !important;
+    }
+
+    body.ospms-attachment-print #ospms-attachment-print-root {
+        display: block !important;
+        position: static !important;
+
+        width: 100% !important;
+        height: auto !important;
+
+        overflow: visible !important;
+        background: white !important;
+    }
+
+    body.ospms-attachment-print .ospms-attachment-print-page {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+
+        width: 100% !important;
+        height: auto !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+
+        break-inside: avoid-page;
+        page-break-inside: avoid;
+    }
+
+    body.ospms-attachment-print
+    .ospms-attachment-print-page + .ospms-attachment-print-page {
+        break-before: page;
+        page-break-before: always;
+    }
+
+    body.ospms-attachment-print
+    .ospms-attachment-print-page img {
+        display: block !important;
+
+        width: auto !important;
+        height: auto !important;
+        max-width: 100% !important;
+
+        object-fit: contain !important;
+        margin: 0 auto !important;
+        box-shadow: none !important;
+    }
+}
+
 /* =========================================================
    績效管理系統－左側底部功能按鈕
 
@@ -7527,6 +7588,16 @@ gap-1.5">
 
     <button type="button" class="file-preview-tool-btn" onclick="fitFilePreviewToScreen()" title="適合畫面">
         <i data-lucide="maximize" class="w-4 h-4"></i><span>適合</span>
+    </button>
+
+    <button id="file-preview-print-btn"
+            type="button"
+            class="file-preview-tool-btn hidden"
+            onclick="printPreviewAttachment()"
+            title="列印附件"
+            aria-label="列印附件">
+        <i data-lucide="printer" class="w-4 h-4"></i>
+        <span>列印</span>
     </button>
 </div>
 
@@ -23668,6 +23739,7 @@ let filePreviewPdfRenderSerial = 0;
 let filePreviewPdfRenderTimer = null;
 let filePreviewPdfScaleFrame = null;
 let filePreviewPdfAppliedRelativeScale = 1;
+let filePreviewPdfPrintReady = false;
 let filePreviewObjectUrl = null;
 let filePreviewTouchDistance = null;
 let filePreviewTouchScale = 1;
@@ -23690,6 +23762,21 @@ function getCurrentRole() {
 
 function canEditData() {
     return isAdmin || isEditor;
+}
+
+function canPrintPreviewAttachment() {
+    return canEditData() && !isPreviewDataMode;
+}
+
+function updateFilePreviewPrintButton() {
+    const button = document.getElementById('file-preview-print-btn');
+
+    if (button) {
+        button.classList.toggle(
+            'hidden',
+            !canPrintPreviewAttachment()
+        );
+    }
 }
 
 function canEditPerformanceNow() {
@@ -29164,6 +29251,7 @@ imagePreviewDefaultScale = 1;
 filePreviewTouchDistance = null;
 filePreviewTouchScale = 1;
 filePreviewPdfAppliedRelativeScale = 1;
+filePreviewPdfPrintReady = false;
 
     revokeCurrentPreviewObjectUrl();
 
@@ -29562,6 +29650,7 @@ async function renderPdfPreviewPages() {
     if (!pdfPages || !filePreviewPdfDocument) return;
 
     const renderSerial = ++filePreviewPdfRenderSerial;
+    filePreviewPdfPrintReady = false;
     const pdf = filePreviewPdfDocument;
     const scale = filePreviewScale;
 const outputScale = Math.min(
@@ -29618,6 +29707,11 @@ const outputScale = Math.min(
                 transform: outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : null
             }).promise;
         }
+
+        if (renderSerial === filePreviewPdfRenderSerial) {
+            filePreviewPdfPrintReady = true;
+        }
+
     } catch (err) {
         if (renderSerial === filePreviewPdfRenderSerial) {
             console.warn('PDF preview render failed', err);
@@ -29977,6 +30071,8 @@ function viewFileDirectly(file) {
     if (badge) badge.innerText = fileType === 'application/pdf' ? 'PDF' : (fileType.includes('png') ? 'PNG' : 'JPG');
     if (toolbar) toolbar.classList.remove('hidden');
 
+    updateFilePreviewPrintButton();
+
     document.body.classList.add('file-preview-open');
     modal.classList.remove('hidden');
     ensureFilePreviewGestures();
@@ -29996,6 +30092,9 @@ function viewFileDirectly(file) {
 
 function closeFilePreviewModal() {
     const { modal } = getFilePreviewElements();
+
+    cleanupAttachmentPrint();
+
     resetFilePreviewContent();
 
     if (modal) modal.classList.add('hidden');
@@ -30007,6 +30106,214 @@ function closeFilePreviewByBackdrop(event) {
         closeFilePreviewModal();
     }
 }
+
+// 附件列印使用獨立列印區，不改變既有預覽內容。
+function cleanupAttachmentPrint() {
+    document.getElementById('ospms-attachment-print-root')?.remove();
+    document.getElementById('ospms-attachment-print-page-style')?.remove();
+
+    document.body.classList.remove('ospms-attachment-print');
+}
+
+let ospmsAttachmentPrintPreparing = false;
+
+async function printPreviewAttachment() {
+    if (ospmsAttachmentPrintPreparing) return;
+
+    // 權限檢查：管理者及使用者才可列印附件。
+    if (!canPrintPreviewAttachment()) {
+        updateFilePreviewPrintButton();
+        return;
+    }
+
+    const { modal, image, pdfPages } = getFilePreviewElements();
+
+    if (!modal || modal.classList.contains('hidden')) {
+        return;
+    }
+
+    const isImage = filePreviewMode === 'image';
+    const isPdf = filePreviewMode === 'pdf';
+
+    // 圖片必須完成載入。
+    if (
+        isImage &&
+        (!image || !image.complete || !image.naturalWidth)
+    ) {
+        alert('圖片尚未載入完成，請稍後再列印。');
+        return;
+    }
+
+    // PDF.js 失敗而改用 iframe 時，不冒險列印錯誤內容。
+    if (filePreviewMode === 'pdf-frame') {
+        alert('目前 PDF 使用瀏覽器備援預覽，無法使用內建附件列印，請稍後重新載入。');
+        return;
+    }
+
+    // 取得已繪製完成的 PDF 頁面。
+    const pdfCanvases = isPdf && pdfPages
+        ? Array.from(
+            pdfPages.querySelectorAll('.pdf-preview-page-canvas')
+        )
+        : [];
+
+    if (
+        isPdf &&
+        (
+            !filePreviewPdfPrintReady ||
+            !filePreviewPdfDocument ||
+            pdfCanvases.length !== filePreviewPdfDocument.numPages ||
+            pdfCanvases.some(canvas => !canvas.width || !canvas.height)
+        )
+    ) {
+        alert('PDF 頁面尚未全部載入完成，請稍後再列印。');
+        return;
+    }
+
+    if (!isImage && !isPdf) {
+        return;
+    }
+
+    // 移除可能殘留的前一次列印內容。
+    cleanupAttachmentPrint();
+
+    // 根據圖片或 PDF 首頁方向設定紙張方向。
+    const firstWidth = isImage
+        ? image.naturalWidth
+        : pdfCanvases[0].width;
+
+    const firstHeight = isImage
+        ? image.naturalHeight
+        : pdfCanvases[0].height;
+
+    const landscape = firstWidth > firstHeight;
+    const maxHeight = landscape ? '185mm' : '270mm';
+
+    ospmsAttachmentPrintPreparing = true;
+
+    try {
+
+        // 建立不會出現在一般螢幕畫面上的列印區。
+        const printRoot = document.createElement('div');
+        printRoot.id = 'ospms-attachment-print-root';
+
+        const addPage = (src, number) => {
+
+            const page = document.createElement('section');
+            page.className = 'ospms-attachment-print-page';
+
+            const picture = document.createElement('img');
+
+            picture.src = src;
+            picture.alt = `附件第 ${number} 頁`;
+            picture.style.maxHeight = maxHeight;
+
+            page.appendChild(picture);
+            printRoot.appendChild(page);
+        };
+
+        if (isImage) {
+
+            // 列印原始圖片，不使用預覽畫面的縮放尺寸。
+            addPage(image.currentSrc || image.src, 1);
+
+        } else {
+
+            // 將已完成渲染的 PDF 各頁建立為列印圖片。
+            pdfCanvases.forEach((canvas, index) => {
+                addPage(
+                    canvas.toDataURL('image/png'),
+                    index + 1
+                );
+            });
+        }
+
+        // 附件列印專用 A4 紙張設定。
+        // 結束後會移除，不影響正式績效報表。
+        const pageStyle = document.createElement('style');
+        pageStyle.id = 'ospms-attachment-print-page-style';
+
+        pageStyle.textContent =
+            `@page {
+                size: A4 ${landscape ? 'landscape' : 'portrait'};
+                margin: 10mm;
+                @bottom-center { content: none; }
+            }`;
+
+        document.head.appendChild(pageStyle);
+        document.body.appendChild(printRoot);
+
+        document.body.classList.add('ospms-attachment-print');
+
+        // 等待全部列印圖片完成載入及解碼。
+        // 避免 PDF Canvas 轉換的圖片尚未準備好，
+        // 瀏覽器就提前產生空白列印預覽。
+        const printImages = Array.from(
+            printRoot.querySelectorAll('img')
+        );
+
+        await Promise.all(printImages.map(async (img) => {
+            if (typeof img.decode === 'function') {
+                await img.decode();
+                return;
+            }
+
+            // 相容沒有 HTMLImageElement.decode() 的瀏覽器。
+            await new Promise((resolve, reject) => {
+                if (img.complete) {
+                    if (img.naturalWidth > 0) {
+                        resolve();
+                    } else {
+                        reject(new Error('附件列印圖片載入失敗'));
+                    }
+                    return;
+                }
+
+                img.addEventListener('load', resolve, {
+                    once: true
+                });
+
+                img.addEventListener('error', () => {
+                    reject(new Error('附件列印圖片載入失敗'));
+                }, {
+                    once: true
+                });
+            });
+        }));
+
+        // 讓瀏覽器完成必要的版面更新。
+        await new Promise(resolve => {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(resolve);
+            });
+        });
+
+        // 等待期間若使用者已關閉附件或切換權限，
+        // 則取消這一次列印。
+        if (
+            !canPrintPreviewAttachment() ||
+            modal.classList.contains('hidden') ||
+            printRoot.parentNode !== document.body
+        ) {
+            cleanupAttachmentPrint();
+            return;
+        }
+
+        // 圖片全部準備完成後才開啟原生列印視窗。
+        window.print();
+
+    } catch (error) {
+
+        console.error('附件列印準備失敗', error);
+
+        cleanupAttachmentPrint();
+
+        alert('無法準備附件列印，請確認檔案是否完整。');
+    } finally {
+        ospmsAttachmentPrintPreparing = false;
+    }
+}
+
         function viewCurrentFile() { const files = getAttachmentFiles(attachmentsStore[currentTab]?.[activeAttachmentTarget.row]?.[activeAttachmentTarget.month]); if (files.length > 0) viewFileDirectly(files[0]); }
 
 async function deleteSingleAttachment() {
@@ -32526,6 +32833,8 @@ updateJsonActionButtons();
  * 先完成 Lucide 圖示轉換，
  * 再顯示上方功能按鈕。
  */
+updateFilePreviewPrintButton();
+
 lucide.createIcons();
 showPerformanceHeaderActions();
 }
@@ -33065,16 +33374,29 @@ refreshRowSummary(row);
 
 
         function preparePrintLayout() {
+
+            // 附件列印不執行績效報表儲存與排版處理。
+            if (document.body.classList.contains('ospms-attachment-print')) {
+                return;
+            }
+
             saveCurrentTabData();
             document.body.classList.add('ospms-printing');
         }
 
         function cleanupPrintLayout() {
             document.body.classList.remove('ospms-printing');
+
+            cleanupAttachmentPrint();
         }
 
         function printCurrentReport() {
+
+            // 正式報表列印前，清除可能殘留的附件列印內容。
+            cleanupAttachmentPrint();
+
             preparePrintLayout();
+
             setTimeout(() => window.print(), 50);
         }
 

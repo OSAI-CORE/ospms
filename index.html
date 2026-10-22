@@ -2916,6 +2916,21 @@ html.performance-icons-ready .sidebar > .p-4 {
     justify-content: center;
 }
 
+/* =========================================================
+   OSPMS｜PDF 預覽水平置中與完整捲動範圍
+
+   1. PDF 小於視窗時維持置中
+   2. PDF 大於視窗時讓舞台隨內容擴展
+   3. 左右兩側都能完整捲動
+   4. 不影響 JPG／PNG 圖片與 PDF 備援預覽
+========================================================= */
+
+/* PDF 與圖片預覽共用完整水平捲動範圍 */
+#file-preview-stage:has(> #pdf-preview-pages:not(.hidden)),
+#file-preview-stage:has(> #file-preview-image:not(.hidden)) {
+    width: max-content;
+}
+
 #file-preview-image {
     display: block;
     width: auto;
@@ -17397,6 +17412,9 @@ if (
          * 採用相同 cloud_file_id 結構，
          * 因此直接沿用既有 hydrate 函式。
          */
+setCloudWorkspaceStatus('正在整理雲端附件資訊...', 'info');
+await waitForLoadUiPaint();
+
 const hydratedPayload =
     hydrateCloudPreviewPayload(
         sourcePayload,
@@ -17408,6 +17426,9 @@ const hydratedPayload =
         /*
          * 正式載入至績效工作區。
          */
+        setCloudWorkspaceStatus('正在套用雲端工作資料...', 'info');
+        await waitForLoadUiPaint();
+
         applyImportedPerformanceData(
             hydratedPayload
         );
@@ -17484,6 +17505,8 @@ updateActiveCloudWorkspaceUI();
          */
         await persistToStorage();
 
+        setCloudWorkspaceStatus('正在建立績效報表...', 'info');
+        await waitForLoadUiPaint();
 
         renderYearFolders();
 
@@ -24262,7 +24285,55 @@ async function persistToStorageConfirmed() {
 
         // --- 功能模組 ---
 
+/* =========================================================
+   JSON 載入按鈕：進度狀態與介面更新
+========================================================= */
+let jsonFileLoadPending = false;
+
+function setJsonFileLoadStatus(label) {
+    const button = document.getElementById('import-json-btn');
+    if (!button) return;
+
+    button.disabled = true;
+    button.setAttribute('aria-busy', 'true');
+    button.innerHTML =
+        '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i>' +
+        `<span>${label}</span>`;
+}
+
+function beginJsonFileLoad() {
+    if (jsonFileLoadPending) return false;
+    jsonFileLoadPending = true;
+    setJsonFileLoadStatus('讀取中');
+    return true;
+}
+
+function finishJsonFileLoad() {
+    jsonFileLoadPending = false;
+
+    const button = document.getElementById('import-json-btn');
+
+    if (button) {
+        button.disabled = false;
+        button.removeAttribute('aria-busy');
+    }
+
+    updateJsonActionButtons();
+}
+
+function waitForLoadUiPaint() {
+    return new Promise(resolve => {
+        if (document.visibilityState === 'hidden') {
+            setTimeout(resolve, 0);
+        } else {
+            requestAnimationFrame(() => setTimeout(resolve, 0));
+        }
+    });
+}
+
 function handleJsonLoadButton() {
+    if (jsonFileLoadPending) return;
+
     if (canImportData()) {
         triggerImportJSON();
     } else {
@@ -25695,15 +25766,33 @@ async function loadPreviewJSON(
 
     if (!file) return;
 
+    if (!beginJsonFileLoad()) {
+        event.target.value = '';
+        return;
+    }
 
-    const reader =
-        new FileReader();
+    const reader = new FileReader();
 
+    reader.onprogress = e => {
+        if (e.lengthComputable && e.total > 0) {
+            const percent = Math.round(e.loaded / e.total * 100);
+            setJsonFileLoadStatus(`讀取 ${percent}%`);
+        }
+    };
+
+    reader.onerror = () => {
+        console.error('讀取預覽檔案失敗：', reader.error);
+        alert('載入失敗：無法讀取預覽檔案。');
+        event.target.value = '';
+        finishJsonFileLoad();
+    };
 
     reader.onload =
         async e => {
 
             try {
+                setJsonFileLoadStatus('解析資料中');
+                await waitForLoadUiPaint();
 
                 const imported =
                     JSON.parse(
@@ -25738,6 +25827,9 @@ async function loadPreviewJSON(
                  * 資料內容仍沿用原本
                  * 績效系統匯入流程。
                  */
+                setJsonFileLoadStatus('套用資料中');
+                await waitForLoadUiPaint();
+
                 applyImportedPerformanceData(
                     imported
                 );
@@ -25766,6 +25858,8 @@ async function loadPreviewJSON(
                     imported
                 );
 
+                setJsonFileLoadStatus('建立報表中');
+                await waitForLoadUiPaint();
 
                 normalizeAllExecutionMonths();
 
@@ -25799,17 +25893,20 @@ showToast(
                 );
 
 
-            } finally {
-
-                event.target.value =
-                    '';
+             } finally {
+                event.target.value = '';
+                finishJsonFileLoad();
             }
         };
 
-
-    reader.readAsText(
-        file
-    );
+    try {
+        reader.readAsText(file);
+    } catch (error) {
+        console.error(error);
+        alert('載入失敗：無法讀取預覽檔案。');
+        event.target.value = '';
+        finishJsonFileLoad();
+    }
 }
 
 function clearPreviewDataAndRestoreTemplate() {
@@ -25893,10 +25990,32 @@ async function importJSON(event) {
     const file = event.target.files[0];
     if (!file) return;
 
+    if (!beginJsonFileLoad()) {
+        event.target.value = '';
+        return;
+    }
+
     const reader = new FileReader();
+
+    reader.onprogress = e => {
+        if (e.lengthComputable && e.total > 0) {
+            const percent = Math.round(e.loaded / e.total * 100);
+            setJsonFileLoadStatus(`讀取 ${percent}%`);
+        }
+    };
+
+    reader.onerror = () => {
+        console.error('讀取正式資料失敗：', reader.error);
+        alert('匯入失敗：無法讀取檔案。');
+        event.target.value = '';
+        finishJsonFileLoad();
+    };
 
     reader.onload = async (e) => {
         try {
+            setJsonFileLoadStatus('解析資料中');
+            await waitForLoadUiPaint();
+
 const imported =
     JSON.parse(
         e.target.result
@@ -25942,6 +26061,9 @@ if (
     return;
 }
 
+            setJsonFileLoadStatus('套用資料中');
+            await waitForLoadUiPaint();
+
             applyImportedPerformanceData(imported);
 releaseImportedPerformancePayload(imported);
 
@@ -25979,9 +26101,16 @@ isPerformanceEditMode = false;
 clearWorkProtectionState();
 
 normalizeAllExecutionMonths();
+
+            setJsonFileLoadStatus('整理載入狀態');
+            await waitForLoadUiPaint();
+
             await persistToStorage();
 
             event.target.value = '';
+
+            setJsonFileLoadStatus('建立報表中');
+            await waitForLoadUiPaint();
 
             renderYearFolders();
             switchTab(currentTab, false);
@@ -25994,10 +26123,18 @@ normalizeAllExecutionMonths();
             alert("匯入失敗：檔案格式錯誤或內容已損毀。");
         } finally {
             event.target.value = '';
+            finishJsonFileLoad();
         }
     };
 
-    reader.readAsText(file);
+    try {
+        reader.readAsText(file);
+    } catch (error) {
+        console.error(error);
+        alert('匯入失敗：無法讀取檔案。');
+        event.target.value = '';
+        finishJsonFileLoad();
+    }
 }
 
 /* =========================================================
@@ -26103,7 +26240,9 @@ if (importJsonBtn) {
         'hidden'
     );
 
-    if (isAdmin) {
+    if (jsonFileLoadPending) {
+        // 保留載入中的 Spinner 與進度文字。
+    } else if (isAdmin) {
         importJsonBtn.innerHTML =
             '<i class="fas fa-file-import"></i><span>匯入資料</span>';
 
@@ -29301,30 +29440,153 @@ function getImageFitPreviewScale(image) {
     return clampPreviewScale(fitScale, 0.01, 1);
 }
 
-function applyPreviewImageScale() {
-    const { image } = getFilePreviewElements();
-    if (!image || !image.naturalWidth || !image.naturalHeight) return;
+function applyPreviewImageScale(options = {}) {
 
-    const displayWidth = Math.max(1, Math.round(image.naturalWidth * filePreviewScale));
-    const displayHeight = Math.max(1, Math.round(image.naturalHeight * filePreviewScale));
-    const isSideways = Math.abs(filePreviewRotation % 180) === 90;
+    const { body, image } = getFilePreviewElements();
+
+    if (
+        !image ||
+        !image.naturalWidth ||
+        !image.naturalHeight
+    ) {
+        return;
+    }
+
+    // =====================================================
+    // 一、縮放前記錄目前畫面中心
+    // =====================================================
+
+    const preserveScroll =
+        options.preserveScroll !== false;
+
+    let zoomAnchor = null;
+
+    // 圖片尚未載入完成或仍處於隱藏狀態時，
+    // 不進行捲動補償，避免影響防閃現機制。
+    if (
+        preserveScroll &&
+        body &&
+        !image.classList.contains('hidden')
+    ) {
+
+        const oldRect =
+            image.getBoundingClientRect();
+
+        const bodyRect =
+            body.getBoundingClientRect();
+
+        if (
+            oldRect.width > 0 &&
+            oldRect.height > 0
+        ) {
+
+            const centerX =
+                bodyRect.left +
+                body.clientWidth / 2;
+
+            const centerY =
+                bodyRect.top +
+                body.clientHeight / 2;
+
+            // 記錄目前視窗中心對應圖片的相對座標。
+            zoomAnchor = {
+                x: (centerX - oldRect.left) /
+                    oldRect.width,
+
+                y: (centerY - oldRect.top) /
+                    oldRect.height
+            };
+        }
+    }
+
+    // =====================================================
+    // 二、保留原本圖片尺寸及旋轉計算
+    // =====================================================
+
+    const displayWidth = Math.max(
+        1,
+        Math.round(
+            image.naturalWidth * filePreviewScale
+        )
+    );
+
+    const displayHeight = Math.max(
+        1,
+        Math.round(
+            image.naturalHeight * filePreviewScale
+        )
+    );
+
+    const isSideways =
+        Math.abs(filePreviewRotation % 180) === 90;
 
     image.style.width = `${displayWidth}px`;
     image.style.height = `${displayHeight}px`;
-    image.style.transform = `rotate(${filePreviewRotation}deg)`;
-    image.style.transformOrigin = 'center center';
+
+    image.style.transform =
+        `rotate(${filePreviewRotation}deg)`;
+
+    image.style.transformOrigin =
+        'center center';
 
     if (isSideways) {
-        const horizontalMargin = Math.max(0, (displayHeight - displayWidth) / 2);
-        const verticalMargin = Math.max(0, (displayWidth - displayHeight) / 2);
-        image.style.margin = `${verticalMargin}px ${horizontalMargin}px`;
+
+        const horizontalMargin = Math.max(
+            0,
+            (displayHeight - displayWidth) / 2
+        );
+
+        const verticalMargin = Math.max(
+            0,
+            (displayWidth - displayHeight) / 2
+        );
+
+        image.style.margin =
+            `${verticalMargin}px ${horizontalMargin}px`;
+
     } else {
+
         image.style.margin = '';
     }
 
+    // 保留原有的圖片縮放狀態與百分比顯示。
     imagePreviewScale = filePreviewScale;
     imagePreviewDefaultScale = filePreviewDefaultScale;
+
     updateFilePreviewZoomLabel();
+
+    // =====================================================
+    // 三、縮放後補償水平及垂直捲動位置
+    // =====================================================
+
+    if (zoomAnchor && body) {
+
+        const newRect =
+            image.getBoundingClientRect();
+
+        const bodyRect =
+            body.getBoundingClientRect();
+
+        const centerX =
+            bodyRect.left +
+            body.clientWidth / 2;
+
+        const centerY =
+            bodyRect.top +
+            body.clientHeight / 2;
+
+        // 水平補償：維持原本閱讀中心。
+        body.scrollLeft +=
+            newRect.left +
+            zoomAnchor.x * newRect.width -
+            centerX;
+
+        // 垂直補償：維持原本閱讀位置。
+        body.scrollTop +=
+            newRect.top +
+            zoomAnchor.y * newRect.height -
+            centerY;
+    }
 }
 
 function applyPreviewFrameScale() {
@@ -29343,53 +29605,198 @@ function applyPreviewFrameScale() {
 }
 
 function applyPreviewPdfScale(options = {}) {
+
     const { body, pdfPages } = getFilePreviewElements();
+
     if (!pdfPages) return;
 
-    const preserveScroll = options.preserveScroll !== false;
-    const baseScale = filePreviewDefaultScale || 1;
-    const relativeScale = Math.max(0.05, filePreviewScale / baseScale);
-    const previousRelativeScale = filePreviewPdfAppliedRelativeScale || 1;
+    const preserveScroll =
+        options.preserveScroll !== false;
 
-    let anchorX = null;
-    let anchorY = null;
+    const baseScale =
+        filePreviewDefaultScale || 1;
 
-    if (preserveScroll && body) {
-        anchorX = (body.scrollLeft + (body.clientWidth / 2)) / previousRelativeScale;
-        anchorY = (body.scrollTop + (body.clientHeight / 2)) / previousRelativeScale;
+    const relativeScale = Math.max(
+        0.05,
+        filePreviewScale / baseScale
+    );
+
+    const shells = Array.from(
+        pdfPages.querySelectorAll(
+            '.pdf-preview-page-shell'
+        )
+    );
+
+    // =====================================================
+    // 一、縮放前記錄目前閱讀位置
+    // =====================================================
+
+    let zoomAnchor = null;
+
+    if (preserveScroll && body && shells.length) {
+
+        const bodyRect =
+            body.getBoundingClientRect();
+
+        const centerX =
+            bodyRect.left + body.clientWidth / 2;
+
+        const centerY =
+            bodyRect.top + body.clientHeight / 2;
+
+        let activeShell = null;
+        let shortestDistance = Infinity;
+
+        // 找出最接近目前視窗中心的 PDF 頁面。
+        shells.forEach(shell => {
+
+            const rect =
+                shell.getBoundingClientRect();
+
+            const distance = Math.max(
+                rect.top - centerY,
+                0,
+                centerY - rect.bottom
+            );
+
+            if (distance < shortestDistance) {
+
+                shortestDistance = distance;
+                activeShell = shell;
+
+            }
+        });
+
+        // 記錄視窗中心相對於該 PDF 頁面的座標。
+        if (activeShell) {
+
+            const rect =
+                activeShell.getBoundingClientRect();
+
+            zoomAnchor = {
+
+                shell: activeShell,
+
+                x: rect.width > 0
+                    ? (centerX - rect.left) / rect.width
+                    : 0.5,
+
+                y: rect.height > 0
+                    ? (centerY - rect.top) / rect.height
+                    : 0.5
+
+            };
+        }
     }
 
-    pdfPages.style.gap = `${Math.max(10, Math.round(18 * relativeScale))}px`;
+    // =====================================================
+    // 二、沿用原有 PDF 頁面縮放方式
+    // =====================================================
 
-    pdfPages.querySelectorAll('.pdf-preview-page-shell').forEach(shell => {
-        const baseWidth = Number(shell.dataset.baseWidth || shell.offsetWidth || 1);
-        const baseHeight = Number(shell.dataset.baseHeight || shell.offsetHeight || 1);
-        const scaledWidth = Math.max(1, Math.round(baseWidth * relativeScale));
-        const scaledHeight = Math.max(1, Math.round(baseHeight * relativeScale));
+    pdfPages.style.gap =
+        `${Math.max(10, Math.round(18 * relativeScale))}px`;
 
-        shell.style.width = `${scaledWidth}px`;
-        shell.style.height = `${scaledHeight}px`;
+    shells.forEach(shell => {
 
-        const canvas = shell.querySelector('.pdf-preview-page-canvas');
+        const baseWidth = Number(
+            shell.dataset.baseWidth ||
+            shell.offsetWidth ||
+            1
+        );
+
+        const baseHeight = Number(
+            shell.dataset.baseHeight ||
+            shell.offsetHeight ||
+            1
+        );
+
+        const scaledWidth = Math.max(
+            1,
+            Math.round(baseWidth * relativeScale)
+        );
+
+        const scaledHeight = Math.max(
+            1,
+            Math.round(baseHeight * relativeScale)
+        );
+
+        shell.style.width =
+            `${scaledWidth}px`;
+
+        shell.style.height =
+            `${scaledHeight}px`;
+
+        const canvas = shell.querySelector(
+            '.pdf-preview-page-canvas'
+        );
+
         if (canvas) {
-            canvas.style.width = `${scaledWidth}px`;
-            canvas.style.height = `${scaledHeight}px`;
+
+            canvas.style.width =
+                `${scaledWidth}px`;
+
+            canvas.style.height =
+                `${scaledHeight}px`;
+
         }
 
-        const badge = shell.querySelector('.pdf-preview-page-number');
+        // 保留原有 PDF 頁碼大小調整。
+        const badge = shell.querySelector(
+            '.pdf-preview-page-number'
+        );
+
         if (badge) {
-            const badgeScale = Math.max(0.72, Math.min(1, 1 / relativeScale));
-            badge.style.transform = `scale(${badgeScale})`;
-            badge.style.transformOrigin = 'top right';
+
+            const badgeScale = Math.max(
+                0.72,
+                Math.min(1, 1 / relativeScale)
+            );
+
+            badge.style.transform =
+                `scale(${badgeScale})`;
+
+            badge.style.transformOrigin =
+                'top right';
         }
     });
 
-    filePreviewPdfAppliedRelativeScale = relativeScale;
+    filePreviewPdfAppliedRelativeScale =
+        relativeScale;
+
     updateFilePreviewZoomLabel();
 
-    if (preserveScroll && body && Number.isFinite(anchorX) && Number.isFinite(anchorY)) {
-        body.scrollLeft = Math.max(0, (anchorX * relativeScale) - (body.clientWidth / 2));
-        body.scrollTop = Math.max(0, (anchorY * relativeScale) - (body.clientHeight / 2));
+    // =====================================================
+    // 三、縮放後恢復原本的視窗中心位置
+    // =====================================================
+
+    if (zoomAnchor && body) {
+
+        // 重新取得 PDF 頁面放大後的實際座標。
+        const nextRect =
+            zoomAnchor.shell.getBoundingClientRect();
+
+        const bodyRect =
+            body.getBoundingClientRect();
+
+        const centerX =
+            bodyRect.left + body.clientWidth / 2;
+
+        const centerY =
+            bodyRect.top + body.clientHeight / 2;
+
+        // 水平方向：
+        // 依實際頁面位置補償，不使用單純倍率公式。
+        body.scrollLeft +=
+            nextRect.left +
+            zoomAnchor.x * nextRect.width -
+            centerX;
+
+        // 垂直方向：
+        // 保留正在閱讀的頁面及所在位置。
+        body.scrollTop +=
+            nextRect.top +
+            zoomAnchor.y * nextRect.height -
+            centerY;
     }
 }
 

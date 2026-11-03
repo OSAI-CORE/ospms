@@ -789,6 +789,26 @@ html.performance-icons-ready .sidebar > .p-4 {
         thead th.sticky-col-name { z-index: 40; left: 40px; }
 
 
+/* =========================================================
+   OSPMS｜1～12 月份固定表頭防穿透
+
+   統一適用：
+   1. 桌機版
+   2. 手機直式
+   3. 手機橫式
+
+   僅修改月份表頭背景為不透明極淡藍色。
+   不影響列印、欄位寬度、Sticky 及捲動機制。
+========================================================= */
+@media screen {
+
+    #main-table thead th:nth-child(n+6):nth-child(-n+17) {
+        background-color: #F0F5FB !important;
+    }
+
+}
+      
+
         #main-table { table-layout: fixed; min-width: 1442px; }
         #main-table th, #main-table td { vertical-align: middle; }
         #main-table th:nth-child(1), #main-table td:nth-child(1) { width: 40px; }
@@ -4675,6 +4695,281 @@ and (max-width: 950px) {
     }
 }
 
+
+/* =========================================================
+   OSPMS｜桌機版左側功能區收合／展開
+
+   僅適用桌機 1025px 以上。
+   手機直式、橫式及既有操作流程全部不變。
+========================================================= */
+
+/* 非桌機版不顯示控制鈕及分類提示框 */
+#desktop-sidebar-toggle,
+#desktop-sidebar-nav-tooltip {
+    display: none;
+}
+
+@media screen and (min-width: 1025px) {
+
+    /* 左側功能區：維持原本寬度，增加平滑收合 */
+    .sidebar {
+        width: 280px;
+        flex-shrink: 0;
+        overflow: hidden;
+        transition: width 0.22s ease;
+    }
+
+
+/* =========================================================
+   桌機展開狀態｜內部內容固定排版寬度
+
+   外層 Sidebar 繼續執行寬度動畫。
+   內部標題與分類文字不隨動畫重新換行，
+   避免展開過程出現文字跳動或擠壓。
+========================================================= */
+
+body:not(.desktop-sidebar-collapsed)
+.sidebar > .p-6,
+
+body:not(.desktop-sidebar-collapsed)
+.sidebar > nav,
+
+body:not(.desktop-sidebar-collapsed)
+.sidebar > .p-4 {
+    width: 280px;
+    min-width: 280px;
+    box-sizing: border-box;
+}
+
+
+/* 收合後保留 52px 精簡圖示導覽列 */
+body.desktop-sidebar-collapsed .sidebar {
+    width: 52px;
+}
+
+/* 收合時隱藏上方系統資訊及下方操作區，
+   中間分類導覽列繼續保留 */
+body.desktop-sidebar-collapsed .sidebar > .p-6,
+body.desktop-sidebar-collapsed .sidebar > .p-4 {
+    display: none;
+}
+
+
+/* =========================================================
+   桌機收合狀態｜精簡圖示導覽列
+   沿用原本分類按鈕及報表切換機制
+========================================================= */
+
+/* 分類導覽列保留顯示，並讓圖示從上方排列 */
+body.desktop-sidebar-collapsed .sidebar > nav {
+    min-width: 0;
+    padding: 64px 0 12px !important;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+/* 隱藏「系統分類目錄」標題及年度資料夾區塊 */
+body.desktop-sidebar-collapsed .sidebar > nav > .px-6 {
+    display: none;
+}
+
+/* 五個分類圖示的排列容器 */
+body.desktop-sidebar-collapsed #nav-tabs {
+    width: 100%;
+    padding: 0 4px;
+    margin-bottom: 0 !important;
+    box-sizing: border-box;
+}
+
+/* 沿用原本分類按鈕，只改收合時的排列 */
+body.desktop-sidebar-collapsed #nav-tabs > button {
+    width: 100%;
+    height: 44px;
+    min-height: 44px;
+
+    padding: 0 4px 0 0 !important;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 10px;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+/* 收合時隱藏分類名稱文字 */
+body.desktop-sidebar-collapsed #nav-tabs > button > span {
+    display: none !important;
+}
+
+/* 五個既有 Lucide 圖示統一尺寸 */
+body.desktop-sidebar-collapsed #nav-tabs > button > svg {
+    width: 18px !important;
+    height: 18px !important;
+    flex: 0 0 18px;
+    margin: 0 !important;
+}
+
+
+/* 收合模式：分類按鈕不顯示原本左側藍色邊線 */
+body.desktop-sidebar-collapsed
+#nav-tabs > button {
+    border-left-color: transparent !important;
+}
+
+/* 目前選取分類：低飽和藍灰背景 */
+body.desktop-sidebar-collapsed
+#nav-tabs > button.bg-slate-800 {
+    background-color: #294766 !important;
+    border-left-color: transparent !important;
+    color: #ffffff !important;
+}
+
+/* 滑鼠點擊後不保留多餘焦點外框 */
+body.desktop-sidebar-collapsed
+#nav-tabs > button:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* 保留鍵盤操作時必要的焦點提示 */
+body.desktop-sidebar-collapsed
+#nav-tabs > button:focus-visible {
+    outline: 2px solid #93c5fd;
+    outline-offset: -2px;
+}
+
+
+/* 未選取分類的 Hover 效果 */
+body.desktop-sidebar-collapsed
+#nav-tabs > button:not(.bg-slate-800):hover {
+    background-color: #334155 !important;
+    color: #ffffff !important;
+}
+
+/* 分類名稱黑色提示框：獨立於側欄之外 */
+#desktop-sidebar-nav-tooltip {
+    position: fixed;
+    z-index: 100;
+
+    padding: 5px 9px;
+    border-radius: 6px;
+
+    background: rgba(15, 23, 42, 0.94);
+    color: #ffffff;
+
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.3;
+
+    white-space: nowrap;
+    pointer-events: none;
+
+    transform: translateY(-50%);
+
+    box-shadow:
+        0 6px 16px rgba(15, 23, 42, 0.18);
+}
+
+/* 只有桌機收合且滑鼠靠近分類時才顯示 */
+body.desktop-sidebar-collapsed
+#desktop-sidebar-nav-tooltip.is-visible {
+    display: block;
+}
+
+
+    /* 收合控制鈕：位於左右區域交界處 */
+    #desktop-sidebar-toggle {
+        display: inline-flex;
+        position: fixed;
+
+        top: 50%;
+        left: 264px;
+        transform: translateY(-50%);
+
+        width: 32px;
+        height: 34px;
+        padding: 0;
+
+        align-items: center;
+        justify-content: center;
+
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        border-radius: 10px;
+
+        background: #334155;
+        color: #e2e8f0;
+
+        font-size: 13px;
+        line-height: 1;
+
+        cursor: pointer;
+        z-index: 50;
+
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.16);
+
+        opacity: 0;
+        pointer-events: none;
+
+        transition:
+            left 0.22s ease,
+            opacity 0.15s ease,
+            background-color 0.15s ease,
+            border-color 0.15s ease;
+    }
+
+    /* 滑鼠進入側欄時顯示按鈕 */
+    .sidebar:hover ~ #desktop-sidebar-toggle,
+    #desktop-sidebar-toggle:hover,
+    #desktop-sidebar-toggle:focus-visible {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* 滑鼠移至按鈕時使用柔和亮色 */
+    #desktop-sidebar-toggle:hover {
+        background: #475569;
+        border-color: rgba(191, 219, 254, 0.55);
+        color: #ffffff;
+    }
+
+/* 收合後：展開按鈕固定在 52px 窄欄上方 */
+body.desktop-sidebar-collapsed #desktop-sidebar-toggle {
+    left: 10px;
+    top: 14px;
+    transform: none;
+
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* 收合後的展開提示框改顯示在按鈕右側 */
+body.desktop-sidebar-collapsed
+#desktop-sidebar-toggle::after,
+body.desktop-sidebar-collapsed
+#desktop-sidebar-toggle:hover::after {
+    left: calc(100% + 8px);
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+    /* 雙箭頭固定尺寸 */
+    #desktop-sidebar-toggle i {
+        font-size: 13px;
+        line-height: 1;
+        pointer-events: none;
+    }
+}
+
+/* 大螢幕觸控裝置：確保按鈕仍可操作 */
+@media screen and (min-width: 1025px) and (hover: none) {
+    #desktop-sidebar-toggle {
+        opacity: 1;
+        pointer-events: auto;
+    }
+}
+
+
     </style>
 </head>
 <body class="text-slate-800 flex h-screen">
@@ -4848,11 +5143,32 @@ and (max-width: 950px) {
     <span>匯出年度績效報表</span>
 </button>
         </div>
+
     </aside>
+
+<!-- 桌機專用：左側功能區收合／展開 -->
+<button id="desktop-sidebar-toggle"
+        type="button"
+        class="system-tooltip-btn no-print"
+        onclick="toggleDesktopSidebar()"
+        data-tooltip="收合"
+        aria-label="收合左側功能區"
+        aria-expanded="true">
+
+    <i class="fa-solid fa-angles-left"></i>
+
+</button>
+
+<!-- 桌機收合模式：分類圖示名稱提示框 -->
+<div id="desktop-sidebar-nav-tooltip"
+     class="no-print"
+     role="tooltip"
+     aria-hidden="true"></div>
 
 <div id="mobile-sidebar-backdrop"
      class="mobile-sidebar-backdrop no-print"
      onclick="closeMobileSidebar()"></div>
+
 
     <main class="flex-1 flex flex-col min-w-0">
         <header class="bg-white px-8 py-5 border-b border-slate-200 flex justify-between items-center shrink-0">
@@ -28119,9 +28435,29 @@ markPerformanceDirty();
                 const btn = document.createElement('button');
                 btn.id = `tab-${key}`;
                 btn.onclick = () => switchTab(key);
-                btn.className = "w-full px-6 py-4 text-left text-sm font-bold flex items-center space-x-3 transition border-l-4 border-transparent text-slate-400 hover:text-white hover:bg-slate-800/50";
-                btn.innerHTML = `<i data-lucide="${icons[key]}" class="w-4 h-4"></i><span>${titles[key]}</span>`;
-                nav.appendChild(btn);
+
+btn.className = "w-full px-6 py-4 text-left text-sm font-bold flex items-center space-x-3 transition border-l-4 border-transparent text-slate-400 hover:text-white hover:bg-slate-800/50";
+
+btn.innerHTML = `<i data-lucide="${icons[key]}" class="w-4 h-4"></i><span>${titles[key]}</span>`;
+
+// 保留完整分類名稱，供收合模式提示使用
+btn.setAttribute('aria-label', titles[key]);
+
+// 桌機精簡導覽列：分類名稱提示
+btn.addEventListener('mouseenter', () => {
+    showDesktopSidebarNavTooltip(btn);
+});
+
+btn.addEventListener('mouseleave', hideDesktopSidebarNavTooltip);
+
+btn.addEventListener('focus', () => {
+    showDesktopSidebarNavTooltip(btn);
+});
+
+btn.addEventListener('blur', hideDesktopSidebarNavTooltip);
+
+nav.appendChild(btn);
+
             });
             lucide.createIcons();
         }
@@ -31043,11 +31379,121 @@ if (activeAttachmentTarget) {
     }
 }
 
+
+/* =========================================================
+   桌機精簡導覽列｜分類名稱 Tooltip
+   僅收合模式啟用，不影響手機及原分類功能
+========================================================= */
+
+function showDesktopSidebarNavTooltip(button) {
+
+    if (!window.matchMedia('(min-width: 1025px)').matches) {
+        return;
+    }
+
+    if (!document.body.classList.contains(
+        'desktop-sidebar-collapsed'
+    )) {
+        return;
+    }
+
+    const tooltip = document.getElementById(
+        'desktop-sidebar-nav-tooltip'
+    );
+
+    if (!tooltip || !button) return;
+
+    const name = button.getAttribute('aria-label') || '';
+
+    if (!name) return;
+
+    const rect = button.getBoundingClientRect();
+
+    tooltip.textContent = name;
+
+    // 將黑色小提示框放在分類圖示右側
+    tooltip.style.left = `${Math.round(rect.right + 9)}px`;
+
+    tooltip.style.top = `${
+        Math.round(rect.top + rect.height / 2)
+    }px`;
+
+    tooltip.classList.add('is-visible');
+}
+
+function hideDesktopSidebarNavTooltip() {
+
+    const tooltip = document.getElementById(
+        'desktop-sidebar-nav-tooltip'
+    );
+
+    if (tooltip) {
+        tooltip.classList.remove('is-visible');
+    }
+}
+
         // --- 核心邏輯與 UI 互動 ---
+
+/* =========================================================
+   OSPMS｜桌機版左側功能區收合／展開
+
+   僅切換桌機介面顯示狀態。
+   不操作報表資料、權限、雲端或手機側欄。
+========================================================= */
+
+function toggleDesktopSidebar() {
+
+    // 只允許桌機版執行
+    if (!window.matchMedia('(min-width: 1025px)').matches) {
+        return;
+    }
+
+    const button = document.getElementById(
+        'desktop-sidebar-toggle'
+    );
+
+    if (!button) return;
+
+    const icon = button.querySelector('i');
+
+    // 切換桌機收合狀態
+const collapsed = document.body.classList.toggle(
+    'desktop-sidebar-collapsed'
+);
+
+// 切換側欄狀態時，清除可能殘留的分類提示框
+hideDesktopSidebarNavTooltip();
+
+// 同步切換左右雙箭頭
+    if (icon) {
+        icon.className = collapsed
+            ? 'fa-solid fa-angles-right'
+            : 'fa-solid fa-angles-left';
+    }
+
+    // 同步修改黑色 Tooltip 文字
+    button.dataset.tooltip = collapsed
+        ? '展開'
+        : '收合';
+
+    // 同步修改按鈕標籤
+    button.setAttribute(
+        'aria-label',
+        collapsed
+            ? '展開左側功能區'
+            : '收合左側功能區'
+    );
+
+    button.setAttribute(
+        'aria-expanded',
+        String(!collapsed)
+    );
+}
 
 function isMobilePortraitView() {
     return window.matchMedia('(max-width: 768px) and (orientation: portrait)').matches;
 }
+
 
 function toggleMobileSidebar() {
     if (!isMobilePortraitView()) return;

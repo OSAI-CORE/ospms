@@ -1233,6 +1233,28 @@ html.performance-icons-ready .sidebar > .p-4 {
 }
 
 
+/* =========================================================
+   OSPMS｜新增績效指標項目按鈕
+
+   與編輯、儲存、列印按鈕統一尺寸。
+   使用柔和淡藍色，避免與編輯狀態混淆。
+========================================================= */
+
+.performance-add-icon-btn {
+    background: #F0F9FF;
+    border: 1px solid #BAE6FD;
+    color: #0284C7;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .performance-add-icon-btn:hover {
+        background: #E0F2FE;
+        border-color: #7DD3FC;
+        color: #0369A1;
+    }
+}
+
+
 /* 儲存記錄 */
 .performance-save-icon-btn {
     background: #059669;
@@ -5200,6 +5222,25 @@ body.desktop-sidebar-collapsed
 <div id="header-action-buttons"
      class="flex items-center gap-1.5 no-print">
 
+
+<!-- 新增績效指標：僅編輯模式顯示 -->
+<button
+    id="admin-add-section"
+    type="button"
+    onclick="addNewRow()"
+    class="
+        hidden
+        performance-header-icon-btn
+        performance-add-icon-btn
+        system-tooltip-btn
+    "
+    data-tooltip="新增績效指標項目"
+    aria-label="新增績效指標項目"
+>
+    <i class="fa-solid fa-circle-plus"></i>
+</button>
+
+
     <!-- 編輯／檢視 -->
     <button
         id="performance-edit-toggle-btn"
@@ -5319,12 +5360,6 @@ body.desktop-sidebar-collapsed
                     </thead>
                     <tbody id="table-body" class="bg-white"></tbody>
                 </table>
-            </div>
-            <div id="admin-add-section" class="hidden mt-4">
-                <button onclick="addNewRow()" class="flex items-center space-x-2 px-4 py-2 border-2 border-dashed border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 transition font-bold text-sm">
-                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
-                    <span>新增績效指標項目</span>
-                </button>
             </div>
         </div>
 <footer class="system-footer-light">
@@ -28531,7 +28566,8 @@ function switchTab(type, shouldSave = true) {
 const permissionSettingsBtn = document.getElementById('permission-settings-btn');
 
 const canWriteInTable =
-    canEditPerformanceNow();
+    canEditPerformanceNow() &&
+    !document.body.classList.contains('ospms-printing');
 
 const canDeleteInTable =
     canDeleteData() &&
@@ -34414,22 +34450,58 @@ refreshRowSummary(row);
         }
 
 
-        function preparePrintLayout() {
 
-            // 附件列印不執行績效報表儲存與排版處理。
-            if (document.body.classList.contains('ospms-attachment-print')) {
-                return;
-            }
+/* 正式報表列印前的捲動位置 */
+let performancePrintScrollState = null;
 
-            saveCurrentTabData();
-            document.body.classList.add('ospms-printing');
-        }
+function preparePrintLayout() {
 
-        function cleanupPrintLayout() {
-            document.body.classList.remove('ospms-printing');
+    // 附件列印維持原本獨立流程。
+    if (document.body.classList.contains('ospms-attachment-print')) {
+        return;
+    }
 
-            cleanupAttachmentPrint();
-        }
+    // 避免列印按鈕及 beforeprint 重複執行。
+    if (document.body.classList.contains('ospms-printing')) {
+        return;
+    }
+
+    // 保留目前報表捲動位置。
+    performancePrintScrollState = getTableScrollState();
+
+    // 先同步尚未儲存的畫面資料至記憶體。
+    saveCurrentTabData();
+
+    // 啟用列印專用檢視狀態。
+    document.body.classList.add('ospms-printing');
+
+    // 重新產生正式檢視版表格。
+    renderTable(currentTab);
+}
+
+function cleanupPrintLayout() {
+
+    const wasPrinting =
+        document.body.classList.contains('ospms-printing');
+
+    // 退出列印專用狀態。
+    document.body.classList.remove('ospms-printing');
+
+    if (wasPrinting) {
+
+        // 恢復使用者原本的編輯／檢視畫面。
+        renderTable(currentTab);
+
+        // 還原報表原本上下及左右捲動位置。
+        restoreTableScrollState(performancePrintScrollState);
+
+        performancePrintScrollState = null;
+    }
+
+    // 原有附件列印清理機制保留。
+    cleanupAttachmentPrint();
+}
+
 
         function printCurrentReport() {
 

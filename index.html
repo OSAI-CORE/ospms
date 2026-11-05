@@ -34525,22 +34525,62 @@ document.addEventListener(
             'Escape'
         ) {
 
+            /*
+             * 記錄 ESC 前實際開啟的視窗，
+             * 避免影響沒有開啟的功能按鈕。
+             */
+            const escModalEntries = [
+                ['cloud-preview-modal', 'cloud-preview-entry-btn'],
+                ['login-modal', 'permission-settings-btn'],
+                ['data-export-modal', 'export-json-btn']
+            ].filter(([modalId]) => {
+
+                const modal =
+                    document.getElementById(modalId);
+
+                return modal &&
+                    !modal.classList.contains('hidden');
+            });
+
+            /*
+             * 原本 ESC 關閉流程全部保留。
+             */
             closeAllExecutionMonthsMenus();
 
-closeFilePreviewModal();
+            closeFilePreviewModal();
 
-requestCloseLoginModal();
+            requestCloseLoginModal();
 
-closeDataExportModal();
+            closeDataExportModal();
 
-closeCloudPreviewModal();
+            closeCloudPreviewModal();
 
-closeCloudPublisherLoginModal();
+            closeCloudPublisherLoginModal();
 
-closeAttachmentModal();
+            closeAttachmentModal();
+
+            /*
+             * 視窗確實關閉後，
+             * 清除對應入口按鈕的殘留 Focus。
+             */
+            for (const [modalId, buttonId] of escModalEntries) {
+
+                const modal =
+                    document.getElementById(modalId);
+
+                if (
+                    modal &&
+                    modal.classList.contains('hidden')
+                ) {
+
+                    document
+                        .getElementById(buttonId)
+                        ?.blur();
+                }
+            }
         }
     }
-);       
+);     
 
 // =========================================================
 // 附件圖片預覽：手機旋轉及視窗大小變更時重新適合畫面
